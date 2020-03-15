@@ -1,6 +1,7 @@
 package gg.strims.mobile
 
 import android.annotation.SuppressLint
+import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -19,6 +20,7 @@ import io.ktor.client.features.websocket.wss
 import io.ktor.http.cio.websocket.Frame
 import io.ktor.http.cio.websocket.readBytes
 import io.ktor.http.cio.websocket.readText
+import java.util.*
 
 @KtorExperimentalAPI
 class MainActivity : AppCompatActivity() {
@@ -33,8 +35,8 @@ class MainActivity : AppCompatActivity() {
             WSClient().onConnect()
         }
 
-        chatRecyclerView.adapter = adapter
-        chatRecyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerViewChat.adapter = adapter
+        recyclerViewChat.layoutManager = LinearLayoutManager(this)
     }
 
     inner class ChatMessage(private val messageData: Message) : Item<GroupieViewHolder>() {
@@ -42,10 +44,22 @@ class MainActivity : AppCompatActivity() {
             return R.layout.chat_message
         }
 
-        @SuppressLint("SetTextI18n")
+        @SuppressLint("SetTextI18n", "SimpleDateFormat")
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
-            viewHolder.itemView.timestampMessage.text = "${messageData.timestamp} :"
-            viewHolder.itemView.username.text = messageData.nick
+            val date = Date(messageData.timestamp)
+            val time = if (date.minutes < 10) {
+                "${date.hours}:0${date.minutes}"
+            } else {
+                "${date.hours}:${date.minutes}"
+            }
+
+            val first = messageData.data.first()
+            if (first.toString() == ">") {
+                viewHolder.itemView.message.setTextColor(Color.parseColor("#789922"))
+            }
+
+            viewHolder.itemView.timestampMessage.text = time
+            viewHolder.itemView.username.text = "${messageData.nick}:"
             viewHolder.itemView.message.text = messageData.data
         }
     }
@@ -66,7 +80,8 @@ class MainActivity : AppCompatActivity() {
                         val msg = parseMessage(frame.readText())
                         if (msg != null) {
                             runOnUiThread(kotlinx.coroutines.Runnable {
-                                    adapter.add(ChatMessage(msg))
+                                adapter.add(ChatMessage(msg))
+                                recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
                             })
                             println(msg.data)
                         }
