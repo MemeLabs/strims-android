@@ -1,9 +1,12 @@
 package gg.strims.mobile
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
@@ -37,6 +40,20 @@ class MainActivity : AppCompatActivity() {
 
         recyclerViewChat.adapter = adapter
         recyclerViewChat.layoutManager = LinearLayoutManager(this)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.chat_menu, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.loginMenu -> {
+                startActivity(Intent(this, LoginActivity::class.java))
+            }
+        }
+        return true
     }
 
     inner class ChatMessage(private val messageData: Message) : Item<GroupieViewHolder>() {
