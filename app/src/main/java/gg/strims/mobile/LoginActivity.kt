@@ -17,7 +17,7 @@ class LoginActivity : AppCompatActivity() {
 
         Log.d("TAG", "Login opened")
 
-        /***Creates WebView (Browser***/
+        /***Creates WebView (Browser)***/
         val webView = findViewById<WebView>(R.id.loginWebView)
         webView.webViewClient = WebViewClient()
         webView.settings.javaScriptEnabled = true
@@ -31,5 +31,7 @@ class LoginActivity : AppCompatActivity() {
     private fun retrieveCookie(view: WebView, url: String) {
         val cookies = CookieManager.getInstance().getCookie(url)
         Log.d("TAG", "cookie: $cookies")
+        val jwt = cookies.substringAfter("jwt=").substringBefore(" ")
+        Log.d("TAG", "jwt: $jwt")
     }
 }
