@@ -5,8 +5,10 @@ import android.content.Intent
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.webkit.CookieManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
@@ -20,6 +22,7 @@ import com.beust.klaxon.Klaxon
 import io.ktor.client.HttpClient
 import io.ktor.client.features.websocket.WebSockets
 import io.ktor.client.features.websocket.wss
+import io.ktor.client.request.header
 import io.ktor.http.cio.websocket.Frame
 import io.ktor.http.cio.websocket.readBytes
 import io.ktor.http.cio.websocket.readText
@@ -29,7 +32,6 @@ import java.util.*
 class MainActivity : AppCompatActivity() {
 
     private val adapter = GroupAdapter<GroupieViewHolder>()
-    private var jwt: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,9 +43,6 @@ class MainActivity : AppCompatActivity() {
 
         recyclerViewChat.adapter = adapter
         recyclerViewChat.layoutManager = LinearLayoutManager(this)
-
-        /** Retrieves cookie for when user is already logged in **/
-        LoginActivity().retrieveCookie()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -53,7 +52,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.loginMenu -> {
+            R.id.chatLogin -> {
                 startActivity(Intent(this, LoginActivity::class.java))
             }
         }
@@ -87,24 +86,44 @@ class MainActivity : AppCompatActivity() {
 
     inner class WSClient {
 
+        private var jwt: String? = null
+
+        private fun retrieveCookie() {
+            val cookies = CookieManager.getInstance().getCookie("https://strims.gg")
+            if (cookies != null) {
+                Log.d("TAG", "cookie: $cookies")
+                var jwt: String? = cookies.substringAfter("jwt=").substringBefore(" ")
+                if (jwt == cookies) {
+                    jwt = null
+                }
+                this.jwt = jwt
+                Log.d("TAG", "JWT: $jwt")
+            }
+        }
+
         private val client = HttpClient {
             install(WebSockets)
         }
 
         suspend fun onConnect() = client.wss(
             host = "chat.strims.gg",
-            path = "/ws"
-        ) {
+            path = "/ws",
+            request = {
+                retrieveCookie()
+                Log.d("TAG", "requesting with: $jwt")
+                header("Cookie", "jwt=$jwt")
+            }
+        ){
             while (true) {
                 when (val frame = incoming.receive()) {
                     is Frame.Text -> {
+                        println(frame.readText())
                         val msg = parseMessage(frame.readText())
                         if (msg != null) {
                             runOnUiThread(kotlinx.coroutines.Runnable {
                                 adapter.add(ChatMessage(msg))
                                 recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
                             })
-                            println(msg.data)
                         }
                     }
                     is Frame.Binary -> println(frame.readBytes())
