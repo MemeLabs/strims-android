@@ -29,6 +29,7 @@ import java.util.*
 class MainActivity : AppCompatActivity() {
 
     private val adapter = GroupAdapter<GroupieViewHolder>()
+    private var jwt: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,6 +41,9 @@ class MainActivity : AppCompatActivity() {
 
         recyclerViewChat.adapter = adapter
         recyclerViewChat.layoutManager = LinearLayoutManager(this)
+
+        /** Retrieves cookie for when user is already logged in **/
+        LoginActivity().retrieveCookie()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
