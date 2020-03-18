@@ -3,13 +3,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="#002547">
+    android:background="#222222">
 
     <TextView
         android:id="@+id/usernamePrivate"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="4dp"
+        android:background="@drawable/whisper_received_username"
         android:text="Username"
         android:textColor="#FFFFFF"
         android:textStyle="bold"

@@ -142,8 +142,8 @@ class MainActivity : AppCompatActivity() {
             }
 
             viewHolder.itemView.timestampMessagePrivate.text = time
-            viewHolder.itemView.usernamePrivate.text = "${messageData.nick} whispered:"
-            viewHolder.itemView.messagePrivate.text = messageData.data
+            viewHolder.itemView.usernamePrivate.text = messageData.nick
+            viewHolder.itemView.messagePrivate.text = " whispered: ${messageData.data}"
         }
     }
 
