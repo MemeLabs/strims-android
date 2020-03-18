@@ -5,9 +5,13 @@ import android.content.Intent
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
+import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.webkit.CookieManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.xwray.groupie.GroupAdapter
@@ -26,6 +30,10 @@ import io.ktor.client.request.header
 import io.ktor.http.cio.websocket.Frame
 import io.ktor.http.cio.websocket.readBytes
 import io.ktor.http.cio.websocket.readText
+import io.ktor.http.cio.websocket.send
+import kotlinx.android.synthetic.main.chat_message.*
+import kotlinx.android.synthetic.main.chat_message.view.message
+import kotlinx.android.synthetic.main.private_chat_message.view.*
 import java.util.*
 
 @KtorExperimentalAPI
@@ -41,8 +49,38 @@ class MainActivity : AppCompatActivity() {
             WSClient().onConnect()
         }
 
+        sendMessageText.addTextChangedListener(object: TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                if (sendMessageText.text.isNotEmpty()) {
+                    sendMessageButton.isEnabled = true
+                }
+            }
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                if (sendMessageText.text.isNotEmpty()) {
+                    sendMessageButton.isEnabled = true
+                }
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if (sendMessageText.text.isNotEmpty()) {
+                    sendMessageButton.isEnabled = true
+                }
+            }
+        })
+
+        sendMessageText.setOnKeyListener(View.OnKeyListener { v, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP) {
+                sendMessageButton.performClick()
+                return@OnKeyListener true
+            }
+            false
+        })
+
         recyclerViewChat.adapter = adapter
-        recyclerViewChat.layoutManager = LinearLayoutManager(this)
+        val layoutManager = LinearLayoutManager(this)
+        layoutManager.stackFromEnd = true
+        recyclerViewChat.layoutManager = layoutManager
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -84,6 +122,31 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    inner class PrivateChatMessage(private val messageData: Message) : Item<GroupieViewHolder>() {
+        override fun getLayout(): Int {
+            return R.layout.private_chat_message
+        }
+
+        @SuppressLint("SetTextI18n")
+        override fun bind(viewHolder: GroupieViewHolder, position: Int) {
+            val date = Date(messageData.timestamp)
+            val time = if (date.minutes < 10) {
+                "${date.hours}:0${date.minutes}"
+            } else {
+                "${date.hours}:${date.minutes}"
+            }
+
+            val first = messageData.data.first()
+            if (first.toString() == ">") {
+                viewHolder.itemView.message.setTextColor(Color.parseColor("#789922"))
+            }
+
+            viewHolder.itemView.timestampMessagePrivate.text = time
+            viewHolder.itemView.usernamePrivate.text = "${messageData.nick} whispered:"
+            viewHolder.itemView.messagePrivate.text = messageData.data
+        }
+    }
+
     inner class WSClient {
 
         private var jwt: String? = null
@@ -92,11 +155,10 @@ class MainActivity : AppCompatActivity() {
             val cookies = CookieManager.getInstance().getCookie("https://strims.gg")
             if (cookies != null) {
                 Log.d("TAG", "cookie: $cookies")
-                var jwt: String? = cookies.substringAfter("jwt=").substringBefore(" ")
-                if (jwt == cookies) {
-                    jwt = null
+                val jwt = cookies.substringAfter("jwt=").substringBefore(" ")
+                if (jwt != cookies) {
+                    this.jwt = jwt
                 }
-                this.jwt = jwt
                 Log.d("TAG", "JWT: $jwt")
             }
         }
@@ -110,18 +172,28 @@ class MainActivity : AppCompatActivity() {
             path = "/ws",
             request = {
                 retrieveCookie()
-                Log.d("TAG", "requesting with: $jwt")
+                Log.d("TAG", "requesting with JWT: $jwt")
                 header("Cookie", "jwt=$jwt")
             }
         ){
+            sendMessageButton.setOnClickListener {
+                GlobalScope.launch {
+                    send("MSG {\"data\":\"${sendMessageText.text}\"}")
+                    sendMessageText.text.clear()
+                }
+            }
             while (true) {
                 when (val frame = incoming.receive()) {
                     is Frame.Text -> {
                         println(frame.readText())
-                        val msg = parseMessage(frame.readText())
+                        val msg: Message? = parseMessage(frame.readText())
                         if (msg != null) {
                             runOnUiThread(kotlinx.coroutines.Runnable {
-                                adapter.add(ChatMessage(msg))
+                                if (msg.privMsg) {
+                                    adapter.add(PrivateChatMessage(msg))
+                                } else {
+                                    adapter.add(ChatMessage(msg))
+                                }
                                 recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
                             })
                         }
@@ -134,7 +206,10 @@ class MainActivity : AppCompatActivity() {
         private fun parseMessage(input: String): Message? {
             val msg = input.split(" ", limit = 2)
             val msgType = msg[0]
-            if (msgType == "MSG") {
+            if (msgType == "PRIVMSG") {
+                val message = Klaxon().parse<Message>(msg[1])!!
+                return Message(true, message.nick, message.data, message.timestamp)
+            } else if (msgType == "MSG") {
                 return Klaxon().parse<Message>(msg[1])
             }
             return null

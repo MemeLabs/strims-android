@@ -13,13 +13,13 @@
         android:layout_height="0dp"
         android:layout_marginBottom="4dp"
         android:background="#000000"
-        app:layout_constraintBottom_toTopOf="@+id/sendMessageField"
+        app:layout_constraintBottom_toTopOf="@+id/sendMessageText"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <EditText
-        android:id="@+id/sendMessageField"
+        android:id="@+id/sendMessageText"
         android:layout_width="0dp"
         android:layout_height="40dp"
         android:layout_marginStart="8dp"
@@ -30,10 +30,21 @@
         android:hint="Write something $username..."
         android:inputType="textPersonName"
         android:paddingStart="4dp"
-        android:textColor="#7A7A7A"
+        android:textColor="#FFFFFF"
         android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/sendMessageButton"
+        android:layout_width="28dp"
+        android:layout_height="30dp"
+        android:layout_marginEnd="6dp"
+        android:background="@drawable/ic_send_orange_24dp"
+        android:enabled="false"
+        app:layout_constraintBottom_toBottomOf="@+id/sendMessageText"
+        app:layout_constraintEnd_toEndOf="@+id/sendMessageText"
+        app:layout_constraintTop_toTopOf="@+id/sendMessageText" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

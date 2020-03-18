@@ -11,6 +11,8 @@ import io.ktor.util.KtorExperimentalAPI
 
 class LoginActivity : AppCompatActivity() {
 
+    var jwt: String? = null
+
     @KtorExperimentalAPI
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -21,12 +23,12 @@ class LoginActivity : AppCompatActivity() {
 
         Log.d("TAG", "Login opened")
 
-        /** Creates WebView, retrieves JWT and goes back to chat activity **/
         val webView = findViewById<WebView>(R.id.loginWebView)
         webView.webViewClient = object: WebViewClient() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 if (url == "https://strims.gg/" || url == "https://chat.strims.gg/") {
                     startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+                    finish()
                 }
             }
         }
