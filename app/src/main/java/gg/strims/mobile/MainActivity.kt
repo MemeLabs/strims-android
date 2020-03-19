@@ -26,12 +26,11 @@ import com.beust.klaxon.Klaxon
 import io.ktor.client.HttpClient
 import io.ktor.client.features.websocket.WebSockets
 import io.ktor.client.features.websocket.wss
-import io.ktor.client.request.header
+import io.ktor.client.request.*
 import io.ktor.http.cio.websocket.Frame
 import io.ktor.http.cio.websocket.readBytes
 import io.ktor.http.cio.websocket.readText
 import io.ktor.http.cio.websocket.send
-import kotlinx.android.synthetic.main.chat_message.*
 import kotlinx.android.synthetic.main.chat_message.view.message
 import kotlinx.android.synthetic.main.private_chat_message.view.*
 import java.util.*
@@ -153,7 +152,7 @@ class MainActivity : AppCompatActivity() {
         private fun retrieveCookie() {
             val cookies = CookieManager.getInstance().getCookie("https://strims.gg")
             if (cookies != null) {
-                Log.d("TAG", "cookie: $cookies")
+                Log.d("TAG", "Cookies: $cookies")
                 val jwt = cookies.substringAfter("jwt=").substringBefore(" ")
                 if (jwt != cookies) {
                     this.jwt = jwt
@@ -166,12 +165,26 @@ class MainActivity : AppCompatActivity() {
             install(WebSockets)
         }
 
+        @SuppressLint("SetTextI18n")
+        private suspend fun retrieveProfile() {
+            val text: String = client.get("https://strims.gg/api/profile") {
+                header("Cookie", "jwt=$jwt")
+            }
+            Log.d("TAG", "Profile: $text")
+            val username: String = text.substringAfter("\"username\":\"").substringBefore("\"")
+            GlobalScope.launch {
+                runOnUiThread(Runnable {
+                    sendMessageText.setHint("Write something $username...")
+                })
+            }
+        }
+
         suspend fun onConnect() = client.wss(
             host = "chat.strims.gg",
             path = "/ws",
             request = {
                 retrieveCookie()
-                Log.d("TAG", "requesting with JWT: $jwt")
+                Log.d("TAG", "Requesting with JWT: $jwt")
                 header("Cookie", "jwt=$jwt")
             }
         ){
@@ -189,6 +202,7 @@ class MainActivity : AppCompatActivity() {
                     })
                 }
             }
+            retrieveProfile()
             while (true) {
                 when (val frame = incoming.receive()) {
                     is Frame.Text -> {
