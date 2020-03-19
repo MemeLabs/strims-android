@@ -11,8 +11,6 @@ import io.ktor.util.KtorExperimentalAPI
 
 class LoginActivity : AppCompatActivity() {
 
-    var jwt: String? = null
-
     @KtorExperimentalAPI
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -136,8 +136,7 @@ class MainActivity : AppCompatActivity() {
                 "${date.hours}:${date.minutes}"
             }
 
-            val first = messageData.data.first()
-            if (first.toString() == ">") {
+            if (messageData.data.first() == '>') {
                 viewHolder.itemView.message.setTextColor(Color.parseColor("#789922"))
             }
 
@@ -180,6 +179,9 @@ class MainActivity : AppCompatActivity() {
                 GlobalScope.launch {
                     send("MSG {\"data\":\"${sendMessageText.text}\"}")
                     sendMessageText.text.clear()
+                    runOnUiThread(kotlinx.coroutines.Runnable {
+                        sendMessageButton.isEnabled = false
+                    })
                 }
             }
             while (true) {
