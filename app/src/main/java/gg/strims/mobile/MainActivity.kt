@@ -180,8 +180,9 @@ class MainActivity : AppCompatActivity() {
                     if (sendMessageText.text.toString().substringBefore(" ") == "/w") {
                         val nick = sendMessageText.text.toString().substringAfter("/w ").substringBefore(" ")
                         send("PRIVMSG {\"nick\":\"$nick\", \"data\":\"${sendMessageText.text.toString().substringAfter("/w $nick ")}\"}")
+                    } else {
+                        send("MSG {\"data\":\"${sendMessageText.text}\"}")
                     }
-                    send("MSG {\"data\":\"${sendMessageText.text}\"}")
                     sendMessageText.text.clear()
                     runOnUiThread(kotlinx.coroutines.Runnable {
                         sendMessageButton.isEnabled = false
