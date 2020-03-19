@@ -177,6 +177,10 @@ class MainActivity : AppCompatActivity() {
         ){
             sendMessageButton.setOnClickListener {
                 GlobalScope.launch {
+                    if (sendMessageText.text.toString().substringBefore(" ") == "/w") {
+                        val nick = sendMessageText.text.toString().substringAfter("/w ").substringBefore(" ")
+                        send("PRIVMSG {\"nick\":\"$nick\", \"data\":\"${sendMessageText.text.toString().substringAfter("/w $nick ")}\"}")
+                    }
                     send("MSG {\"data\":\"${sendMessageText.text}\"}")
                     sendMessageText.text.clear()
                     runOnUiThread(kotlinx.coroutines.Runnable {
