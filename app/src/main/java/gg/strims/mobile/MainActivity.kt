@@ -40,6 +40,8 @@ class MainActivity : AppCompatActivity() {
 
     private val adapter = GroupAdapter<GroupieViewHolder>()
 
+    var user: User? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -87,13 +89,22 @@ class MainActivity : AppCompatActivity() {
         return super.onCreateOptionsMenu(menu)
     }
 
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        if (user != null) {
+            menu!!.findItem(R.id.chatLogin).isVisible = false
+            menu.findItem(R.id.chatProfile).isVisible = true
+            menu.findItem(R.id.chatSignOut).isVisible = true
+        }
+        return super.onPrepareOptionsMenu(menu)
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.chatLogin -> {
                 startActivity(Intent(this, LoginActivity::class.java))
             }
         }
-        return true
+        return super.onOptionsItemSelected(item)
     }
 
     inner class ChatMessage(private val messageData: Message) : Item<GroupieViewHolder>() {
@@ -108,6 +119,14 @@ class MainActivity : AppCompatActivity() {
                 "${date.hours}:0${date.minutes}"
             } else {
                 "${date.hours}:${date.minutes}"
+            }
+
+            if (messageData.features.contains("bot")) {
+                viewHolder.itemView.username.setTextColor(Color.parseColor("#FF2196F3"))
+            }
+
+            if (messageData.data.contains(user!!.username)) {
+                viewHolder.itemView.setBackgroundColor(Color.parseColor("#001D36"))
             }
 
             val first = messageData.data.first()
@@ -149,6 +168,10 @@ class MainActivity : AppCompatActivity() {
 
         private var jwt: String? = null
 
+        private val client = HttpClient {
+            install(WebSockets)
+        }
+
         private fun retrieveCookie() {
             val cookies = CookieManager.getInstance().getCookie("https://strims.gg")
             if (cookies != null) {
@@ -161,21 +184,18 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        private val client = HttpClient {
-            install(WebSockets)
-        }
-
         @SuppressLint("SetTextI18n")
         private suspend fun retrieveProfile() {
             val text: String = client.get("https://strims.gg/api/profile") {
                 header("Cookie", "jwt=$jwt")
             }
             Log.d("TAG", "Profile: $text")
-            val username: String = text.substringAfter("\"username\":\"").substringBefore("\"")
             GlobalScope.launch {
-                runOnUiThread(Runnable {
-                    sendMessageText.setHint("Write something $username...")
-                })
+                runOnUiThread {
+                    user = Klaxon().parse(text)
+                    sendMessageText.hint = "Write something ${user!!.username} ..."
+                    invalidateOptionsMenu()
+                }
             }
         }
 
@@ -188,6 +208,7 @@ class MainActivity : AppCompatActivity() {
                 header("Cookie", "jwt=$jwt")
             }
         ){
+            retrieveProfile()
             sendMessageButton.setOnClickListener {
                 GlobalScope.launch {
                     if (sendMessageText.text.toString().substringBefore(" ") == "/w") {
@@ -197,12 +218,11 @@ class MainActivity : AppCompatActivity() {
                         send("MSG {\"data\":\"${sendMessageText.text}\"}")
                     }
                     sendMessageText.text.clear()
-                    runOnUiThread(kotlinx.coroutines.Runnable {
+                    runOnUiThread {
                         sendMessageButton.isEnabled = false
-                    })
+                    }
                 }
             }
-            retrieveProfile()
             while (true) {
                 when (val frame = incoming.receive()) {
                     is Frame.Text -> {
@@ -229,7 +249,7 @@ class MainActivity : AppCompatActivity() {
             val msgType = msg[0]
             if (msgType == "PRIVMSG") {
                 val message = Klaxon().parse<Message>(msg[1])!!
-                return Message(true, message.nick, message.data, message.timestamp)
+                return Message(true, message.nick, message.data, message.timestamp, message.features)
             } else if (msgType == "MSG") {
                 return Klaxon().parse<Message>(msg[1])
             }

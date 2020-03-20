@@ -6,4 +6,12 @@
         android:id="@+id/chatLogin"
         android:title="Login"
         app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/chatProfile"
+        android:title="Profile"
+        android:visible="false" />
+    <item
+        android:id="@+id/chatSignOut"
+        android:title="Sign Out"
+        android:visible="false" />
 </menu>

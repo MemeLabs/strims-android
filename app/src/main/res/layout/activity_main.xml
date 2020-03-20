@@ -27,7 +27,7 @@
         android:layout_marginBottom="4dp"
         android:background="@drawable/rounded_text_enter_message"
         android:ems="10"
-        android:hint="Write something $username..."
+        android:hint="Log in to send messages"
         android:inputType="textPersonName"
         android:paddingStart="4dp"
         android:textColor="#FFFFFF"

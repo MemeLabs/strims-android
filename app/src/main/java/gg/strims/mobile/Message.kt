@@ -1,8 +1,8 @@
 package gg.strims.mobile
 
-data class Message(val privMsg: Boolean, val nick: String, var data: String, var timestamp: Long) {
+data class Message(val privMsg: Boolean, val nick: String, var data: String, var timestamp: Long, var features: Array<String>) {
 
-    constructor(): this(false,"", "", -1)
+    constructor(): this(false,"", "", -1, arrayOf<String>())
 
 //    private var privMsg: Boolean? = null
 //
