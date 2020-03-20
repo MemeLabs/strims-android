@@ -33,6 +33,7 @@ import io.ktor.http.cio.websocket.readText
 import io.ktor.http.cio.websocket.send
 import kotlinx.android.synthetic.main.chat_message.view.message
 import kotlinx.android.synthetic.main.private_chat_message.view.*
+import java.net.URL
 import java.util.*
 
 @KtorExperimentalAPI
@@ -96,6 +97,10 @@ class ChatActivity : AppCompatActivity() {
             menu!!.findItem(R.id.chatLogin).isVisible = false
             menu.findItem(R.id.chatProfile).isVisible = true
             menu.findItem(R.id.chatSignOut).isVisible = true
+        } else {
+            menu!!.findItem(R.id.chatLogin).isVisible = true
+            menu.findItem(R.id.chatProfile).isVisible = false
+            menu.findItem(R.id.chatSignOut).isVisible = false
         }
         return super.onPrepareOptionsMenu(menu)
     }
@@ -130,13 +135,18 @@ class ChatActivity : AppCompatActivity() {
                 viewHolder.itemView.username.setTextColor(Color.parseColor("#FF2196F3"))
             }
 
-            if (messageData.data.contains(CurrentUser.user!!.username)) {
-                viewHolder.itemView.setBackgroundColor(Color.parseColor("#001D36"))
+            if (CurrentUser.user != null) {
+                if (messageData.data.contains(CurrentUser.user!!.username)) {
+                    viewHolder.itemView.setBackgroundColor(Color.parseColor("#001D36"))
+                } else {
+                    viewHolder.itemView.setBackgroundColor(Color.parseColor("#000000"))
+                }
             }
 
-            val first = messageData.data.first()
-            if (first.toString() == ">") {
+            if (messageData.data.first() == '>') {
                 viewHolder.itemView.message.setTextColor(Color.parseColor("#789922"))
+            } else {
+                viewHolder.itemView.message.setTextColor(Color.parseColor("#FFFFFF"))
             }
 
             viewHolder.itemView.timestampMessage.text = time
@@ -177,6 +187,15 @@ class ChatActivity : AppCompatActivity() {
             install(WebSockets)
         }
 
+        private fun retrieveHistory() {
+            val msg = Klaxon().parseArray<String>(URL("https://chat.strims.gg/api/chat/history").readText())
+            runOnUiThread {
+                msg?.forEach {
+                    adapter.add(ChatMessage(parseMessage(it)!!))
+                }
+            }
+        }
+
         private fun retrieveCookie() {
             val cookies = CookieManager.getInstance().getCookie("https://strims.gg")
             if (cookies != null) {
@@ -214,6 +233,7 @@ class ChatActivity : AppCompatActivity() {
             }
         ){
             retrieveProfile()
+            retrieveHistory()
             sendMessageButton.setOnClickListener {
                 GlobalScope.launch {
                     if (sendMessageText.text.toString().substringBefore(" ") == "/w") {
@@ -234,14 +254,14 @@ class ChatActivity : AppCompatActivity() {
                         println(frame.readText())
                         val msg: Message? = parseMessage(frame.readText())
                         if (msg != null) {
-                            runOnUiThread(kotlinx.coroutines.Runnable {
+                            runOnUiThread {
                                 if (msg.privMsg) {
                                     adapter.add(PrivateChatMessage(msg))
                                 } else {
                                     adapter.add(ChatMessage(msg))
                                 }
                                 recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
-                            })
+                            }
                         }
                     }
                     is Frame.Binary -> println(frame.readBytes())
