@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000"
+    tools:context=".ChatOptionsActivity">
+
+    <CheckBox
+        android:id="@+id/checkBoxTimestamp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:buttonTint="#FF5722"
+        android:text="Show timestamps on messages"
+        android:textColor="#BBBBBB"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <CheckBox
+        android:id="@+id/checkBoxGreentext"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:buttonTint="#FF5722"
+        android:text="Greentext"
+        android:textColor="#BBBBBB"
+        app:layout_constraintStart_toStartOf="@+id/checkBoxTimestamp"
+        app:layout_constraintTop_toBottomOf="@+id/checkBoxTimestamp" />
+
+    <CheckBox
+        android:id="@+id/checkBoxHarshIgnore"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:buttonTint="#FF5722"
+        android:text="Harsh Ignore"
+        android:textColor="#BBBBBB"
+        app:layout_constraintStart_toStartOf="@+id/checkBoxGreentext"
+        app:layout_constraintTop_toBottomOf="@+id/checkBoxGreentext" />
+
+    <CheckBox
+        android:id="@+id/checkBoxHideNsfw"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:buttonTint="#FF5722"
+        android:text="Hide NSFW/NSFL content"
+        android:textColor="#BBBBBB"
+        app:layout_constraintStart_toStartOf="@+id/checkBoxHarshIgnore"
+        app:layout_constraintTop_toBottomOf="@+id/checkBoxHarshIgnore" />
+
+    <CheckBox
+        android:id="@+id/checkBoxNotifications"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:buttonTint="#FF5722"
+        android:text="Push notifications"
+        android:textColor="#BBBBBB"
+        app:layout_constraintStart_toStartOf="@+id/checkBoxHideNsfw"
+        app:layout_constraintTop_toBottomOf="@+id/checkBoxHideNsfw" />
+
+    <CheckBox
+        android:id="@+id/checkBoxEmotes"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:buttonTint="#FF5722"
+        android:text="Emotes"
+        android:textColor="#BBBBBB"
+        app:layout_constraintStart_toStartOf="@+id/checkBoxNotifications"
+        app:layout_constraintTop_toBottomOf="@+id/checkBoxNotifications" />
+
+    <TextView
+        android:id="@+id/ignoredUsersTextViewOptions"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="Ignored Users:"
+        android:textColor="#BBBBBB"
+        app:layout_constraintStart_toStartOf="@+id/checkBoxEmotes"
+        app:layout_constraintTop_toBottomOf="@+id/checkBoxEmotes" />
+
+    <EditText
+        android:id="@+id/ignoredUsersEditTextOptions"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="24dp"
+        android:background="@drawable/rounded_text_profile"
+        android:ems="10"
+        android:inputType="textMultiLine|textPersonName"
+        android:textColor="#BBBBBB"
+        android:textColorHighlight="#59FF5722"
+        android:textColorLink="#FF5722"
+        android:verticalScrollbarPosition="right"
+        android:maxLines="3"
+        android:textCursorDrawable="@null"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/ignoredUsersTextViewOptions"
+        app:layout_constraintTop_toBottomOf="@+id/ignoredUsersTextViewOptions" />
+
+    <TextView
+        android:id="@+id/customHighlightsTextViewOptions"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Highlighted Users:"
+        android:textColor="#BBBBBB"
+        app:layout_constraintStart_toStartOf="@+id/ignoredUsersEditTextOptions"
+        app:layout_constraintTop_toBottomOf="@+id/ignoredUsersEditTextOptions" />
+
+    <EditText
+        android:id="@+id/customHighlightsEditTextOptions"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="24dp"
+        android:background="@drawable/rounded_text_profile"
+        android:ems="10"
+        android:inputType="textMultiLine|textPersonName"
+        android:maxLines="3"
+        android:textColor="#BBBBBB"
+        android:textColorHighlight="#59FF5722"
+        android:textColorLink="#FF5722"
+        android:verticalScrollbarPosition="right"
+        android:textCursorDrawable="@null"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/customHighlightsTextViewOptions"
+        app:layout_constraintTop_toBottomOf="@+id/customHighlightsTextViewOptions" />
+</androidx.constraintlayout.widget.ConstraintLayout>

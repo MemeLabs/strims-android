@@ -11,6 +11,10 @@
         android:title="Profile"
         android:visible="false" />
     <item
+        android:id="@+id/chatOptions"
+        android:title="Options"
+        android:visible="false" />
+    <item
         android:id="@+id/chatSignOut"
         android:title="Sign Out"
         android:visible="false" />

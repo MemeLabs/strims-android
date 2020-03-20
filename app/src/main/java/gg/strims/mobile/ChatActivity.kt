@@ -1,6 +1,7 @@
 package gg.strims.mobile
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
@@ -14,6 +15,7 @@ import android.view.MenuItem
 import android.view.View
 import android.webkit.CookieManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
@@ -23,6 +25,7 @@ import kotlinx.android.synthetic.main.chat_message.view.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import com.beust.klaxon.Klaxon
+import com.google.gson.Gson
 import io.ktor.client.HttpClient
 import io.ktor.client.features.websocket.WebSockets
 import io.ktor.client.features.websocket.wss
@@ -33,6 +36,9 @@ import io.ktor.http.cio.websocket.readText
 import io.ktor.http.cio.websocket.send
 import kotlinx.android.synthetic.main.chat_message.view.message
 import kotlinx.android.synthetic.main.private_chat_message.view.*
+import java.io.*
+import java.lang.Exception
+import java.lang.StringBuilder
 import java.net.URL
 import java.util.*
 
@@ -41,6 +47,10 @@ class ChatActivity : AppCompatActivity() {
 
     object CurrentUser {
         var user: User? = null
+    }
+
+    object CurrentOptions {
+        var options: Options? = Options()
     }
 
     private val adapter = GroupAdapter<GroupieViewHolder>()
@@ -97,10 +107,12 @@ class ChatActivity : AppCompatActivity() {
             menu!!.findItem(R.id.chatLogin).isVisible = false
             menu.findItem(R.id.chatProfile).isVisible = true
             menu.findItem(R.id.chatSignOut).isVisible = true
+            menu.findItem(R.id.chatOptions).isVisible = true
         } else {
             menu!!.findItem(R.id.chatLogin).isVisible = true
             menu.findItem(R.id.chatProfile).isVisible = false
             menu.findItem(R.id.chatSignOut).isVisible = false
+            menu.findItem(R.id.chatOptions).isVisible = false
         }
         return super.onPrepareOptionsMenu(menu)
     }
@@ -112,6 +124,9 @@ class ChatActivity : AppCompatActivity() {
             }
             R.id.chatProfile -> {
                 startActivity(Intent(this, ProfileActivity::class.java))
+            }
+            R.id.chatOptions -> {
+                startActivity(Intent(this, ChatOptionsActivity::class.java))
             }
         }
         return super.onOptionsItemSelected(item)
@@ -187,6 +202,44 @@ class ChatActivity : AppCompatActivity() {
             install(WebSockets)
         }
 
+        private fun retrieveOptions() {
+            val fileInputStream = openFileInput("filename")
+            val inputStreamReader = InputStreamReader(fileInputStream)
+            val bufferedReader = BufferedReader(inputStreamReader)
+            val stringBuilder = StringBuilder()
+            var text: String? = null
+            while ({text = bufferedReader.readLine(); text}() != null) {
+                stringBuilder.append(text)
+            }
+            CurrentOptions.options = Klaxon().parse(stringBuilder.toString())
+            Log.d("TAG", stringBuilder.toString())
+            Log.d("TAG", CurrentOptions.options!!.greentext.toString())
+        }
+
+        /** Test function **/
+        private fun changeGreentext() {
+            if (CurrentOptions.options!!.greentext) {
+                CurrentOptions.options!!.greentext = false
+                Log.d("TAG", "Changing greentext to false")
+            } else if (!CurrentOptions.options!!.greentext) {
+                CurrentOptions.options!!.greentext = true
+                Log.d("TAG", "Changing greentext to true")
+            }
+            saveOptions()
+        }
+
+        private fun saveOptions() {
+            val userOptions = CurrentOptions.options
+            val fileOutputStream: FileOutputStream
+            try {
+                fileOutputStream = openFileOutput("filename", Context.MODE_PRIVATE)
+                fileOutputStream.write(Gson().toJson(userOptions).toByteArray())
+            }
+            catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
         private fun retrieveHistory() {
             val msg = Klaxon().parseArray<String>(URL("https://chat.strims.gg/api/chat/history").readText())
             runOnUiThread {
@@ -234,6 +287,9 @@ class ChatActivity : AppCompatActivity() {
         ){
             retrieveProfile()
             retrieveHistory()
+            retrieveOptions()
+            changeGreentext()
+            retrieveOptions()
             sendMessageButton.setOnClickListener {
                 GlobalScope.launch {
                     if (sendMessageText.text.toString().substringBefore(" ") == "/w") {
