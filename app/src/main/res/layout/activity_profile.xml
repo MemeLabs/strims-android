@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000"
+    tools:context=".ProfileActivity">
+
+    <TextView
+        android:id="@+id/usernameTextViewProfile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Username"
+        android:textColor="#BBBBBB"
+        app:layout_constraintStart_toStartOf="@+id/usernameEditTextProfile"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <EditText
+        android:id="@+id/usernameEditTextProfile"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="24dp"
+        android:background="@drawable/rounded_text_profile"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/usernameTextViewProfile" />
+
+    <TextView
+        android:id="@+id/streamPathTextViewProfile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Stream Path"
+        android:textColor="#BBBBBB"
+        app:layout_constraintStart_toStartOf="@+id/streamPathEditTextProfile"
+        app:layout_constraintTop_toBottomOf="@+id/usernameEditTextProfile" />
+
+    <EditText
+        android:id="@+id/streamPathEditTextProfile"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="24dp"
+        android:background="@drawable/rounded_text_profile"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/streamPathTextViewProfile" />
+
+    <TextView
+        android:id="@+id/streamingServiceTextViewProfile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Streaming Service"
+        android:textColor="#BBBBBB"
+        app:layout_constraintStart_toStartOf="@+id/streamingServiceEditTextProfile"
+        app:layout_constraintTop_toBottomOf="@+id/streamPathEditTextProfile" />
+
+    <EditText
+        android:id="@+id/streamingServiceEditTextProfile"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="24dp"
+        android:background="@drawable/rounded_text_profile"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/streamingServiceTextViewProfile" />
+
+    <TextView
+        android:id="@+id/channelTextViewProfile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Channel/Video ID"
+        android:textColor="#BBBBBB"
+        app:layout_constraintStart_toStartOf="@+id/channelEditTextProfile"
+        app:layout_constraintTop_toBottomOf="@+id/streamingServiceEditTextProfile" />
+
+    <EditText
+        android:id="@+id/channelEditTextProfile"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="24dp"
+        android:background="@drawable/rounded_text_profile"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/channelTextViewProfile" />
+</androidx.constraintlayout.widget.ConstraintLayout>

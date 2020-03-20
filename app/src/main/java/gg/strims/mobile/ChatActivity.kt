@@ -18,7 +18,7 @@ import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
 import io.ktor.util.KtorExperimentalAPI
-import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_chat.*
 import kotlinx.android.synthetic.main.chat_message.view.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -36,15 +36,17 @@ import kotlinx.android.synthetic.main.private_chat_message.view.*
 import java.util.*
 
 @KtorExperimentalAPI
-class MainActivity : AppCompatActivity() {
+class ChatActivity : AppCompatActivity() {
+
+    object CurrentUser {
+        var user: User? = null
+    }
 
     private val adapter = GroupAdapter<GroupieViewHolder>()
 
-    var user: User? = null
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_chat)
 
         GlobalScope.launch {
             WSClient().onConnect()
@@ -90,7 +92,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
-        if (user != null) {
+        if (CurrentUser.user != null) {
             menu!!.findItem(R.id.chatLogin).isVisible = false
             menu.findItem(R.id.chatProfile).isVisible = true
             menu.findItem(R.id.chatSignOut).isVisible = true
@@ -102,6 +104,9 @@ class MainActivity : AppCompatActivity() {
         when (item.itemId) {
             R.id.chatLogin -> {
                 startActivity(Intent(this, LoginActivity::class.java))
+            }
+            R.id.chatProfile -> {
+                startActivity(Intent(this, ProfileActivity::class.java))
             }
         }
         return super.onOptionsItemSelected(item)
@@ -125,7 +130,7 @@ class MainActivity : AppCompatActivity() {
                 viewHolder.itemView.username.setTextColor(Color.parseColor("#FF2196F3"))
             }
 
-            if (messageData.data.contains(user!!.username)) {
+            if (messageData.data.contains(CurrentUser.user!!.username)) {
                 viewHolder.itemView.setBackgroundColor(Color.parseColor("#001D36"))
             }
 
@@ -192,8 +197,8 @@ class MainActivity : AppCompatActivity() {
             Log.d("TAG", "Profile: $text")
             GlobalScope.launch {
                 runOnUiThread {
-                    user = Klaxon().parse(text)
-                    sendMessageText.hint = "Write something ${user!!.username} ..."
+                    CurrentUser.user = Klaxon().parse(text)
+                    sendMessageText.hint = "Write something ${CurrentUser.user!!.username} ..."
                     invalidateOptionsMenu()
                 }
             }

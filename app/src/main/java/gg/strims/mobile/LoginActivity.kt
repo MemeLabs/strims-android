@@ -25,7 +25,7 @@ class LoginActivity : AppCompatActivity() {
         webView.webViewClient = object: WebViewClient() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 if (url == "https://strims.gg/" || url == "https://chat.strims.gg/") {
-                    startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+                    startActivity(Intent(this@LoginActivity, ChatActivity::class.java))
                     finish()
                 }
             }
