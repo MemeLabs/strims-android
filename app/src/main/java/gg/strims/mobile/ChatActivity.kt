@@ -15,7 +15,6 @@ import android.view.MenuItem
 import android.view.View
 import android.webkit.CookieManager
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
@@ -45,16 +44,7 @@ import java.util.*
 @KtorExperimentalAPI
 class ChatActivity : AppCompatActivity() {
 
-    object CurrentUser {
-        var user: User? = null
-    }
-
-    object CurrentOptions {
-        var options: Options? = Options()
-    }
-
     private val adapter = GroupAdapter<GroupieViewHolder>()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chat)
@@ -139,6 +129,9 @@ class ChatActivity : AppCompatActivity() {
 
         @SuppressLint("SetTextI18n", "SimpleDateFormat")
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
+            if (CurrentUser.options!!.ignoreList.contains(messageData.nick)) {
+                return
+            }
             val date = Date(messageData.timestamp)
             val time = if (date.minutes < 10) {
                 "${date.hours}:0${date.minutes}"
@@ -158,10 +151,12 @@ class ChatActivity : AppCompatActivity() {
                 }
             }
 
-            if (messageData.data.first() == '>') {
-                viewHolder.itemView.message.setTextColor(Color.parseColor("#789922"))
-            } else {
-                viewHolder.itemView.message.setTextColor(Color.parseColor("#FFFFFF"))
+            if (CurrentUser.options!!.greentext) {
+                if (messageData.data.first() == '>') {
+                    viewHolder.itemView.message.setTextColor(Color.parseColor("#789922"))
+                } else {
+                    viewHolder.itemView.message.setTextColor(Color.parseColor("#FFFFFF"))
+                }
             }
 
             viewHolder.itemView.timestampMessage.text = time
@@ -177,6 +172,9 @@ class ChatActivity : AppCompatActivity() {
 
         @SuppressLint("SetTextI18n")
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
+            if (CurrentUser.options!!.ignoreList.contains(messageData.nick)) {
+                return
+            }
             val date = Date(messageData.timestamp)
             val time = if (date.minutes < 10) {
                 "${date.hours}:0${date.minutes}"
@@ -194,6 +192,36 @@ class ChatActivity : AppCompatActivity() {
         }
     }
 
+    fun retrieveOptions() {
+        val file = baseContext.getFileStreamPath("filename.txt")
+        if (file.exists()) {
+            val fileInputStream = openFileInput("filename.txt")
+            val inputStreamReader = InputStreamReader(fileInputStream)
+            val bufferedReader = BufferedReader(inputStreamReader)
+            val stringBuilder = StringBuilder()
+            var text: String? = null
+            while ({ text = bufferedReader.readLine(); text }() != null) {
+                stringBuilder.append(text)
+            }
+            CurrentUser.options = Klaxon().parse(stringBuilder.toString())
+        } else {
+            CurrentUser.options = Options()
+        }
+        Log.d("TAG", "${CurrentUser.options!!.greentext}, ${CurrentUser.options!!.emotes}")
+    }
+
+    private fun saveOptions() {
+        val userOptions = CurrentUser.options
+        val fileOutputStream: FileOutputStream
+        try {
+            fileOutputStream = openFileOutput("filename.txt", Context.MODE_PRIVATE)
+            Log.d("TAG", "Saving: ${Gson().toJson(userOptions)}")
+            fileOutputStream.write(Gson().toJson(userOptions).toByteArray())
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     inner class WSClient {
 
         private var jwt: String? = null
@@ -202,48 +230,10 @@ class ChatActivity : AppCompatActivity() {
             install(WebSockets)
         }
 
-        private fun retrieveOptions() {
-            val fileInputStream = openFileInput("filename")
-            val inputStreamReader = InputStreamReader(fileInputStream)
-            val bufferedReader = BufferedReader(inputStreamReader)
-            val stringBuilder = StringBuilder()
-            var text: String? = null
-            while ({text = bufferedReader.readLine(); text}() != null) {
-                stringBuilder.append(text)
-            }
-            CurrentOptions.options = Klaxon().parse(stringBuilder.toString())
-            Log.d("TAG", stringBuilder.toString())
-            Log.d("TAG", CurrentOptions.options!!.greentext.toString())
-        }
-
-        /** Test function **/
-        private fun changeGreentext() {
-            if (CurrentOptions.options!!.greentext) {
-                CurrentOptions.options!!.greentext = false
-                Log.d("TAG", "Changing greentext to false")
-            } else if (!CurrentOptions.options!!.greentext) {
-                CurrentOptions.options!!.greentext = true
-                Log.d("TAG", "Changing greentext to true")
-            }
-            saveOptions()
-        }
-
-        private fun saveOptions() {
-            val userOptions = CurrentOptions.options
-            val fileOutputStream: FileOutputStream
-            try {
-                fileOutputStream = openFileOutput("filename", Context.MODE_PRIVATE)
-                fileOutputStream.write(Gson().toJson(userOptions).toByteArray())
-            }
-            catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-
         private fun retrieveHistory() {
-            val msg = Klaxon().parseArray<String>(URL("https://chat.strims.gg/api/chat/history").readText())
+            val messageHistory = Klaxon().parseArray<String>(URL("https://chat.strims.gg/api/chat/history").readText())
             runOnUiThread {
-                msg?.forEach {
+                messageHistory?.forEach {
                     adapter.add(ChatMessage(parseMessage(it)!!))
                 }
             }
@@ -288,13 +278,54 @@ class ChatActivity : AppCompatActivity() {
             retrieveProfile()
             retrieveHistory()
             retrieveOptions()
-            changeGreentext()
-            retrieveOptions()
             sendMessageButton.setOnClickListener {
                 GlobalScope.launch {
-                    if (sendMessageText.text.toString().substringBefore(" ") == "/w") {
-                        val nick = sendMessageText.text.toString().substringAfter("/w ").substringBefore(" ")
-                        send("PRIVMSG {\"nick\":\"$nick\", \"data\":\"${sendMessageText.text.toString().substringAfter("/w $nick ")}\"}")
+                    val messageText = sendMessageText.text.toString()
+                    val first = messageText.first()
+                    if (first == '/') {
+                        if (messageText.substringAfter(first).substringBefore(' ') == "w") {
+                            val nick = messageText.substringAfter("/w ").substringBefore(' ')
+                            send(
+                                "PRIVMSG {\"nick\":\"$nick\", \"data\":\"${sendMessageText.text.toString().substringAfter("/w $nick ")}\"}"
+                            )
+                        } else if (messageText.substringAfter(first).substringBefore(' ') == "ignore") {
+                            val nickIgnore = messageText.substringAfter("/ignore ").substringBefore(' ')
+                            CurrentUser.options!!.ignoreList.add(nickIgnore)
+                            saveOptions()
+                        } else if (messageText.substringAfter(first).substringBefore(' ') == "unignore") {
+                            val nickUnignore = messageText.substringAfter("/unignore ").substringBefore(' ')
+                            if (CurrentUser.options!!.ignoreList.contains(nickUnignore)) {
+                                CurrentUser.options!!.ignoreList.remove(nickUnignore)
+                                saveOptions()
+                                runOnUiThread {
+                                    adapter.add(
+                                        ChatMessage(
+                                            Message(
+                                                false,
+                                                "Info",
+                                                "Unignored: $nickUnignore",
+                                                System.currentTimeMillis(),
+                                                arrayOf()
+                                            )
+                                        )
+                                    )
+                                }
+                            } else {
+                                runOnUiThread {
+                                    adapter.add(
+                                        ChatMessage(
+                                            Message(
+                                                false,
+                                                "Info",
+                                                "User not currently ignored",
+                                                System.currentTimeMillis(),
+                                                arrayOf()
+                                            )
+                                        )
+                                    )
+                                }
+                            }
+                        }
                     } else {
                         send("MSG {\"data\":\"${sendMessageText.text}\"}")
                     }

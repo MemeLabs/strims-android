@@ -14,8 +14,8 @@ class ProfileActivity : AppCompatActivity() {
 
         supportActionBar?.title = "Profile"
 
-        usernameEditTextProfile.setText(ChatActivity.CurrentUser.user!!.username)
-        streamPathEditTextProfile.setText(ChatActivity.CurrentUser.user!!.stream_path)
-        channelEditTextProfile.setText(ChatActivity.CurrentUser.user!!.channel)
+        usernameEditTextProfile.setText(CurrentUser.user!!.username)
+        streamPathEditTextProfile.setText(CurrentUser.user!!.stream_path)
+        channelEditTextProfile.setText(CurrentUser.user!!.channel)
     }
 }
