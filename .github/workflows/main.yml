@@ -7,7 +7,7 @@ on:
   push:
     branches:
       - 'master'
-      - 'signed-release'
+      - 'signed-release-cant-manually-run-workflow-jimface'
 
 jobs:
   test:
