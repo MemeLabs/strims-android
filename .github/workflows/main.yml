@@ -23,6 +23,7 @@ jobs:
         run: bash ./gradlew test --stacktrace
 
   apk:
+    needs: [test]
     name: Generate APK
     runs-on: ubuntu-18.04
 
