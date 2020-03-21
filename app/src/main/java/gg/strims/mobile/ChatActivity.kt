@@ -1,6 +1,9 @@
 package gg.strims.mobile
 
 import android.annotation.SuppressLint
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
@@ -14,6 +17,10 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.webkit.CookieManager
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.app.RemoteInput
+import androidx.core.app.TaskStackBuilder
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
@@ -44,7 +51,15 @@ import java.util.*
 @KtorExperimentalAPI
 class ChatActivity : AppCompatActivity() {
 
+    companion object {
+        var channelId = "chat_notifications"
+        var NOTIFICATION_ID = 1
+        var NOT_USER_KEY = "NOT_USER_KEY"
+        var NOTIFICATION_REPLY_KEY = "Text"
+    }
+
     private val adapter = GroupAdapter<GroupieViewHolder>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chat)
@@ -129,25 +144,23 @@ class ChatActivity : AppCompatActivity() {
 
         @SuppressLint("SetTextI18n", "SimpleDateFormat")
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
-            if (CurrentUser.options!!.ignoreList.contains(messageData.nick)) {
-                return
-            }
-            val date = Date(messageData.timestamp)
-            val time = if (date.minutes < 10) {
-                "${date.hours}:0${date.minutes}"
-            } else {
-                "${date.hours}:${date.minutes}"
+            CurrentUser.options!!.ignoreList.forEach {
+                if (it == messageData.nick) {
+                    return
+
+                }
+
+                if (CurrentUser.options!!.harshIgnore) {
+                    if (messageData.data.contains(" $it ")) {
+                        return
+                    }
+                }
             }
 
-            if (messageData.features.contains("bot")) {
-                viewHolder.itemView.username.setTextColor(Color.parseColor("#FF2196F3"))
-            }
-
-            if (CurrentUser.user != null) {
-                if (messageData.data.contains(CurrentUser.user!!.username)) {
-                    viewHolder.itemView.setBackgroundColor(Color.parseColor("#001D36"))
-                } else {
-                    viewHolder.itemView.setBackgroundColor(Color.parseColor("#000000"))
+            if (CurrentUser.options!!.hideNsfw) {
+                if ((messageData.data.contains("nsfw") || messageData.data.contains("nsfl")
+                            && messageData.data.contains("a link"))) {
+                    return
                 }
             }
 
@@ -159,7 +172,38 @@ class ChatActivity : AppCompatActivity() {
                 }
             }
 
-            viewHolder.itemView.timestampMessage.text = time
+            if (CurrentUser.options!!.showTime) {
+                val date = Date(messageData.timestamp)
+                val time = if (date.minutes < 10) {
+                    "${date.hours}:0${date.minutes}"
+                } else {
+                    "${date.hours}:${date.minutes}"
+                }
+                viewHolder.itemView.timestampMessage.text = time
+            }
+
+            if (CurrentUser.options!!.customHighlights.isNotEmpty()) {
+                CurrentUser.options!!.customHighlights.forEach {
+                    if (messageData.data.contains(it)) {
+                        viewHolder.itemView.setBackgroundColor(Color.parseColor("#001D36"))
+                    } else {
+                        viewHolder.itemView.setBackgroundColor(Color.parseColor("#000000"))
+                    }
+                }
+            }
+
+            if (CurrentUser.user != null) {
+                if (messageData.data.contains(CurrentUser.user!!.username)) {
+                    viewHolder.itemView.setBackgroundColor(Color.parseColor("#001D36"))
+                } else {
+                    viewHolder.itemView.setBackgroundColor(Color.parseColor("#000000"))
+                }
+            }
+
+            if (messageData.features.contains("bot")) {
+                viewHolder.itemView.username.setTextColor(Color.parseColor("#FF2196F3"))
+            }
+
             viewHolder.itemView.username.text = "${messageData.nick}:"
             viewHolder.itemView.message.text = messageData.data
         }
@@ -175,6 +219,7 @@ class ChatActivity : AppCompatActivity() {
             if (CurrentUser.options!!.ignoreList.contains(messageData.nick)) {
                 return
             }
+
             val date = Date(messageData.timestamp)
             val time = if (date.minutes < 10) {
                 "${date.hours}:0${date.minutes}"
@@ -220,6 +265,37 @@ class ChatActivity : AppCompatActivity() {
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    private fun displayNotification(message: Message) {
+        val pendingIntent = TaskStackBuilder.create(this)
+            .addNextIntent(Intent(this, ChatActivity::class.java))
+            .getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
+
+        val notificationBuilder = NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setContentTitle(message.nick)
+            .setContentText(message.data)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+
+        val remoteInput = RemoteInput.Builder(NOTIFICATION_REPLY_KEY).setLabel("Reply").build()
+
+        val replyIntent = Intent(this, ChatActivity::class.java)
+            .putExtra(NOT_USER_KEY, message.nick)
+
+        val replyPendingIntent = PendingIntent.getActivity(this, 0, replyIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+
+        val action = NotificationCompat.Action.Builder(R.drawable.ic_launcher_foreground, "Reply", replyPendingIntent)
+            .addRemoteInput(remoteInput).build()
+
+        notificationBuilder.addAction(action)
+
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val channel = NotificationChannel(channelId, "Chat Messages", NotificationManager.IMPORTANCE_DEFAULT)
+        notificationManager.createNotificationChannel(channel)
+        NotificationManagerCompat.from(this).notify(NOTIFICATION_ID, notificationBuilder.build())
     }
 
     inner class WSClient {
@@ -271,13 +347,17 @@ class ChatActivity : AppCompatActivity() {
             path = "/ws",
             request = {
                 retrieveCookie()
-                Log.d("TAG", "Requesting with JWT: $jwt")
-                header("Cookie", "jwt=$jwt")
+                if (jwt != null) {
+                    Log.d("TAG", "Requesting with JWT: $jwt")
+                    header("Cookie", "jwt=$jwt")
+                }
             }
         ){
-            retrieveProfile()
-            retrieveHistory()
+            if (jwt != null) {
+                retrieveProfile()
+            }
             retrieveOptions()
+            retrieveHistory()
             sendMessageButton.setOnClickListener {
                 GlobalScope.launch {
                     val messageText = sendMessageText.text.toString()
@@ -335,6 +415,20 @@ class ChatActivity : AppCompatActivity() {
                     }
                 }
             }
+            if (intent.getStringExtra(NOT_USER_KEY) != null) {
+                val remoteReply = RemoteInput.getResultsFromIntent(intent)
+
+                if (remoteReply != null) {
+                    val message = remoteReply.getCharSequence(NOTIFICATION_REPLY_KEY) as String
+                    val nick = intent.getStringExtra(NOT_USER_KEY)
+                    send(
+                        "PRIVMSG {\"nick\":\"$nick\", \"data\":\"$message\"}"
+                    )
+
+                    val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                    nm.cancel(NOTIFICATION_ID)
+                }
+            }
             while (true) {
                 when (val frame = incoming.receive()) {
                     is Frame.Text -> {
@@ -344,6 +438,9 @@ class ChatActivity : AppCompatActivity() {
                             runOnUiThread {
                                 if (msg.privMsg) {
                                     adapter.add(PrivateChatMessage(msg))
+                                    if (!CurrentUser.options!!.ignoreList.contains(msg.nick) && CurrentUser.options!!.notifications) {
+                                        displayNotification(msg)
+                                    }
                                 } else {
                                     adapter.add(ChatMessage(msg))
                                 }
