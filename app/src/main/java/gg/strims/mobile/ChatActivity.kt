@@ -147,11 +147,10 @@ class ChatActivity : AppCompatActivity() {
             CurrentUser.options!!.ignoreList.forEach {
                 if (it == messageData.nick) {
                     return
-
                 }
 
                 if (CurrentUser.options!!.harshIgnore) {
-                    if (messageData.data.contains(" $it ")) {
+                    if (messageData.data.contains(it)) {
                         return
                     }
                 }
@@ -179,6 +178,7 @@ class ChatActivity : AppCompatActivity() {
                 } else {
                     "${date.hours}:${date.minutes}"
                 }
+                viewHolder.itemView.timestampMessage.visibility = View.VISIBLE
                 viewHolder.itemView.timestampMessage.text = time
             }
 
@@ -202,10 +202,48 @@ class ChatActivity : AppCompatActivity() {
 
             if (messageData.features.contains("bot")) {
                 viewHolder.itemView.username.setTextColor(Color.parseColor("#FF2196F3"))
+            } else {
+                viewHolder.itemView.username.setTextColor(Color.parseColor("#FFFFFF"))
+            }
+
+            if (CurrentUser.tempHideNick == messageData.nick) {
+                viewHolder.itemView.username.setTextColor(Color.parseColor("#FF2196F3"))
             }
 
             viewHolder.itemView.username.text = "${messageData.nick}:"
             viewHolder.itemView.message.text = messageData.data
+
+            viewHolder.itemView.username.setOnClickListener {
+                if (viewHolder.itemView.username.currentTextColor == Color.parseColor("#FF2196F3")) {
+                    CurrentUser.tempHideNick = null
+                    for (i in 0 until adapter.itemCount) {
+                        if (adapter.getItem(i).layout == R.layout.chat_message) {
+                            val item = adapter.getItem(i) as ChatMessage
+                            if (item.messageData.nick == messageData.nick) {
+                                val adapterItem =
+                                    recyclerViewChat.findViewHolderForAdapterPosition(i)
+
+                                adapterItem?.itemView?.username?.setTextColor(Color.parseColor("#FFFFFF"))
+                            }
+                        }
+                    }
+                } else {
+                    for (i in 0 until adapter.itemCount) {
+                        if (adapter.getItem(i).layout == R.layout.chat_message) {
+                            val item = adapter.getItem(i) as ChatMessage
+                            if (item.messageData.nick == messageData.nick) {
+                                val adapterItem =
+                                    recyclerViewChat.findViewHolderForAdapterPosition(i)
+
+                                adapterItem?.itemView?.username?.setTextColor(Color.parseColor("#FF2196F3"))
+                            }
+                        }
+                    }
+                    if (CurrentUser.tempHideNick == null) {
+                        CurrentUser.tempHideNick = messageData.nick
+                    }
+                }
+            }
         }
     }
 
@@ -444,7 +482,11 @@ class ChatActivity : AppCompatActivity() {
                                 } else {
                                     adapter.add(ChatMessage(msg))
                                 }
-                                recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
+                                val layoutTest = recyclerViewChat.layoutManager as LinearLayoutManager
+                                val lastItem = layoutTest.findLastVisibleItemPosition()
+                                if (lastItem == recyclerViewChat.adapter!!.itemCount - 2) {
+                                    recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
+                                }
                             }
                         }
                     }
