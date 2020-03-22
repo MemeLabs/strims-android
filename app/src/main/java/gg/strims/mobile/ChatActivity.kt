@@ -212,8 +212,6 @@ class ChatActivity : AppCompatActivity() {
                 CurrentUser.options!!.customHighlights.forEach {
                     if (messageData.nick == it) {
                         viewHolder.itemView.setBackgroundColor(Color.parseColor("#001D36"))
-                    } else {
-                        viewHolder.itemView.setBackgroundColor(Color.parseColor("#000000"))
                     }
                 }
             }
@@ -471,15 +469,18 @@ class ChatActivity : AppCompatActivity() {
                             if (CurrentUser.options!!.customHighlights.contains(nickHighlight)) {
                                 runOnUiThread {
                                     adapter.add(ChatMessage(Message(false, "Info", "User already highlighted", System.currentTimeMillis(), arrayOf())))
+                                    recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
                                 }
                             } else {
                                 CurrentUser.options!!.customHighlights.add(nickHighlight)
                                 saveOptions()
                                 adapter.add(ChatMessage(Message(false, "Info", "Highlighting user: $nickHighlight", System.currentTimeMillis(), arrayOf())))
+                                recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
                             }
                         } else {
                             runOnUiThread {
                                 adapter.add(ChatMessage(Message(false, "Info", "Invalid command", System.currentTimeMillis(), arrayOf())))
+                                recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
                             }
                         }
                     } else {
@@ -522,7 +523,7 @@ class ChatActivity : AppCompatActivity() {
                                 }
                                 val layoutTest = recyclerViewChat.layoutManager as LinearLayoutManager
                                 val lastItem = layoutTest.findLastVisibleItemPosition()
-                                if (lastItem >= recyclerViewChat.adapter!!.itemCount - 2) {
+                                if (lastItem >= recyclerViewChat.adapter!!.itemCount - 3) {
                                     recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
                                 }
                             }
