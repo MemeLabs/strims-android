@@ -7,7 +7,7 @@ on:
 jobs:
   main:
     if: github.event.pull_request.merged == true
-    name: Test Build Publish
+    name: Test & Build Release
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v1

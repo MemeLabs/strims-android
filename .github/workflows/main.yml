@@ -10,7 +10,7 @@ on:
 
 jobs:
   main:
-    name: Test Build Publish
+    name: Test & Build Debug
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v1
