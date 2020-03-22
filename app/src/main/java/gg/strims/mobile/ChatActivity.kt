@@ -100,6 +100,22 @@ class ChatActivity : AppCompatActivity() {
         val layoutManager = LinearLayoutManager(this)
         layoutManager.stackFromEnd = true
         recyclerViewChat.layoutManager = layoutManager
+
+        recyclerViewChat.setOnScrollChangeListener { v, scrollX, scrollY, oldScrollX, oldScrollY ->
+            val layoutTest = recyclerViewChat.layoutManager as LinearLayoutManager
+            val lastItem = layoutTest.findLastVisibleItemPosition()
+            if (lastItem < recyclerViewChat.adapter!!.itemCount - 1) {
+                goToBottom.visibility = View.VISIBLE
+                goToBottom.isEnabled = true
+            } else {
+                goToBottom.visibility = View.GONE
+                goToBottom.isEnabled = false
+            }
+        }
+
+        goToBottom.setOnClickListener {
+            recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -182,9 +198,19 @@ class ChatActivity : AppCompatActivity() {
                 viewHolder.itemView.timestampMessage.text = time
             }
 
+            if (CurrentUser.user != null) {
+                if (messageData.data.contains(CurrentUser.user!!.username)) {
+                    viewHolder.itemView.setBackgroundColor(Color.parseColor("#001D36"))
+                } else if (CurrentUser.user!!.username == messageData.nick) {
+                    viewHolder.itemView.setBackgroundColor(Color.parseColor("#151515"))
+                } else if (CurrentUser.user!!.username != messageData.nick && !messageData.data.contains(CurrentUser.user!!.username)) {
+                    viewHolder.itemView.setBackgroundColor(Color.parseColor("#000000"))
+                }
+            }
+
             if (CurrentUser.options!!.customHighlights.isNotEmpty()) {
                 CurrentUser.options!!.customHighlights.forEach {
-                    if (messageData.data.contains(it)) {
+                    if (messageData.nick == it) {
                         viewHolder.itemView.setBackgroundColor(Color.parseColor("#001D36"))
                     } else {
                         viewHolder.itemView.setBackgroundColor(Color.parseColor("#000000"))
@@ -192,55 +218,50 @@ class ChatActivity : AppCompatActivity() {
                 }
             }
 
-            if (CurrentUser.user != null) {
-                if (messageData.data.contains(CurrentUser.user!!.username)) {
-                    viewHolder.itemView.setBackgroundColor(Color.parseColor("#001D36"))
-                } else {
-                    viewHolder.itemView.setBackgroundColor(Color.parseColor("#000000"))
-                }
-            }
-
             if (messageData.features.contains("bot")) {
                 viewHolder.itemView.username.setTextColor(Color.parseColor("#FF2196F3"))
+                viewHolder.itemView.botFlair.visibility = View.VISIBLE
             } else {
                 viewHolder.itemView.username.setTextColor(Color.parseColor("#FFFFFF"))
+                viewHolder.itemView.botFlair.visibility = View.GONE
             }
 
-            if (CurrentUser.tempHideNick == messageData.nick) {
-                viewHolder.itemView.username.setTextColor(Color.parseColor("#FF2196F3"))
+            if (CurrentUser.tempHighlightNick != null && CurrentUser.tempHighlightNick!!.contains(messageData.nick)) {
+                viewHolder.itemView.username.setTextColor(Color.parseColor("#FFF44336"))
             }
 
             viewHolder.itemView.username.text = "${messageData.nick}:"
             viewHolder.itemView.message.text = messageData.data
 
             viewHolder.itemView.username.setOnClickListener {
-                if (viewHolder.itemView.username.currentTextColor == Color.parseColor("#FF2196F3")) {
-                    CurrentUser.tempHideNick = null
-                    for (i in 0 until adapter.itemCount) {
-                        if (adapter.getItem(i).layout == R.layout.chat_message) {
-                            val item = adapter.getItem(i) as ChatMessage
-                            if (item.messageData.nick == messageData.nick) {
-                                val adapterItem =
-                                    recyclerViewChat.findViewHolderForAdapterPosition(i)
+                for (i in 0 until adapter.itemCount) {
+                    if (adapter.getItem(i).layout == R.layout.chat_message) {
+                        val item = adapter.getItem(i) as ChatMessage
+                        if (item.messageData.nick == messageData.nick) {
+                            val adapterItem =
+                                recyclerViewChat.findViewHolderForAdapterPosition(i)
 
-                                adapterItem?.itemView?.username?.setTextColor(Color.parseColor("#FFFFFF"))
-                            }
+                            adapterItem?.itemView?.username?.setTextColor(Color.parseColor("#FFF44336"))
                         }
                     }
-                } else {
-                    for (i in 0 until adapter.itemCount) {
-                        if (adapter.getItem(i).layout == R.layout.chat_message) {
-                            val item = adapter.getItem(i) as ChatMessage
-                            if (item.messageData.nick == messageData.nick) {
-                                val adapterItem =
-                                    recyclerViewChat.findViewHolderForAdapterPosition(i)
+                }
+                if (CurrentUser.tempHighlightNick == null) {
+                    CurrentUser.tempHighlightNick = mutableListOf()
+                }
+                CurrentUser.tempHighlightNick!!.add(messageData.nick)
+            }
 
-                                adapterItem?.itemView?.username?.setTextColor(Color.parseColor("#FF2196F3"))
-                            }
+            viewHolder.itemView.setOnClickListener {
+                for (i in 0 until adapter.itemCount) {
+                    if (adapter.getItem(i).layout == R.layout.chat_message) {
+                        val item = adapter.getItem(i) as ChatMessage
+                        if (item.messageData.features.isEmpty()) {
+                            val adapterItem =
+                                recyclerViewChat.findViewHolderForAdapterPosition(i)
+
+                            adapterItem?.itemView?.username?.setTextColor(Color.parseColor("#FFFFFF"))
                         }
-                    }
-                    if (CurrentUser.tempHideNick == null) {
-                        CurrentUser.tempHideNick = messageData.nick
+                        CurrentUser.tempHighlightNick = null
                     }
                 }
             }
@@ -346,6 +367,7 @@ class ChatActivity : AppCompatActivity() {
 
         private fun retrieveHistory() {
             val messageHistory = Klaxon().parseArray<String>(URL("https://chat.strims.gg/api/chat/history").readText())
+            Log.d("TAG", messageHistory.toString())
             runOnUiThread {
                 messageHistory?.forEach {
                     adapter.add(ChatMessage(parseMessage(it)!!))
@@ -444,6 +466,22 @@ class ChatActivity : AppCompatActivity() {
                                 }
                             }
                         }
+                        else if (messageText.substringAfter(first).substringBefore(' ') == "highlight") {
+                            val nickHighlight = messageText.substringAfter("/highlight ").substringBefore(' ')
+                            if (CurrentUser.options!!.customHighlights.contains(nickHighlight)) {
+                                runOnUiThread {
+                                    adapter.add(ChatMessage(Message(false, "Info", "User already highlighted", System.currentTimeMillis(), arrayOf())))
+                                }
+                            } else {
+                                CurrentUser.options!!.customHighlights.add(nickHighlight)
+                                saveOptions()
+                                adapter.add(ChatMessage(Message(false, "Info", "Highlighting user: $nickHighlight", System.currentTimeMillis(), arrayOf())))
+                            }
+                        } else {
+                            runOnUiThread {
+                                adapter.add(ChatMessage(Message(false, "Info", "Invalid command", System.currentTimeMillis(), arrayOf())))
+                            }
+                        }
                     } else {
                         send("MSG {\"data\":\"${sendMessageText.text}\"}")
                     }
@@ -484,7 +522,7 @@ class ChatActivity : AppCompatActivity() {
                                 }
                                 val layoutTest = recyclerViewChat.layoutManager as LinearLayoutManager
                                 val lastItem = layoutTest.findLastVisibleItemPosition()
-                                if (lastItem == recyclerViewChat.adapter!!.itemCount - 2) {
+                                if (lastItem >= recyclerViewChat.adapter!!.itemCount - 2) {
                                     recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
                                 }
                             }
@@ -497,12 +535,44 @@ class ChatActivity : AppCompatActivity() {
 
         private fun parseMessage(input: String): Message? {
             val msg = input.split(" ", limit = 2)
-            val msgType = msg[0]
-            if (msgType == "PRIVMSG") {
-                val message = Klaxon().parse<Message>(msg[1])!!
-                return Message(true, message.nick, message.data, message.timestamp, message.features)
-            } else if (msgType == "MSG") {
-                return Klaxon().parse<Message>(msg[1])
+            when (msg[0]) {
+                "NAMES" -> {
+                    Log.d("TAG", "Names: ${msg[1]}")
+                    val users: List<ChatUser>? = Klaxon().parseArray(msg[1].substringAfter("\"users\":").substringBefore(",\"connectioncount\":"))
+                    CurrentUser.users = users?.toMutableList()
+                    CurrentUser.connectionCount = msg[1].substringAfter("\"connectioncount\":").substringBefore('}').toInt()
+                    Log.d("TAG", CurrentUser.connectionCount.toString())
+                    Log.d("TAG", CurrentUser.users!![0].nick)
+                    runOnUiThread {
+                        adapter.add(
+                            ChatMessage(
+                                Message(
+                                    false,
+                                    "Info",
+                                    "Connected users: ${CurrentUser.connectionCount}",
+                                    System.currentTimeMillis(),
+                                    arrayOf()
+                                )
+                            )
+                        )
+                        recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
+                    }
+                }
+                "JOIN" -> {
+                    val userJoin = Klaxon().parse<ChatUser>(msg[1])
+                    CurrentUser.users!!.add(userJoin!!)
+                }
+                "QUIT" -> {
+                    val userQuit = Klaxon().parse<ChatUser>(msg[1])
+                    CurrentUser.users!!.remove(userQuit)
+                }
+                "PRIVMSG" -> {
+                    val message = Klaxon().parse<Message>(msg[1])!!
+                    return Message(true, message.nick, message.data, message.timestamp, message.features)
+                }
+                "MSG" -> {
+                    return Klaxon().parse<Message>(msg[1])
+                }
             }
             return null
         }

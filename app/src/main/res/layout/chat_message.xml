@@ -14,20 +14,22 @@
         android:text="Username"
         android:textColor="#FFFFFF"
         android:textStyle="bold"
-        app:layout_constraintStart_toEndOf="@+id/timestampMessage"
+        app:layout_constraintStart_toEndOf="@+id/botFlair"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/message"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
         android:layout_marginBottom="4dp"
+        android:autoLink="web"
         android:maxWidth="200dp"
         android:text="Message"
         android:textColor="#FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="@+id/username"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/username" />
 
     <TextView
@@ -41,6 +43,19 @@
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@+id/username"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/username" />
+        app:layout_constraintTop_toTopOf="@+id/username"
+        tools:visibility="visible" />
+
+    <ImageView
+        android:id="@+id/botFlair"
+        android:layout_width="12dp"
+        android:layout_height="12dp"
+        android:layout_marginStart="4dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/timestampMessage"
+        app:layout_constraintStart_toEndOf="@id/timestampMessage"
+        app:layout_constraintTop_toTopOf="@id/timestampMessage"
+        app:srcCompat="@drawable/ic_android_bot_24dp"
+        tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

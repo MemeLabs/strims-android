@@ -28,7 +28,7 @@
         android:background="@drawable/rounded_text_enter_message"
         android:ems="10"
         android:hint="Log in to send messages"
-        android:inputType="textPersonName"
+        android:inputType="textPersonName|textCapSentences"
         android:paddingStart="4dp"
         android:textColor="#FFFFFF"
         android:textSize="14sp"
@@ -46,5 +46,23 @@
         app:layout_constraintBottom_toBottomOf="@+id/sendMessageText"
         app:layout_constraintEnd_toEndOf="@+id/sendMessageText"
         app:layout_constraintTop_toTopOf="@+id/sendMessageText" />
+
+    <Button
+        android:id="@+id/goToBottom"
+        android:layout_width="0dp"
+        android:layout_height="30dp"
+        android:animateLayoutChanges="true"
+        android:backgroundTint="#5C5C5C"
+        android:paddingLeft="0dp"
+        android:paddingTop="0dp"
+        android:paddingRight="0dp"
+        android:paddingBottom="0dp"
+        android:text="More messages below"
+        android:textColor="#000000"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/recyclerViewChat"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
