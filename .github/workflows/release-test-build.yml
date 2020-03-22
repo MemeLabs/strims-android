@@ -1,4 +1,4 @@
-name: Release Branch Test Build
+name: Release Branch Test & Build
 on:
   pull_request:
      types: [closed] 
