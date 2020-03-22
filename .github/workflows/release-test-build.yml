@@ -1,16 +1,13 @@
-name: Android Pull Request & Master CI
-
+name: Release Branch Test & Build
 on:
   pull_request:
-    branches:
-      - 'master'
-  push:
-    branches:
-      - 'master'
-
+     types: [closed] 
+     branches:
+        -'release-*'
 jobs:
   main:
-    name: Test & Build Debug
+    if: github.event.pull_request.merged == true
+    name: Test & Build Release
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v1
@@ -26,12 +23,12 @@ jobs:
 
       - name: Unit tests
         run: bash ./gradlew test --stacktrace
-
-      - name: Build Debug APK
-        run: bash ./gradlew assembleDebug --stacktrace
-      - name: Upload Debug APK
+          
+      - name: Build Release APK
+        run: bash ./gradlew assembleRelease --stacktrace
+      - name: Upload Release APK
         uses: actions/upload-artifact@v1
         with:
-          name: debug-app
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: release-app
+          path: app/build/outputs/apk/release/app-release.apk
 
