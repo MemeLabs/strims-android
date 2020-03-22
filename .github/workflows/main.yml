@@ -39,6 +39,11 @@ jobs:
           uses: actions/setup-java@v1
           with:
             java-version: 1.8
+        - name: Decrypt secrets
+          run: bash ./decrypt_secrets.sh
+          env:
+            KEY_STORE_PASSPHRASE: ${{ secrets.KEY_STORE_PASSPHRASE }}
+            APP_SIGN_KEY_FILE_PASSPHRASE: ${{ secrets.APP_SIGN_KEY_FILE_PASSPHRASE }}
         - name: Build debug APK
           run: bash ./gradlew assembleDebug --stacktrace
         - name: Upload Debug APK
@@ -58,6 +63,11 @@ jobs:
           uses: actions/setup-java@v1
           with:
             java-version: 1.8
+        - name: Decrypt secrets
+          run: bash ./decrypt_secrets.sh
+          env:
+            KEY_STORE_PASSPHRASE: ${{ secrets.KEY_STORE_PASSPHRASE }}
+            APP_SIGN_KEY_FILE_PASSPHRASE: ${{ secrets.APP_SIGN_KEY_FILE_PASSPHRASE }}
         - name: Build Release APK
           run: bash ./gradlew assembleRelease --stacktrace
         - name: Upload Release APK
