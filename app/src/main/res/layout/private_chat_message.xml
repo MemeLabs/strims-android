@@ -6,7 +6,7 @@
     android:background="#222222">
 
     <TextView
-        android:id="@+id/usernamePrivate"
+        android:id="@+id/usernamePrivateMessage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="4dp"
@@ -14,11 +14,11 @@
         android:text="Username"
         android:textColor="#FFFFFF"
         android:textStyle="bold"
-        app:layout_constraintStart_toEndOf="@+id/timestampMessagePrivate"
+        app:layout_constraintStart_toEndOf="@+id/timestampMessagePrivateMessage"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/messagePrivate"
+        android:id="@+id/messagePrivateMessage"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="4dp"
@@ -29,10 +29,10 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/usernamePrivate" />
+        app:layout_constraintTop_toBottomOf="@+id/usernamePrivateMessage" />
 
     <TextView
-        android:id="@+id/timestampMessagePrivate"
+        android:id="@+id/timestampMessagePrivateMessage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="4dp"
@@ -40,7 +40,7 @@
         android:text="Timestamp"
         android:textColor="#737373"
         android:textSize="12sp"
-        app:layout_constraintBottom_toBottomOf="@+id/usernamePrivate"
+        app:layout_constraintBottom_toBottomOf="@+id/usernamePrivateMessage"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/usernamePrivate" />
+        app:layout_constraintTop_toTopOf="@+id/usernamePrivateMessage" />
 </androidx.constraintlayout.widget.ConstraintLayout>

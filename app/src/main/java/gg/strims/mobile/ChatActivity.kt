@@ -7,20 +7,22 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
-import android.view.KeyEvent
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
+import android.view.*
 import android.webkit.CookieManager
+import android.widget.CheckBox
+import android.widget.ImageView
+import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.RemoteInput
 import androidx.core.app.TaskStackBuilder
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
@@ -32,6 +34,9 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import com.beust.klaxon.Klaxon
 import com.google.gson.Gson
+import gg.strims.mobile.models.ChatUser
+import gg.strims.mobile.models.Message
+import gg.strims.mobile.models.Options
 import io.ktor.client.HttpClient
 import io.ktor.client.features.websocket.WebSockets
 import io.ktor.client.features.websocket.wss
@@ -40,7 +45,7 @@ import io.ktor.http.cio.websocket.Frame
 import io.ktor.http.cio.websocket.readBytes
 import io.ktor.http.cio.websocket.readText
 import io.ktor.http.cio.websocket.send
-import kotlinx.android.synthetic.main.chat_message.view.message
+import kotlinx.android.synthetic.main.activity_chat_options.*
 import kotlinx.android.synthetic.main.private_chat_message.view.*
 import java.io.*
 import java.lang.Exception
@@ -63,6 +68,8 @@ class ChatActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chat)
+
+        showHideFragment(supportFragmentManager.findFragmentById(R.id.options_fragment)!!)
 
         GlobalScope.launch {
             WSClient().onConnect()
@@ -116,6 +123,94 @@ class ChatActivity : AppCompatActivity() {
         goToBottom.setOnClickListener {
             recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
         }
+
+        optionsButton.setOnClickListener {
+            showHideFragment(supportFragmentManager.findFragmentById(R.id.options_fragment)!!)
+        }
+    }
+
+    class OptionsFragment : Fragment() {
+        override fun onCreateView(
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
+        ): View? {
+            return inflater.inflate(R.layout.activity_chat_options, container, false)
+        }
+
+        override fun onHiddenChanged(hidden: Boolean) {
+            if (CurrentUser.options != null) {
+                checkBoxTimestamp.isChecked = CurrentUser.options!!.showTime
+                checkBoxGreentext.isChecked = CurrentUser.options!!.greentext
+                checkBoxHarshIgnore.isChecked = CurrentUser.options!!.harshIgnore
+                checkBoxHideNsfw.isChecked = CurrentUser.options!!.hideNsfw
+                checkBoxNotifications.isChecked = CurrentUser.options!!.notifications
+                checkBoxEmotes.isChecked = CurrentUser.options!!.emotes
+
+                ignoredUsersTextViewOptions.text =
+                    CurrentUser.options!!.ignoreList.toString()
+                        .substringAfter('[').substringBefore(']')
+                customHighlightsTextViewOptions.text =
+                    CurrentUser.options!!.customHighlights.toString()
+                        .substringAfter('[').substringBefore(']')
+            }
+        }
+
+        override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+            if (CurrentUser.options != null) {
+                checkBoxTimestamp.isChecked = CurrentUser.options!!.showTime
+                checkBoxGreentext.isChecked = CurrentUser.options!!.greentext
+                checkBoxHarshIgnore.isChecked = CurrentUser.options!!.harshIgnore
+                checkBoxHideNsfw.isChecked = CurrentUser.options!!.hideNsfw
+                checkBoxNotifications.isChecked = CurrentUser.options!!.notifications
+                checkBoxEmotes.isChecked = CurrentUser.options!!.emotes
+
+                ignoredUsersTextViewOptions.text =
+                    CurrentUser.options!!.ignoreList.toString()
+                        .substringAfter('[').substringBefore(']')
+                customHighlightsTextViewOptions.text =
+                    CurrentUser.options!!.customHighlights.toString()
+                        .substringAfter('[').substringBefore(']')
+            }
+            closeMenuButton.setOnClickListener {
+                fragmentManager!!.beginTransaction()
+                    .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+                    .hide(this)
+                    .commit()
+            }
+
+            saveOptionsButton.setOnClickListener {
+                CurrentUser.saveOptions(context!!)
+                fragmentManager!!.beginTransaction()
+                    .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+                    .hide(this)
+                    .commit()
+            }
+
+            checkBoxTimestamp.setOnCheckedChangeListener { buttonView, isChecked ->
+                CurrentUser.options!!.showTime = isChecked
+            }
+
+            checkBoxGreentext.setOnCheckedChangeListener { buttonView, isChecked ->
+                CurrentUser.options!!.greentext = isChecked
+            }
+
+            checkBoxHarshIgnore.setOnCheckedChangeListener { buttonView, isChecked ->
+                CurrentUser.options!!.harshIgnore = isChecked
+            }
+
+            checkBoxHideNsfw.setOnCheckedChangeListener { buttonView, isChecked ->
+                CurrentUser.options!!.hideNsfw = isChecked
+            }
+
+            checkBoxNotifications.setOnCheckedChangeListener { buttonView, isChecked ->
+                CurrentUser.options!!.notifications = isChecked
+            }
+
+            checkBoxEmotes.setOnCheckedChangeListener { buttonView, isChecked ->
+                CurrentUser.options!!.emotes = isChecked
+            }
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -153,13 +248,37 @@ class ChatActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
+    private fun showHideFragment(fragment: Fragment) {
+        val fragmentTransaction = supportFragmentManager.beginTransaction()
+        fragmentTransaction.setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+
+        if (fragment.isHidden) {
+            fragmentTransaction.show(fragment)
+        } else if (!fragment.isHidden) {
+            fragmentTransaction.hide(fragment)
+        }
+
+        fragmentTransaction.commit()
+    }
+
     inner class ChatMessage(private val messageData: Message) : Item<GroupieViewHolder>() {
         override fun getLayout(): Int {
             return R.layout.chat_message
         }
 
-        @SuppressLint("SetTextI18n", "SimpleDateFormat")
+        @SuppressLint("SetTextI18n", "SimpleDateFormat", "WrongViewCast")
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
+            if (messageData.data.contains("billyWeird")) {
+                val split = messageData.data.split("billyWeird")
+                val emote = ImageView(this@ChatActivity)
+                val layout = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                emote.layoutParams = layout
+                emote.layoutParams.width = 100
+                emote.layoutParams.height = 100
+                emote.setImageDrawable(getDrawable(R.drawable.ic_android_bot_24dp))
+                val con = findViewById<ConstraintLayout>(R.id.constraintLayoutChatMessage)
+                Log.d("TAG", split.toString())
+            }
             CurrentUser.options!!.ignoreList.forEach {
                 if (it == messageData.nick) {
                     return
@@ -181,9 +300,9 @@ class ChatActivity : AppCompatActivity() {
 
             if (CurrentUser.options!!.greentext) {
                 if (messageData.data.first() == '>') {
-                    viewHolder.itemView.message.setTextColor(Color.parseColor("#789922"))
+                    viewHolder.itemView.messageChatMessage.setTextColor(Color.parseColor("#789922"))
                 } else {
-                    viewHolder.itemView.message.setTextColor(Color.parseColor("#FFFFFF"))
+                    viewHolder.itemView.messageChatMessage.setTextColor(Color.parseColor("#FFFFFF"))
                 }
             }
 
@@ -194,8 +313,8 @@ class ChatActivity : AppCompatActivity() {
                 } else {
                     "${date.hours}:${date.minutes}"
                 }
-                viewHolder.itemView.timestampMessage.visibility = View.VISIBLE
-                viewHolder.itemView.timestampMessage.text = time
+                viewHolder.itemView.timestampChatMessage.visibility = View.VISIBLE
+                viewHolder.itemView.timestampChatMessage.text = time
             }
 
             if (CurrentUser.user != null) {
@@ -217,21 +336,21 @@ class ChatActivity : AppCompatActivity() {
             }
 
             if (messageData.features.contains("bot")) {
-                viewHolder.itemView.username.setTextColor(Color.parseColor("#FF2196F3"))
-                viewHolder.itemView.botFlair.visibility = View.VISIBLE
+                viewHolder.itemView.usernameChatMessage.setTextColor(Color.parseColor("#FF2196F3"))
+                viewHolder.itemView.botFlairChatMessage.visibility = View.VISIBLE
             } else {
-                viewHolder.itemView.username.setTextColor(Color.parseColor("#FFFFFF"))
-                viewHolder.itemView.botFlair.visibility = View.GONE
+                viewHolder.itemView.usernameChatMessage.setTextColor(Color.parseColor("#FFFFFF"))
+                viewHolder.itemView.botFlairChatMessage.visibility = View.GONE
             }
 
             if (CurrentUser.tempHighlightNick != null && CurrentUser.tempHighlightNick!!.contains(messageData.nick)) {
-                viewHolder.itemView.username.setTextColor(Color.parseColor("#FFF44336"))
+                viewHolder.itemView.usernameChatMessage.setTextColor(Color.parseColor("#FFF44336"))
             }
 
-            viewHolder.itemView.username.text = "${messageData.nick}:"
-            viewHolder.itemView.message.text = messageData.data
+            viewHolder.itemView.usernameChatMessage.text = "${messageData.nick}:"
+            viewHolder.itemView.messageChatMessage.text = messageData.data
 
-            viewHolder.itemView.username.setOnClickListener {
+            viewHolder.itemView.usernameChatMessage.setOnClickListener {
                 for (i in 0 until adapter.itemCount) {
                     if (adapter.getItem(i).layout == R.layout.chat_message) {
                         val item = adapter.getItem(i) as ChatMessage
@@ -239,7 +358,7 @@ class ChatActivity : AppCompatActivity() {
                             val adapterItem =
                                 recyclerViewChat.findViewHolderForAdapterPosition(i)
 
-                            adapterItem?.itemView?.username?.setTextColor(Color.parseColor("#FFF44336"))
+                            adapterItem?.itemView?.usernameChatMessage?.setTextColor(Color.parseColor("#FFF44336"))
                         }
                     }
                 }
@@ -257,7 +376,7 @@ class ChatActivity : AppCompatActivity() {
                             val adapterItem =
                                 recyclerViewChat.findViewHolderForAdapterPosition(i)
 
-                            adapterItem?.itemView?.username?.setTextColor(Color.parseColor("#FFFFFF"))
+                            adapterItem?.itemView?.usernameChatMessage?.setTextColor(Color.parseColor("#FFFFFF"))
                         }
                         CurrentUser.tempHighlightNick = null
                     }
@@ -285,12 +404,12 @@ class ChatActivity : AppCompatActivity() {
             }
 
             if (messageData.data.first() == '>') {
-                viewHolder.itemView.message.setTextColor(Color.parseColor("#789922"))
+                viewHolder.itemView.messageChatMessage.setTextColor(Color.parseColor("#789922"))
             }
 
-            viewHolder.itemView.timestampMessagePrivate.text = time
-            viewHolder.itemView.usernamePrivate.text = messageData.nick
-            viewHolder.itemView.messagePrivate.text = " whispered: ${messageData.data}"
+            viewHolder.itemView.timestampMessagePrivateMessage.text = time
+            viewHolder.itemView.usernamePrivateMessage.text = messageData.nick
+            viewHolder.itemView.messagePrivateMessage.text = " whispered: ${messageData.data}"
         }
     }
 
@@ -310,18 +429,6 @@ class ChatActivity : AppCompatActivity() {
             CurrentUser.options = Options()
         }
         Log.d("TAG", "${CurrentUser.options!!.greentext}, ${CurrentUser.options!!.emotes}")
-    }
-
-    private fun saveOptions() {
-        val userOptions = CurrentUser.options
-        val fileOutputStream: FileOutputStream
-        try {
-            fileOutputStream = openFileOutput("filename.txt", Context.MODE_PRIVATE)
-            Log.d("TAG", "Saving: ${Gson().toJson(userOptions)}")
-            fileOutputStream.write(Gson().toJson(userOptions).toByteArray())
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
     }
 
     private fun displayNotification(message: Message) {
@@ -429,12 +536,12 @@ class ChatActivity : AppCompatActivity() {
                         } else if (messageText.substringAfter(first).substringBefore(' ') == "ignore") {
                             val nickIgnore = messageText.substringAfter("/ignore ").substringBefore(' ')
                             CurrentUser.options!!.ignoreList.add(nickIgnore)
-                            saveOptions()
+                            CurrentUser.saveOptions(this@ChatActivity)
                         } else if (messageText.substringAfter(first).substringBefore(' ') == "unignore") {
                             val nickUnignore = messageText.substringAfter("/unignore ").substringBefore(' ')
                             if (CurrentUser.options!!.ignoreList.contains(nickUnignore)) {
                                 CurrentUser.options!!.ignoreList.remove(nickUnignore)
-                                saveOptions()
+                                CurrentUser.saveOptions(this@ChatActivity)
                                 runOnUiThread {
                                     adapter.add(
                                         ChatMessage(
@@ -468,18 +575,42 @@ class ChatActivity : AppCompatActivity() {
                             val nickHighlight = messageText.substringAfter("/highlight ").substringBefore(' ')
                             if (CurrentUser.options!!.customHighlights.contains(nickHighlight)) {
                                 runOnUiThread {
-                                    adapter.add(ChatMessage(Message(false, "Info", "User already highlighted", System.currentTimeMillis(), arrayOf())))
+                                    adapter.add(ChatMessage(
+                                        Message(
+                                            false,
+                                            "Info",
+                                            "User already highlighted",
+                                            System.currentTimeMillis(),
+                                            arrayOf()
+                                        )
+                                    ))
                                     recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
                                 }
                             } else {
                                 CurrentUser.options!!.customHighlights.add(nickHighlight)
-                                saveOptions()
-                                adapter.add(ChatMessage(Message(false, "Info", "Highlighting user: $nickHighlight", System.currentTimeMillis(), arrayOf())))
+                                CurrentUser.saveOptions(this@ChatActivity)
+                                adapter.add(ChatMessage(
+                                    Message(
+                                        false,
+                                        "Info",
+                                        "Highlighting user: $nickHighlight",
+                                        System.currentTimeMillis(),
+                                        arrayOf()
+                                    )
+                                ))
                                 recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
                             }
                         } else {
                             runOnUiThread {
-                                adapter.add(ChatMessage(Message(false, "Info", "Invalid command", System.currentTimeMillis(), arrayOf())))
+                                adapter.add(ChatMessage(
+                                    Message(
+                                        false,
+                                        "Info",
+                                        "Invalid command",
+                                        System.currentTimeMillis(),
+                                        arrayOf()
+                                    )
+                                ))
                                 recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
                             }
                         }
@@ -569,7 +700,13 @@ class ChatActivity : AppCompatActivity() {
                 }
                 "PRIVMSG" -> {
                     val message = Klaxon().parse<Message>(msg[1])!!
-                    return Message(true, message.nick, message.data, message.timestamp, message.features)
+                    return Message(
+                        true,
+                        message.nick,
+                        message.data,
+                        message.timestamp,
+                        message.features
+                    )
                 }
                 "MSG" -> {
                     return Klaxon().parse<Message>(msg[1])

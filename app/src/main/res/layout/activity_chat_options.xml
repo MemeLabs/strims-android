@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000"
+    android:background="@drawable/rounded_text_enter_message"
     tools:context=".ChatOptionsActivity">
 
     <CheckBox
@@ -84,16 +84,16 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:layout_marginEnd="24dp"
+        android:layout_marginEnd="8dp"
         android:background="@drawable/rounded_text_profile"
         android:ems="10"
         android:inputType="textMultiLine|textPersonName"
+        android:maxLines="3"
         android:textColor="#BBBBBB"
         android:textColorHighlight="#59FF5722"
         android:textColorLink="#FF5722"
-        android:verticalScrollbarPosition="right"
-        android:maxLines="3"
         android:textCursorDrawable="@null"
+        android:verticalScrollbarPosition="right"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@+id/ignoredUsers"
         app:layout_constraintTop_toBottomOf="@+id/ignoredUsers" />
@@ -113,7 +113,6 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:layout_marginEnd="24dp"
         android:background="@drawable/rounded_text_profile"
         android:ems="10"
         android:inputType="textMultiLine|textPersonName"
@@ -121,9 +120,30 @@
         android:textColor="#BBBBBB"
         android:textColorHighlight="#59FF5722"
         android:textColorLink="#FF5722"
-        android:verticalScrollbarPosition="right"
         android:textCursorDrawable="@null"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:verticalScrollbarPosition="right"
+        app:layout_constraintEnd_toEndOf="@+id/ignoredUsersTextViewOptions"
         app:layout_constraintStart_toStartOf="@+id/customHighlights"
         app:layout_constraintTop_toBottomOf="@+id/customHighlights" />
+
+    <Button
+        android:id="@+id/closeMenuButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:backgroundTint="#FF5722"
+        android:text="Close"
+        app:layout_constraintStart_toStartOf="@+id/customHighlightsTextViewOptions"
+        app:layout_constraintTop_toBottomOf="@+id/customHighlightsTextViewOptions" />
+
+    <Button
+        android:id="@+id/saveOptionsButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:backgroundTint="#FF5722"
+        android:text="Save"
+        app:layout_constraintEnd_toEndOf="@+id/customHighlightsTextViewOptions"
+        app:layout_constraintTop_toBottomOf="@+id/customHighlightsTextViewOptions" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,4 +1,4 @@
-package gg.strims.mobile
+package gg.strims.mobile.models
 
 class ChatUser(var nick: String, var features: Array<String>) {
 

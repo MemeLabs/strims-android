@@ -2,23 +2,24 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/constraintLayoutChatMessage"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="#000000">
 
     <TextView
-        android:id="@+id/username"
+        android:id="@+id/usernameChatMessage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="4dp"
         android:text="Username"
         android:textColor="#FFFFFF"
         android:textStyle="bold"
-        app:layout_constraintStart_toEndOf="@+id/botFlair"
+        app:layout_constraintStart_toEndOf="@+id/botFlairChatMessage"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/message"
+        android:id="@+id/messageChatMessage"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="4dp"
@@ -30,10 +31,10 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/username" />
+        app:layout_constraintTop_toBottomOf="@+id/usernameChatMessage" />
 
     <TextView
-        android:id="@+id/timestampMessage"
+        android:id="@+id/timestampChatMessage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="4dp"
@@ -41,20 +42,20 @@
         android:textColor="#737373"
         android:textSize="12sp"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="@+id/username"
+        app:layout_constraintBottom_toBottomOf="@+id/usernameChatMessage"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/username"
+        app:layout_constraintTop_toTopOf="@+id/usernameChatMessage"
         tools:visibility="visible" />
 
     <ImageView
-        android:id="@+id/botFlair"
+        android:id="@+id/botFlairChatMessage"
         android:layout_width="12dp"
         android:layout_height="12dp"
         android:layout_marginStart="4dp"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="@+id/timestampMessage"
-        app:layout_constraintStart_toEndOf="@id/timestampMessage"
-        app:layout_constraintTop_toTopOf="@id/timestampMessage"
+        app:layout_constraintBottom_toBottomOf="@+id/timestampChatMessage"
+        app:layout_constraintStart_toEndOf="@id/timestampChatMessage"
+        app:layout_constraintTop_toTopOf="@id/timestampChatMessage"
         app:srcCompat="@drawable/ic_android_bot_24dp"
         tools:visibility="visible" />
 
