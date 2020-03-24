@@ -29,13 +29,15 @@
         android:background="@drawable/rounded_text_enter_message"
         android:ems="10"
         android:hint="Log in to send messages"
-        android:inputType="textPersonName|textCapSentences"
+        android:inputType="textMultiLine|textPersonName|textCapSentences"
+        android:maxLines="3"
         android:paddingStart="4dp"
+        android:paddingEnd="40dp"
         android:textColor="#FFFFFF"
         android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/optionsButton" />
+        app:layout_constraintStart_toEndOf="@+id/userListButton" />
 
     <Button
         android:id="@+id/sendMessageButton"
@@ -80,7 +82,24 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:layout="@layout/activity_chat_options" />
+        tools:layout="@layout/activity_chat_options"
+        tools:visibility="gone" />
+
+    <fragment
+        android:id="@+id/user_list_fragment"
+        android:name="gg.strims.mobile.ChatActivity$UserListFragment"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="32dp"
+        android:layout_marginBottom="128dp"
+        android:layout_weight="2"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:layout="@layout/activity_user_list" />
 
     <ImageView
         android:id="@+id/optionsButton"
@@ -91,5 +110,15 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/sendMessageText"
         app:srcCompat="@drawable/ic_settings_orange_24dp" />
+
+    <ImageView
+        android:id="@+id/userListButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        app:layout_constraintBottom_toBottomOf="@+id/optionsButton"
+        app:layout_constraintStart_toEndOf="@+id/optionsButton"
+        app:layout_constraintTop_toTopOf="@+id/optionsButton"
+        app:srcCompat="@drawable/ic_person_orange_24dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

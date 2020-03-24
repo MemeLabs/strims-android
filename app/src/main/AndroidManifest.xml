@@ -12,6 +12,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name=".UserListActivity"></activity>
         <activity
             android:name=".ChatOptionsActivity"
             android:parentActivityName=".ChatActivity" />
@@ -20,7 +21,7 @@
             android:parentActivityName=".ChatActivity" />
         <activity
             android:name=".LoginActivity"
-            android:parentActivityName=".ChatActivity"/>
+            android:parentActivityName=".ChatActivity" />
         <activity android:name=".ChatActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
