@@ -786,13 +786,8 @@ class ChatActivity : AppCompatActivity() {
                 }
                 "PRIVMSG" -> {
                     val message = Klaxon().parse<Message>(msg[1])!!
-                    return Message(
-                        true,
-                        message.nick,
-                        message.data,
-                        message.timestamp,
-                        message.features
-                    )
+                    message.privMsg = true
+                    return message
                 }
                 "MSG" -> {
                     return Klaxon().parse<Message>(msg[1])
