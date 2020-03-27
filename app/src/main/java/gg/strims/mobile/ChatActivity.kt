@@ -143,6 +143,7 @@ class ChatActivity : AppCompatActivity() {
         }
 
         override fun onHiddenChanged(hidden: Boolean) {
+            userListAdapter.clear()
             if (CurrentUser.users != null) {
                 CurrentUser.users!!.sortBy { it.nick }
                     CurrentUser.users!!.forEach {
@@ -153,12 +154,6 @@ class ChatActivity : AppCompatActivity() {
 
             userListSearch.addTextChangedListener(object: TextWatcher {
                 override fun afterTextChanged(s: Editable?) {
-                    for (i in 0 until userListAdapter.itemCount) {
-                        val item = userListAdapter.getItem(i) as UserListItem
-//                        if (!item.user.nick.contains(userListSearch.text.toString())) {
-//                            userListAdapter.removeGroupAtAdapterPosition(i)
-//                        }
-                    }
                 }
 
                 override fun beforeTextChanged(
@@ -167,21 +162,25 @@ class ChatActivity : AppCompatActivity() {
                     count: Int,
                     after: Int
                 ) {
-                    for (i in 0 until userListAdapter.itemCount) {
-                        val item = userListAdapter.getItem(i) as UserListItem
-//                        if (!item.user.nick.contains(userListSearch.text.toString())) {
-//                            userListAdapter.removeGroupAtAdapterPosition(i)
-//                        }
-                    }
                 }
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    val test = userListSearch.text.toString()
-                    for (i in 0..userListAdapter.itemCount) {
+                    userListAdapter.clear()
+                    val list = mutableListOf<ChatUser>()
+                    CurrentUser.users!!.sortBy { it.nick }
+                    CurrentUser.users!!.forEach {
+                        userListAdapter.add(UserListItem(it))
+                    }
+                    recyclerViewUserList.scrollToPosition(1)
+                    for (i in 0 until userListAdapter.itemCount) {
                         val item = userListAdapter.getItem(i) as UserListItem
-                        if (item.user.nick.contains(test)) {
-                            userListAdapter.removeGroupAtAdapterPosition(i)
+                        if (item.user.nick.contains(userListSearch.text.toString())) {
+                            list.add(item.user)
                         }
+                    }
+                    userListAdapter.clear()
+                    list.forEach {
+                        userListAdapter.add(UserListItem(it))
                     }
                 }
             })

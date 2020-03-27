@@ -26,10 +26,13 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
+        android:backgroundTint="#FF5722"
         android:ems="10"
         android:hint="Username search ..."
         android:inputType="textPersonName"
         android:textColor="#C5C5C5"
+        android:textColorHighlight="#4DFF5722"
+        android:textCursorDrawable="@drawable/orange_cursor"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@+id/recyclerViewUserList"
         app:layout_constraintStart_toStartOf="@+id/recyclerViewUserList" />
