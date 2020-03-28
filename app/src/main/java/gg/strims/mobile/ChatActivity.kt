@@ -123,10 +123,34 @@ class ChatActivity : AppCompatActivity() {
         }
 
         optionsButton.setOnClickListener {
+            val fragment = supportFragmentManager.findFragmentById(R.id.user_list_fragment)
+            val fragmentTransaction = supportFragmentManager.beginTransaction()
+            fragmentTransaction.setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+
+            if (fragment != null) {
+                if (!fragment.isHidden) {
+                    fragmentTransaction.hide(fragment)
+                }
+
+                fragmentTransaction.commit()
+            }
+
             showHideFragment(supportFragmentManager.findFragmentById(R.id.options_fragment)!!)
         }
 
         userListButton.setOnClickListener {
+            val fragment = supportFragmentManager.findFragmentById(R.id.options_fragment)
+            val fragmentTransaction = supportFragmentManager.beginTransaction()
+            fragmentTransaction.setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+
+            if (fragment != null) {
+                if (!fragment.isHidden) {
+                    fragmentTransaction.hide(fragment)
+                }
+
+                fragmentTransaction.commit()
+            }
+
             showHideFragment(supportFragmentManager.findFragmentById(R.id.user_list_fragment)!!)
         }
     }
@@ -198,12 +222,25 @@ class ChatActivity : AppCompatActivity() {
                 return R.layout.chat_user_row
             }
 
+            @SuppressLint("SetTextI18n")
             override fun bind(viewHolder: GroupieViewHolder, position: Int) {
                 viewHolder.itemView.chatUserUsername.text = user.nick
                 if (user.features.contains("bot")) {
                     viewHolder.itemView.chatUserUsername.setTextColor(Color.parseColor("#FF2196F3"))
                 } else {
                     viewHolder.itemView.chatUserUsername.setTextColor(Color.parseColor("#FFFFFF"))
+                }
+
+                viewHolder.itemView.chatUserUsername.setOnClickListener {
+                    activity!!.sendMessageText.setText("/w ${user.nick} ")
+                    keyRequestFocus(activity!!.sendMessageText, context!!)
+                    activity!!.sendMessageText.setSelection(activity!!.sendMessageText.text.length)
+                    val fragment = this@UserListFragment
+                    val fragmentTransaction = fragmentManager!!.beginTransaction()
+                    fragmentTransaction.setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+                        .hide(fragment)
+
+                    fragmentTransaction.commit()
                 }
             }
         }
