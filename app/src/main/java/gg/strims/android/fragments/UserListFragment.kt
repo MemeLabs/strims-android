@@ -21,108 +21,116 @@ import kotlinx.android.synthetic.main.activity_chat.*
 import kotlinx.android.synthetic.main.activity_user_list.*
 import kotlinx.android.synthetic.main.chat_user_row.view.*
 
-class UserListFragment {
-    class UserListFragment : Fragment() {
-        private val userListAdapter =
-            GroupAdapter<GroupieViewHolder>()
+class UserListFragment : Fragment() {
+    private val userListAdapter =
+        GroupAdapter<GroupieViewHolder>()
 
-        override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
-        ): View? {
-            return inflater.inflate(R.layout.activity_user_list, container, false)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return inflater.inflate(R.layout.activity_user_list, container, false)
+    }
+
+    override fun onHiddenChanged(hidden: Boolean) {
+        userListAdapter.clear()
+        if (CurrentUser.users != null) {
+            CurrentUser.users!!.sortBy { it.nick }
+            CurrentUser.users!!.forEach {
+                userListAdapter.add(UserListItem(it))
+            }
+            recyclerViewUserList.scrollToPosition(1)
         }
 
-        override fun onHiddenChanged(hidden: Boolean) {
-            userListAdapter.clear()
-            if (CurrentUser.users != null) {
+        userListSearch.addTextChangedListener(object :
+            TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+            }
+
+            override fun beforeTextChanged(
+                s: CharSequence?,
+                start: Int,
+                count: Int,
+                after: Int
+            ) {
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                userListAdapter.clear()
+                val list = mutableListOf<ChatUser>()
                 CurrentUser.users!!.sortBy { it.nick }
-                    CurrentUser.users!!.forEach {
+                CurrentUser.users!!.forEach {
                     userListAdapter.add(UserListItem(it))
                 }
                 recyclerViewUserList.scrollToPosition(1)
+                for (i in 0 until userListAdapter.itemCount) {
+                    val item = userListAdapter.getItem(i) as UserListItem
+                    if (item.user.nick.contains(userListSearch.text.toString())) {
+                        list.add(item.user)
+                    }
+                }
+                userListAdapter.clear()
+                list.forEach {
+                    userListAdapter.add(UserListItem(it))
+                }
             }
+        })
+    }
 
-            userListSearch.addTextChangedListener(object:
-                TextWatcher {
-                override fun afterTextChanged(s: Editable?) {
-                }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        val layoutManager =
+            LinearLayoutManager(view.context)
+        layoutManager.stackFromEnd = true
+        recyclerViewUserList.layoutManager = layoutManager
+        recyclerViewUserList.adapter = userListAdapter
 
-                override fun beforeTextChanged(
-                    s: CharSequence?,
-                    start: Int,
-                    count: Int,
-                    after: Int
-                ) {
-                }
+        closeUserListButton.setOnClickListener {
+            fragmentManager!!.beginTransaction()
+                .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+                .hide(this)
+                .commit()
+        }
+    }
 
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    userListAdapter.clear()
-                    val list = mutableListOf<ChatUser>()
-                    CurrentUser.users!!.sortBy { it.nick }
-                    CurrentUser.users!!.forEach {
-                        userListAdapter.add(UserListItem(it))
-                    }
-                    recyclerViewUserList.scrollToPosition(1)
-                    for (i in 0 until userListAdapter.itemCount) {
-                        val item = userListAdapter.getItem(i) as UserListItem
-                        if (item.user.nick.contains(userListSearch.text.toString())) {
-                            list.add(item.user)
-                        }
-                    }
-                    userListAdapter.clear()
-                    list.forEach {
-                        userListAdapter.add(UserListItem(it))
-                    }
-                }
-            })
+    inner class UserListItem(val user: ChatUser) : Item<GroupieViewHolder>() {
+        override fun getLayout(): Int {
+            return R.layout.chat_user_row
         }
 
-        override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-            val layoutManager =
-                LinearLayoutManager(view.context)
-            layoutManager.stackFromEnd = true
-            recyclerViewUserList.layoutManager = layoutManager
-            recyclerViewUserList.adapter = userListAdapter
-        }
-
-        inner class UserListItem(val user: ChatUser) : Item<GroupieViewHolder>() {
-            override fun getLayout(): Int {
-                return R.layout.chat_user_row
+        @SuppressLint("SetTextI18n")
+        override fun bind(viewHolder: GroupieViewHolder, position: Int) {
+            viewHolder.itemView.chatUserUsername.text = user.nick
+            if (user.features.contains("bot")) {
+                viewHolder.itemView.chatUserUsername.setTextColor(
+                    Color.parseColor(
+                        "#FF2196F3"
+                    )
+                )
+            } else {
+                viewHolder.itemView.chatUserUsername.setTextColor(
+                    Color.parseColor(
+                        "#FFFFFF"
+                    )
+                )
             }
 
-            @SuppressLint("SetTextI18n")
-            override fun bind(viewHolder: GroupieViewHolder, position: Int) {
-                viewHolder.itemView.chatUserUsername.text = user.nick
-                if (user.features.contains("bot")) {
-                    viewHolder.itemView.chatUserUsername.setTextColor(
-                        Color.parseColor(
-                            "#FF2196F3"
-                        )
-                    )
-                } else {
-                    viewHolder.itemView.chatUserUsername.setTextColor(
-                        Color.parseColor(
-                            "#FFFFFF"
-                        )
-                    )
-                }
+            viewHolder.itemView.chatUserUsername.setOnClickListener {
+                activity!!.sendMessageText.setText("/w ${user.nick} ")
+                keyRequestFocus(
+                    activity!!.sendMessageText,
+                    context!!
+                )
+                activity!!.sendMessageText.setSelection(activity!!.sendMessageText.text.length)
+                val fragment = this@UserListFragment
+                val fragmentTransaction = fragmentManager!!.beginTransaction()
+                fragmentTransaction.setCustomAnimations(
+                    android.R.anim.fade_in,
+                    android.R.anim.fade_out
+                )
+                    .hide(fragment)
 
-                viewHolder.itemView.chatUserUsername.setOnClickListener {
-                    activity!!.sendMessageText.setText("/w ${user.nick} ")
-                    keyRequestFocus(
-                        activity!!.sendMessageText,
-                        context!!
-                    )
-                    activity!!.sendMessageText.setSelection(activity!!.sendMessageText.text.length)
-                    val fragment = this@UserListFragment
-                    val fragmentTransaction = fragmentManager!!.beginTransaction()
-                    fragmentTransaction.setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
-                        .hide(fragment)
-
-                    fragmentTransaction.commit()
-                }
+                fragmentTransaction.commit()
             }
         }
     }

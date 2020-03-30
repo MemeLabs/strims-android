@@ -9,74 +9,72 @@ import gg.strims.android.CurrentUser
 import gg.strims.android.R
 import kotlinx.android.synthetic.main.activity_chat_options.*
 
-class OptionsFragment {
-    class OptionsFragment : Fragment() {
-        override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
-        ): View? {
-            return inflater.inflate(R.layout.activity_chat_options, container, false)
+class OptionsFragment : Fragment() {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return inflater.inflate(R.layout.activity_chat_options, container, false)
+    }
+
+    override fun onHiddenChanged(hidden: Boolean) {
+        if (CurrentUser.options != null) {
+            checkBoxTimestamp.isChecked = CurrentUser.options!!.showTime
+            checkBoxGreentext.isChecked = CurrentUser.options!!.greentext
+            checkBoxHarshIgnore.isChecked = CurrentUser.options!!.harshIgnore
+            checkBoxHideNsfw.isChecked = CurrentUser.options!!.hideNsfw
+            checkBoxNotifications.isChecked = CurrentUser.options!!.notifications
+            checkBoxEmotes.isChecked = CurrentUser.options!!.emotes
+
+            ignoredUsersTextViewOptions.text =
+                CurrentUser.options!!.ignoreList.toString()
+                    .substringAfter('[').substringBefore(']')
+
+            customHighlightsTextViewOptions.text =
+                CurrentUser.options!!.customHighlights.toString()
+                    .substringAfter('[').substringBefore(']')
+        }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        closeMenuButton.setOnClickListener {
+            fragmentManager!!.beginTransaction()
+                .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+                .hide(this)
+                .commit()
         }
 
-        override fun onHiddenChanged(hidden: Boolean) {
-            if (CurrentUser.options != null) {
-                checkBoxTimestamp.isChecked = CurrentUser.options!!.showTime
-                checkBoxGreentext.isChecked = CurrentUser.options!!.greentext
-                checkBoxHarshIgnore.isChecked = CurrentUser.options!!.harshIgnore
-                checkBoxHideNsfw.isChecked = CurrentUser.options!!.hideNsfw
-                checkBoxNotifications.isChecked = CurrentUser.options!!.notifications
-                checkBoxEmotes.isChecked = CurrentUser.options!!.emotes
-
-                ignoredUsersTextViewOptions.text =
-                    CurrentUser.options!!.ignoreList.toString()
-                        .substringAfter('[').substringBefore(']')
-
-                customHighlightsTextViewOptions.text =
-                    CurrentUser.options!!.customHighlights.toString()
-                        .substringAfter('[').substringBefore(']')
-            }
+        saveOptionsButton.setOnClickListener {
+            CurrentUser.saveOptions(context!!)
+            fragmentManager!!.beginTransaction()
+                .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+                .hide(this)
+                .commit()
         }
 
-        override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-            closeMenuButton.setOnClickListener {
-                fragmentManager!!.beginTransaction()
-                    .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
-                    .hide(this)
-                    .commit()
-            }
+        checkBoxTimestamp.setOnCheckedChangeListener { buttonView, isChecked ->
+            CurrentUser.options!!.showTime = isChecked
+        }
 
-            saveOptionsButton.setOnClickListener {
-                CurrentUser.saveOptions(context!!)
-                fragmentManager!!.beginTransaction()
-                    .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
-                    .hide(this)
-                    .commit()
-            }
+        checkBoxGreentext.setOnCheckedChangeListener { buttonView, isChecked ->
+            CurrentUser.options!!.greentext = isChecked
+        }
 
-            checkBoxTimestamp.setOnCheckedChangeListener { buttonView, isChecked ->
-                CurrentUser.options!!.showTime = isChecked
-            }
+        checkBoxHarshIgnore.setOnCheckedChangeListener { buttonView, isChecked ->
+            CurrentUser.options!!.harshIgnore = isChecked
+        }
 
-            checkBoxGreentext.setOnCheckedChangeListener { buttonView, isChecked ->
-                CurrentUser.options!!.greentext = isChecked
-            }
+        checkBoxHideNsfw.setOnCheckedChangeListener { buttonView, isChecked ->
+            CurrentUser.options!!.hideNsfw = isChecked
+        }
 
-            checkBoxHarshIgnore.setOnCheckedChangeListener { buttonView, isChecked ->
-                CurrentUser.options!!.harshIgnore = isChecked
-            }
+        checkBoxNotifications.setOnCheckedChangeListener { buttonView, isChecked ->
+            CurrentUser.options!!.notifications = isChecked
+        }
 
-            checkBoxHideNsfw.setOnCheckedChangeListener { buttonView, isChecked ->
-                CurrentUser.options!!.hideNsfw = isChecked
-            }
-
-            checkBoxNotifications.setOnCheckedChangeListener { buttonView, isChecked ->
-                CurrentUser.options!!.notifications = isChecked
-            }
-
-            checkBoxEmotes.setOnCheckedChangeListener { buttonView, isChecked ->
-                CurrentUser.options!!.emotes = isChecked
-            }
+        checkBoxEmotes.setOnCheckedChangeListener { buttonView, isChecked ->
+            CurrentUser.options!!.emotes = isChecked
         }
     }
 }

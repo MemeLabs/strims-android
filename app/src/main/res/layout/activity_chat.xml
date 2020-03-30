@@ -67,40 +67,58 @@
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@+id/recyclerViewChat"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        tools:visibility="visible" />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <fragment
         android:id="@+id/options_fragment"
-        android:name="gg.strims.android.fragments.OptionsFragment$OptionsFragment"
+        android:name="gg.strims.android.fragments.OptionsFragment"
         android:layout_width="0dp"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="16dp"
         android:layout_marginEnd="24dp"
-        android:layout_marginBottom="80dp"
+        android:layout_marginBottom="60dp"
         android:layout_weight="2"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:layout="@layout/activity_chat_options" />
+        tools:layout="@layout/activity_chat_options"
+        tools:visibility="gone" />
 
     <fragment
         android:id="@+id/user_list_fragment"
-        android:name="gg.strims.android.fragments.UserListFragment$UserListFragment"
+        android:name="gg.strims.android.fragments.UserListFragment"
         android:layout_width="0dp"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="16dp"
         android:layout_marginEnd="24dp"
+        android:layout_marginBottom="60dp"
+        android:layout_weight="2"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:layout="@layout/activity_user_list"
+        tools:visibility="gone" />
+
+    <fragment
+        android:id="@+id/profile_fragment"
+        android:name="gg.strims.android.fragments.ProfileFragment"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
         android:layout_marginBottom="80dp"
         android:layout_weight="2"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:layout="@layout/activity_user_list" />
+        tools:layout="@layout/activity_profile"
+        tools:visibility="gone" />
 
     <ImageView
         android:id="@+id/optionsButton"
@@ -121,5 +139,17 @@
         app:layout_constraintStart_toEndOf="@+id/optionsButton"
         app:layout_constraintTop_toTopOf="@+id/optionsButton"
         app:srcCompat="@drawable/ic_person_orange_24dp" />
+
+    <fragment
+        android:id="@+id/login_fragment"
+        android:name="gg.strims.android.fragments.LoginFragment"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:layout="@layout/activity_login"
+        tools:visibility="gone" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

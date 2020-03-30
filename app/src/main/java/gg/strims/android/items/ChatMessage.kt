@@ -79,7 +79,7 @@ class ChatMessage(private val messageData: Message) : Item<GroupieViewHolder>() 
             }
         }
 
-        if (messageData.features.contains("bot")) {
+        if (messageData.features.contains("bot") || messageData.nick == "Info") {
             viewHolder.itemView.usernameChatMessage.setTextColor(Color.parseColor("#FF2196F3"))
             viewHolder.itemView.botFlairChatMessage.visibility = View.VISIBLE
         } else {

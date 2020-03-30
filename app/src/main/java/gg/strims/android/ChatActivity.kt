@@ -63,6 +63,8 @@ class ChatActivity : AppCompatActivity() {
             WSClient().onConnect()
         }
 
+        showHideFragment(supportFragmentManager.findFragmentById(R.id.login_fragment)!!)
+        showHideFragment(supportFragmentManager.findFragmentById(R.id.profile_fragment)!!)
         showHideFragment(supportFragmentManager.findFragmentById(R.id.options_fragment)!!)
         showHideFragment(supportFragmentManager.findFragmentById(R.id.user_list_fragment)!!)
 
@@ -111,33 +113,17 @@ class ChatActivity : AppCompatActivity() {
 
         optionsButton.setOnClickListener {
             val fragment = supportFragmentManager.findFragmentById(R.id.user_list_fragment)
-            val fragmentTransaction = supportFragmentManager.beginTransaction()
-            fragmentTransaction.setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
-
-            if (fragment != null) {
-                if (!fragment.isHidden) {
-                    fragmentTransaction.hide(fragment)
-                }
-
-                fragmentTransaction.commit()
+            if (!fragment!!.isHidden) {
+                showHideFragment(fragment)
             }
-
             showHideFragment(supportFragmentManager.findFragmentById(R.id.options_fragment)!!)
         }
 
         userListButton.setOnClickListener {
             val fragment = supportFragmentManager.findFragmentById(R.id.options_fragment)
-            val fragmentTransaction = supportFragmentManager.beginTransaction()
-            fragmentTransaction.setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
-
-            if (fragment != null) {
-                if (!fragment.isHidden) {
-                    fragmentTransaction.hide(fragment)
-                }
-
-                fragmentTransaction.commit()
+            if (!fragment!!.isHidden) {
+                showHideFragment(fragment)
             }
-
             showHideFragment(supportFragmentManager.findFragmentById(R.id.user_list_fragment)!!)
         }
     }
@@ -163,10 +149,10 @@ class ChatActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.chatLogin -> {
-                startActivity(Intent(this, LoginActivity::class.java))
+                showHideFragment(supportFragmentManager.findFragmentById(R.id.login_fragment)!!)
             }
             R.id.chatProfile -> {
-                startActivity(Intent(this, ProfileActivity::class.java))
+                showHideFragment(supportFragmentManager.findFragmentById(R.id.profile_fragment)!!)
             }
         }
         return super.onOptionsItemSelected(item)

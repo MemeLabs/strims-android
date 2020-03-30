@@ -4,8 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000"
-    tools:context=".ProfileActivity">
+    android:background="@drawable/rounded_text_enter_message">
 
     <TextView
         android:id="@+id/usernameTextViewProfile"
@@ -120,5 +119,15 @@
         android:text="Save"
         android:textColor="#000000"
         app:layout_constraintEnd_toEndOf="@+id/channelEditTextProfile"
+        app:layout_constraintTop_toBottomOf="@+id/channelEditTextProfile" />
+
+    <Button
+        android:id="@+id/closeProfile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:backgroundTint="#FF5722"
+        android:text="CLose"
+        app:layout_constraintStart_toStartOf="@+id/channelEditTextProfile"
         app:layout_constraintTop_toBottomOf="@+id/channelEditTextProfile" />
 </androidx.constraintlayout.widget.ConstraintLayout>
