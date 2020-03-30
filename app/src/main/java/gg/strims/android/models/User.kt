@@ -1,4 +1,4 @@
-package gg.strims.mobile.models
+package gg.strims.android.models
 
 class User(
     val username: String,

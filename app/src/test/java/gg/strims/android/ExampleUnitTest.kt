@@ -1,4 +1,4 @@
-package gg.strims.mobile
+package gg.strims.android
 
 import org.junit.Test
 

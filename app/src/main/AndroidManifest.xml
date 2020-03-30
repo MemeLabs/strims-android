@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="gg.strims.mobile">
+    package="gg.strims.android">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -12,17 +12,17 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".UserListActivity"></activity>
+        <activity android:name="gg.strims.android.UserListActivity"></activity>
         <activity
-            android:name=".ChatOptionsActivity"
-            android:parentActivityName=".ChatActivity" />
+            android:name="gg.strims.android.ChatOptionsActivity"
+            android:parentActivityName="gg.strims.android.ChatActivity" />
         <activity
-            android:name=".ProfileActivity"
-            android:parentActivityName=".ChatActivity" />
+            android:name="gg.strims.android.ProfileActivity"
+            android:parentActivityName="gg.strims.android.ChatActivity" />
         <activity
-            android:name=".LoginActivity"
-            android:parentActivityName=".ChatActivity" />
-        <activity android:name=".ChatActivity">
+            android:name="gg.strims.android.LoginActivity"
+            android:parentActivityName="gg.strims.android.ChatActivity" />
+        <activity android:name="gg.strims.android.ChatActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

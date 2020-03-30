@@ -1,4 +1,4 @@
-package gg.strims.mobile
+package gg.strims.android
 
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
@@ -13,17 +13,12 @@ import android.text.TextWatcher
 import android.util.Log
 import android.view.*
 import android.webkit.CookieManager
-import android.widget.CheckBox
-import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.RemoteInput
 import androidx.core.app.TaskStackBuilder
-import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
@@ -34,10 +29,9 @@ import kotlinx.android.synthetic.main.chat_message.view.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import com.beust.klaxon.Klaxon
-import com.google.gson.Gson
-import gg.strims.mobile.models.ChatUser
-import gg.strims.mobile.models.Message
-import gg.strims.mobile.models.Options
+import gg.strims.android.models.ChatUser
+import gg.strims.android.models.Message
+import gg.strims.android.models.Options
 import io.ktor.client.HttpClient
 import io.ktor.client.features.websocket.WebSockets
 import io.ktor.client.features.websocket.wss
@@ -51,7 +45,6 @@ import kotlinx.android.synthetic.main.activity_user_list.*
 import kotlinx.android.synthetic.main.chat_user_row.view.*
 import kotlinx.android.synthetic.main.private_chat_message.view.*
 import java.io.*
-import java.lang.Exception
 import java.lang.StringBuilder
 import java.net.URL
 import java.util.*

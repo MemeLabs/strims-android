@@ -1,4 +1,4 @@
-package gg.strims.mobile
+package gg.strims.android
 
 import android.annotation.SuppressLint
 import android.content.Intent

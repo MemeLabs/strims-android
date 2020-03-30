@@ -1,4 +1,4 @@
-package gg.strims.mobile
+package gg.strims.android
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle

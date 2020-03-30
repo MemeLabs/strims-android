@@ -1,11 +1,11 @@
-package gg.strims.mobile
+package gg.strims.android
 
 import android.content.Context
 import android.util.Log
 import com.google.gson.Gson
-import gg.strims.mobile.models.ChatUser
-import gg.strims.mobile.models.Options
-import gg.strims.mobile.models.User
+import gg.strims.android.models.ChatUser
+import gg.strims.android.models.Options
+import gg.strims.android.models.User
 import java.io.FileOutputStream
 import java.lang.Exception
 

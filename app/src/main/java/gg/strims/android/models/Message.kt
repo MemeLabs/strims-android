@@ -1,4 +1,4 @@
-package gg.strims.mobile.models
+package gg.strims.android.models
 
 data class Message(var privMsg: Boolean, val nick: String, var data: String, var timestamp: Long, var features: Array<String>) {
 
