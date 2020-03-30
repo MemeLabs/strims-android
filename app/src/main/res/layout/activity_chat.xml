@@ -16,15 +16,17 @@
         android:background="#000000"
         app:layout_constraintBottom_toTopOf="@+id/sendMessageText"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
 
     <EditText
         android:id="@+id/sendMessageText"
         android:layout_width="0dp"
         android:layout_height="40dp"
         android:layout_marginStart="4dp"
-        android:layout_marginEnd="8dp"
+        android:layout_marginEnd="32dp"
         android:layout_marginBottom="4dp"
         android:background="@drawable/rounded_text_enter_message"
         android:ems="10"
@@ -139,6 +141,16 @@
         app:layout_constraintStart_toEndOf="@+id/optionsButton"
         app:layout_constraintTop_toTopOf="@+id/optionsButton"
         app:srcCompat="@drawable/ic_person_orange_24dp" />
+
+    <ImageView
+        android:id="@+id/emotesButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="@+id/sendMessageText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/sendMessageText"
+        app:layout_constraintTop_toTopOf="@+id/sendMessageText"
+        app:srcCompat="@drawable/ic_sentiment_satisfied_orange_24dp" />
 
     <fragment
         android:id="@+id/login_fragment"
