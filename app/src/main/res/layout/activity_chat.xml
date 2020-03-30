@@ -72,7 +72,7 @@
 
     <fragment
         android:id="@+id/options_fragment"
-        android:name="gg.strims.android.ChatActivity$OptionsFragment"
+        android:name="gg.strims.android.fragments.OptionsFragment$OptionsFragment"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_marginStart="24dp"
@@ -88,7 +88,7 @@
 
     <fragment
         android:id="@+id/user_list_fragment"
-        android:name="gg.strims.android.ChatActivity$UserListFragment"
+        android:name="gg.strims.android.fragments.UserListFragment$UserListFragment"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_marginStart="24dp"

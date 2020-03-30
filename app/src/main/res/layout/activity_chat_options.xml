@@ -4,8 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/rounded_text_enter_message"
-    tools:context=".ChatOptionsActivity">
+    android:background="@drawable/rounded_text_enter_message">
 
     <CheckBox
         android:id="@+id/checkBoxTimestamp"

@@ -6,7 +6,6 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -22,13 +21,13 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
-import com.xwray.groupie.Item
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.android.synthetic.main.activity_chat.*
-import kotlinx.android.synthetic.main.chat_message.view.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import com.beust.klaxon.Klaxon
+import gg.strims.android.items.ChatMessage
+import gg.strims.android.items.PrivateChatMessage
 import gg.strims.android.models.ChatUser
 import gg.strims.android.models.Message
 import gg.strims.android.models.Options
@@ -40,14 +39,9 @@ import io.ktor.http.cio.websocket.Frame
 import io.ktor.http.cio.websocket.readBytes
 import io.ktor.http.cio.websocket.readText
 import io.ktor.http.cio.websocket.send
-import kotlinx.android.synthetic.main.activity_chat_options.*
-import kotlinx.android.synthetic.main.activity_user_list.*
-import kotlinx.android.synthetic.main.chat_user_row.view.*
-import kotlinx.android.synthetic.main.private_chat_message.view.*
 import java.io.*
 import java.lang.StringBuilder
 import java.net.URL
-import java.util.*
 
 @KtorExperimentalAPI
 class ChatActivity : AppCompatActivity() {
@@ -59,7 +53,7 @@ class ChatActivity : AppCompatActivity() {
         var NOTIFICATION_REPLY_KEY = "Text"
     }
 
-    private val adapter = GroupAdapter<GroupieViewHolder>()
+    val adapter = GroupAdapter<GroupieViewHolder>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -148,167 +142,6 @@ class ChatActivity : AppCompatActivity() {
         }
     }
 
-    class UserListFragment : Fragment() {
-        private val userListAdapter = GroupAdapter<GroupieViewHolder>()
-
-        override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
-        ): View? {
-            return inflater.inflate(R.layout.activity_user_list, container, false)
-        }
-
-        override fun onHiddenChanged(hidden: Boolean) {
-            userListAdapter.clear()
-            if (CurrentUser.users != null) {
-                CurrentUser.users!!.sortBy { it.nick }
-                    CurrentUser.users!!.forEach {
-                    userListAdapter.add(UserListItem(it))
-                }
-                recyclerViewUserList.scrollToPosition(1)
-            }
-
-            userListSearch.addTextChangedListener(object: TextWatcher {
-                override fun afterTextChanged(s: Editable?) {
-                }
-
-                override fun beforeTextChanged(
-                    s: CharSequence?,
-                    start: Int,
-                    count: Int,
-                    after: Int
-                ) {
-                }
-
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    userListAdapter.clear()
-                    val list = mutableListOf<ChatUser>()
-                    CurrentUser.users!!.sortBy { it.nick }
-                    CurrentUser.users!!.forEach {
-                        userListAdapter.add(UserListItem(it))
-                    }
-                    recyclerViewUserList.scrollToPosition(1)
-                    for (i in 0 until userListAdapter.itemCount) {
-                        val item = userListAdapter.getItem(i) as UserListItem
-                        if (item.user.nick.contains(userListSearch.text.toString())) {
-                            list.add(item.user)
-                        }
-                    }
-                    userListAdapter.clear()
-                    list.forEach {
-                        userListAdapter.add(UserListItem(it))
-                    }
-                }
-            })
-        }
-
-        override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-            val layoutManager = LinearLayoutManager(view.context)
-            layoutManager.stackFromEnd = true
-            recyclerViewUserList.layoutManager = layoutManager
-            recyclerViewUserList.adapter = userListAdapter
-        }
-
-        inner class UserListItem(val user: ChatUser) : Item<GroupieViewHolder>() {
-            override fun getLayout(): Int {
-                return R.layout.chat_user_row
-            }
-
-            @SuppressLint("SetTextI18n")
-            override fun bind(viewHolder: GroupieViewHolder, position: Int) {
-                viewHolder.itemView.chatUserUsername.text = user.nick
-                if (user.features.contains("bot")) {
-                    viewHolder.itemView.chatUserUsername.setTextColor(Color.parseColor("#FF2196F3"))
-                } else {
-                    viewHolder.itemView.chatUserUsername.setTextColor(Color.parseColor("#FFFFFF"))
-                }
-
-                viewHolder.itemView.chatUserUsername.setOnClickListener {
-                    activity!!.sendMessageText.setText("/w ${user.nick} ")
-                    keyRequestFocus(activity!!.sendMessageText, context!!)
-                    activity!!.sendMessageText.setSelection(activity!!.sendMessageText.text.length)
-                    val fragment = this@UserListFragment
-                    val fragmentTransaction = fragmentManager!!.beginTransaction()
-                    fragmentTransaction.setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
-                        .hide(fragment)
-
-                    fragmentTransaction.commit()
-                }
-            }
-        }
-    }
-
-    class OptionsFragment : Fragment() {
-        override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
-        ): View? {
-            return inflater.inflate(R.layout.activity_chat_options, container, false)
-        }
-
-        override fun onHiddenChanged(hidden: Boolean) {
-            if (CurrentUser.options != null) {
-                checkBoxTimestamp.isChecked = CurrentUser.options!!.showTime
-                checkBoxGreentext.isChecked = CurrentUser.options!!.greentext
-                checkBoxHarshIgnore.isChecked = CurrentUser.options!!.harshIgnore
-                checkBoxHideNsfw.isChecked = CurrentUser.options!!.hideNsfw
-                checkBoxNotifications.isChecked = CurrentUser.options!!.notifications
-                checkBoxEmotes.isChecked = CurrentUser.options!!.emotes
-
-                ignoredUsersTextViewOptions.text =
-                    CurrentUser.options!!.ignoreList.toString()
-                        .substringAfter('[').substringBefore(']')
-
-                customHighlightsTextViewOptions.text =
-                    CurrentUser.options!!.customHighlights.toString()
-                        .substringAfter('[').substringBefore(']')
-            }
-        }
-
-        override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-            closeMenuButton.setOnClickListener {
-                fragmentManager!!.beginTransaction()
-                    .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
-                    .hide(this)
-                    .commit()
-            }
-
-            saveOptionsButton.setOnClickListener {
-                CurrentUser.saveOptions(context!!)
-                fragmentManager!!.beginTransaction()
-                    .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
-                    .hide(this)
-                    .commit()
-            }
-
-            checkBoxTimestamp.setOnCheckedChangeListener { buttonView, isChecked ->
-                CurrentUser.options!!.showTime = isChecked
-            }
-
-            checkBoxGreentext.setOnCheckedChangeListener { buttonView, isChecked ->
-                CurrentUser.options!!.greentext = isChecked
-            }
-
-            checkBoxHarshIgnore.setOnCheckedChangeListener { buttonView, isChecked ->
-                CurrentUser.options!!.harshIgnore = isChecked
-            }
-
-            checkBoxHideNsfw.setOnCheckedChangeListener { buttonView, isChecked ->
-                CurrentUser.options!!.hideNsfw = isChecked
-            }
-
-            checkBoxNotifications.setOnCheckedChangeListener { buttonView, isChecked ->
-                CurrentUser.options!!.notifications = isChecked
-            }
-
-            checkBoxEmotes.setOnCheckedChangeListener { buttonView, isChecked ->
-                CurrentUser.options!!.emotes = isChecked
-            }
-        }
-    }
-
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.chat_menu, menu)
         return super.onCreateOptionsMenu(menu)
@@ -350,154 +183,6 @@ class ChatActivity : AppCompatActivity() {
         }
 
         fragmentTransaction.commit()
-    }
-
-    inner class ChatMessage(private val messageData: Message) : Item<GroupieViewHolder>() {
-        override fun getLayout(): Int {
-            return R.layout.chat_message
-        }
-
-        @SuppressLint("SetTextI18n", "SimpleDateFormat", "WrongViewCast")
-        override fun bind(viewHolder: GroupieViewHolder, position: Int) {
-            CurrentUser.options!!.ignoreList.forEach {
-                if (it == messageData.nick) {
-                    return
-                }
-
-                if (CurrentUser.options!!.harshIgnore) {
-                    if (messageData.data.contains(it)) {
-                        return
-                    }
-                }
-            }
-
-            if (CurrentUser.options!!.hideNsfw) {
-                if ((messageData.data.contains("nsfw") || messageData.data.contains("nsfl")
-                            && messageData.data.contains("a link"))) {
-                    return
-                }
-            }
-
-            if (CurrentUser.options!!.greentext) {
-                if (messageData.data.first() == '>') {
-                    viewHolder.itemView.messageChatMessage.setTextColor(Color.parseColor("#789922"))
-                } else {
-                    viewHolder.itemView.messageChatMessage.setTextColor(Color.parseColor("#FFFFFF"))
-                }
-            }
-
-            if (CurrentUser.options!!.showTime) {
-                val date = Date(messageData.timestamp)
-                val time = if (date.minutes < 10) {
-                    "${date.hours}:0${date.minutes}"
-                } else {
-                    "${date.hours}:${date.minutes}"
-                }
-                viewHolder.itemView.timestampChatMessage.visibility = View.VISIBLE
-                viewHolder.itemView.timestampChatMessage.text = time
-            }
-
-            if (CurrentUser.user != null) {
-                if (messageData.data.contains(CurrentUser.user!!.username)) {
-                    viewHolder.itemView.setBackgroundColor(Color.parseColor("#001D36"))
-                } else if (CurrentUser.user!!.username == messageData.nick) {
-                    viewHolder.itemView.setBackgroundColor(Color.parseColor("#151515"))
-                } else if (CurrentUser.user!!.username != messageData.nick && !messageData.data.contains(CurrentUser.user!!.username)) {
-                    viewHolder.itemView.setBackgroundColor(Color.parseColor("#000000"))
-                }
-            }
-
-            if (CurrentUser.options!!.customHighlights.isNotEmpty()) {
-                CurrentUser.options!!.customHighlights.forEach {
-                    if (messageData.nick == it) {
-                        viewHolder.itemView.setBackgroundColor(Color.parseColor("#001D36"))
-                    }
-                }
-            }
-
-            if (messageData.features.contains("bot")) {
-                viewHolder.itemView.usernameChatMessage.setTextColor(Color.parseColor("#FF2196F3"))
-                viewHolder.itemView.botFlairChatMessage.visibility = View.VISIBLE
-            } else {
-                viewHolder.itemView.usernameChatMessage.setTextColor(Color.parseColor("#FFFFFF"))
-                viewHolder.itemView.botFlairChatMessage.visibility = View.GONE
-            }
-
-            if (CurrentUser.tempHighlightNick != null && CurrentUser.tempHighlightNick!!.contains(messageData.nick)) {
-                viewHolder.itemView.usernameChatMessage.setTextColor(Color.parseColor("#FFF44336"))
-            }
-
-            viewHolder.itemView.usernameChatMessage.text = "${messageData.nick}:"
-            viewHolder.itemView.messageChatMessage.text = messageData.data
-
-            viewHolder.itemView.usernameChatMessage.setOnClickListener {
-                for (i in 0 until adapter.itemCount) {
-                    if (adapter.getItem(i).layout == R.layout.chat_message) {
-                        val item = adapter.getItem(i) as ChatMessage
-                        if (item.messageData.nick == messageData.nick) {
-                            val adapterItem =
-                                recyclerViewChat.findViewHolderForAdapterPosition(i)
-
-                            adapterItem?.itemView?.usernameChatMessage?.setTextColor(Color.parseColor("#FFF44336"))
-                        }
-                    }
-                }
-                if (CurrentUser.tempHighlightNick == null) {
-                    CurrentUser.tempHighlightNick = mutableListOf()
-                }
-                CurrentUser.tempHighlightNick!!.add(messageData.nick)
-            }
-
-            viewHolder.itemView.setOnClickListener {
-                for (i in 0 until adapter.itemCount) {
-                    if (adapter.getItem(i).layout == R.layout.chat_message) {
-                        val item = adapter.getItem(i) as ChatMessage
-                        if (item.messageData.features.isEmpty()) {
-                            val adapterItem =
-                                recyclerViewChat.findViewHolderForAdapterPosition(i)
-
-                            adapterItem?.itemView?.usernameChatMessage?.setTextColor(Color.parseColor("#FFFFFF"))
-                        }
-                        CurrentUser.tempHighlightNick = null
-                    }
-                }
-            }
-        }
-    }
-
-    inner class PrivateChatMessage(private val messageData: Message) : Item<GroupieViewHolder>() {
-        override fun getLayout(): Int {
-            return R.layout.private_chat_message
-        }
-
-        @SuppressLint("SetTextI18n")
-        override fun bind(viewHolder: GroupieViewHolder, position: Int) {
-            if (CurrentUser.options!!.ignoreList.contains(messageData.nick)) {
-                return
-            }
-
-            if (CurrentUser.options!!.showTime) {
-                val date = Date(messageData.timestamp)
-                val time = if (date.minutes < 10) {
-                    "${date.hours}:0${date.minutes}"
-                } else {
-                    "${date.hours}:${date.minutes}"
-                }
-                viewHolder.itemView.timestampChatMessage.visibility = View.VISIBLE
-                viewHolder.itemView.timestampChatMessage.text = time
-            }
-
-            if (CurrentUser.options!!.greentext) {
-                if (messageData.data.first() == '>') {
-                    viewHolder.itemView.messageChatMessage.setTextColor(Color.parseColor("#789922"))
-                } else {
-                    viewHolder.itemView.messageChatMessage.setTextColor(Color.parseColor("#FFFFFF"))
-                }
-            }
-
-            viewHolder.itemView.usernamePrivateMessage.text = messageData.nick
-            viewHolder.itemView.messagePrivateMessage.text = " whispered: ${messageData.data}"
-        }
     }
 
     fun retrieveOptions() {
@@ -562,7 +247,13 @@ class ChatActivity : AppCompatActivity() {
             Log.d("TAG", messageHistory.toString())
             runOnUiThread {
                 messageHistory?.forEach {
-                    adapter.add(ChatMessage(parseMessage(it)!!))
+                    adapter.add(
+                        ChatMessage(
+                            parseMessage(
+                                it
+                            )!!
+                        )
+                    )
                 }
             }
         }
@@ -619,6 +310,20 @@ class ChatActivity : AppCompatActivity() {
                             val nick = messageText.substringAfter("/w ").substringBefore(' ')
                             send("PRIVMSG {\"nick\":\"$nick\", \"data\":\"${sendMessageText.text.toString()
                                 .substringAfter("/w $nick ")}\"}")
+                            runOnUiThread {
+                                adapter.add(
+                                    PrivateChatMessage(
+                                        Message(
+                                            false,
+                                            CurrentUser.user!!.username,
+                                            sendMessageText.text.toString(),
+                                            System.currentTimeMillis(),
+                                            arrayOf()
+                                        )
+                                    )
+                                )
+                                recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
+                            }
                         } else if (messageText.substringAfter(first).substringBefore(' ') == "ignore") {
                             val nickIgnore = messageText.substringAfter("/ignore ").substringBefore(' ')
                             CurrentUser.options!!.ignoreList.add(nickIgnore)
@@ -756,12 +461,20 @@ class ChatActivity : AppCompatActivity() {
                             if (!CurrentUser.options!!.ignoreList.contains(msg.nick)) {
                                 runOnUiThread {
                                     if (msg.privMsg) {
-                                        adapter.add(PrivateChatMessage(msg))
+                                        adapter.add(
+                                            PrivateChatMessage(
+                                                msg
+                                            )
+                                        )
                                         if (CurrentUser.options!!.notifications) {
                                             displayNotification(msg)
                                         }
                                     } else {
-                                        adapter.add(ChatMessage(msg))
+                                        adapter.add(
+                                            ChatMessage(
+                                                msg
+                                            )
+                                        )
                                     }
                                     val layoutTest =
                                         recyclerViewChat.layoutManager as LinearLayoutManager
@@ -805,7 +518,9 @@ class ChatActivity : AppCompatActivity() {
                 }
                 "JOIN" -> {
                     val userJoin = Klaxon().parse<ChatUser>(msg[1])
-                    CurrentUser.users!!.add(userJoin!!)
+                    if (!CurrentUser.users!!.contains(userJoin)) {
+                        CurrentUser.users!!.add(userJoin!!)
+                    }
                 }
                 "QUIT" -> {
                     val userQuit = Klaxon().parse<ChatUser>(msg[1])

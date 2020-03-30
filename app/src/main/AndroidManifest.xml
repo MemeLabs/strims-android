@@ -12,10 +12,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name="gg.strims.android.UserListActivity"></activity>
-        <activity
-            android:name="gg.strims.android.ChatOptionsActivity"
-            android:parentActivityName="gg.strims.android.ChatActivity" />
         <activity
             android:name="gg.strims.android.ProfileActivity"
             android:parentActivityName="gg.strims.android.ChatActivity" />
