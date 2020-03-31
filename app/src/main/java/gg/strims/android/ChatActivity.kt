@@ -83,9 +83,11 @@ class ChatActivity : AppCompatActivity() {
         })
 
         sendMessageText.setOnKeyListener(View.OnKeyListener { v, keyCode, event ->
-            if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP) {
-                sendMessageButton.performClick()
-                return@OnKeyListener true
+            if (keyCode == KeyEvent.KEYCODE_ENTER) {
+                if (sendMessageText.text.isNotEmpty()) {
+                    sendMessageButton.performClick()
+                    return@OnKeyListener true
+                }
             }
             false
         })
