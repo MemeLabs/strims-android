@@ -296,15 +296,15 @@ class ChatActivity : AppCompatActivity() {
                     if (first == '/') {
                         if (messageText.substringAfter(first).substringBefore(' ') == "w") {
                             val nick = messageText.substringAfter("/w ").substringBefore(' ')
-                            send("PRIVMSG {\"nick\":\"$nick\", \"data\":\"${sendMessageText.text.toString()
-                                .substringAfter("/w $nick ")}\"}")
+                            val message = messageText.substringAfter("/w $nick ")
+                            send("PRIVMSG {\"nick\":\"$nick\", \"data\":\"$message\"}")
                             runOnUiThread {
                                 adapter.add(
                                     PrivateChatMessage(
                                         Message(
                                             false,
-                                            CurrentUser.user!!.username,
-                                            sendMessageText.text.toString(),
+                                            "To: $nick",
+                                            message,
                                             System.currentTimeMillis(),
                                             arrayOf()
                                         )
