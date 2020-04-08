@@ -1,10 +1,8 @@
-name: Android Pull Request & Master CI
-
+name: Develop Branch Test & Build
 on:
   push:
     branches:
       - 'develop'
-
 jobs:
   main:
     name: Test & Build Debug
