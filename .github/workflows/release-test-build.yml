@@ -1,8 +1,8 @@
-name: Release Branch Test & Build
+name: Master Branch Test & Build
 on:
-  push: 
-     branches:
-        -'master'
+  push:
+    branches:
+      - 'master'
 jobs:
   main:
     name: Test & Build Release
