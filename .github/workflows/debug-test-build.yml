@@ -3,6 +3,9 @@ on:
   push:
     branches:
       - 'develop'
+      - 'fix/*'
+      - 'release/*'
+      - 'feature/*'
 jobs:
   main:
     name: Test & Build Debug
