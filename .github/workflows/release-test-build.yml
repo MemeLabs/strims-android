@@ -3,7 +3,7 @@ on:
   pull_request:
      types: [closed] 
      branches:
-        -'release-*'
+        -'master'
 jobs:
   main:
     if: github.event.pull_request.merged == true
