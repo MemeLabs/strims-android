@@ -1,12 +1,10 @@
 name: Release Branch Test & Build
 on:
-  pull_request:
-     types: [closed] 
+  push: 
      branches:
         -'master'
 jobs:
   main:
-    if: github.event.pull_request.merged == true
     name: Test & Build Release
     runs-on: ubuntu-18.04
     steps:
