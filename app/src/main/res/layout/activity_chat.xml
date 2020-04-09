@@ -31,7 +31,7 @@
         android:background="@drawable/rounded_text_enter_message"
         android:ems="10"
         android:hint="Log in to send messages"
-        android:inputType="textMultiLine|textPersonName|textCapSentences"
+        android:inputType="textMultiLine"
         android:maxLines="3"
         android:paddingStart="4dp"
         android:paddingEnd="40dp"
@@ -57,7 +57,7 @@
     <Button
         android:id="@+id/goToBottom"
         android:layout_width="0dp"
-        android:layout_height="30dp"
+        android:layout_height="35dp"
         android:animateLayoutChanges="true"
         android:backgroundTint="#181818"
         android:paddingLeft="0dp"
@@ -67,9 +67,42 @@
         android:text="More messages below"
         android:textColor="#959595"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="@+id/recyclerViewChat"
+        app:layout_constraintBottom_toTopOf="@id/sendMessageText"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <fragment
+        android:id="@+id/angelthump_fragment"
+        android:name="gg.strims.android.fragments.AngelThumpFragment"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:layout="@layout/fragment_angelthump"
+        tools:visibility="gone" />
+
+    <fragment
+        android:id="@+id/twitch_fragment"
+        android:name="gg.strims.android.fragments.TwitchFragment"
+        android:layout_width="0dp"
+        android:layout_height="300dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:layout="@layout/fragment_twitch"
+        tools:visibility="gone" />
+
+    <fragment
+        android:id="@+id/youtube_fragment"
+        android:name="gg.strims.android.fragments.YouTubeFragment"
+        android:layout_width="0dp"
+        android:layout_height="300dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:layout="@layout/fragment_youtube"
+        tools:visibility="gone" />
 
     <fragment
         android:id="@+id/options_fragment"
@@ -81,11 +114,12 @@
         android:layout_marginEnd="24dp"
         android:layout_marginBottom="60dp"
         android:layout_weight="2"
+        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:layout="@layout/activity_chat_options"
+        tools:layout="@layout/fragment_chat_options"
         tools:visibility="gone" />
 
     <fragment
@@ -102,7 +136,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:layout="@layout/activity_user_list"
+        tools:layout="@layout/fragment_user_list"
         tools:visibility="gone" />
 
     <fragment
@@ -119,7 +153,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:layout="@layout/activity_profile"
+        tools:layout="@layout/fragment_profile"
         tools:visibility="gone" />
 
     <ImageView
@@ -153,6 +187,18 @@
         app:srcCompat="@drawable/ic_sentiment_satisfied_orange_24dp" />
 
     <fragment
+        android:id="@+id/home_fragment"
+        android:name="gg.strims.android.fragments.HomeFragment"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:layout="@layout/fragment_strims_homepage"
+        tools:visibility="gone" />
+
+    <fragment
         android:id="@+id/login_fragment"
         android:name="gg.strims.android.fragments.LoginFragment"
         android:layout_width="0dp"
@@ -161,7 +207,22 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:layout="@layout/activity_login"
+        tools:layout="@layout/fragment_login"
         tools:visibility="gone" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewAutofill"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/rounded_recyclerview_autofil"
+        android:scrollbars="horizontal"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/goToBottom"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:listitem="@layout/autofill_item" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
