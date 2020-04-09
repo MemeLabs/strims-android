@@ -2,7 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/constraintLayoutChatMessage"
+    android:id="@+id/constraintLayoutChatMessageItem"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="#000000">
@@ -27,7 +27,7 @@
         android:autoLink="web"
         android:maxWidth="200dp"
         android:text="Message"
-        android:textColor="#FFFFFF"
+        android:textColor="#D8D8D8"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

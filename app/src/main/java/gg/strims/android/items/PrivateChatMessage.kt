@@ -8,12 +8,12 @@ import com.xwray.groupie.Item
 import gg.strims.android.CurrentUser
 import gg.strims.android.R
 import gg.strims.android.models.Message
-import kotlinx.android.synthetic.main.private_chat_message.view.*
+import kotlinx.android.synthetic.main.private_chat_message_item.view.*
 import java.util.*
 
 class PrivateChatMessage(private val messageData: Message) : Item<GroupieViewHolder>() {
     override fun getLayout(): Int {
-        return R.layout.private_chat_message
+        return R.layout.private_chat_message_item
     }
 
     @SuppressLint("SetTextI18n")
