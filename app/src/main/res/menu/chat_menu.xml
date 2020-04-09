@@ -3,6 +3,9 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
+        android:id="@+id/chatHome"
+        android:title="Streams" />
+    <item
         android:id="@+id/chatLogin"
         android:title="Login"
         app:showAsAction="ifRoom" />

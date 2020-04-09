@@ -7,15 +7,17 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import gg.strims.android.CurrentUser
 import gg.strims.android.R
-import kotlinx.android.synthetic.main.activity_chat_options.*
+import gg.strims.android.hideFragment
+import kotlinx.android.synthetic.main.fragment_chat_options.*
 
 class OptionsFragment : Fragment() {
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.activity_chat_options, container, false)
+        return inflater.inflate(R.layout.fragment_chat_options, container, false)
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
@@ -38,6 +40,7 @@ class OptionsFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        hideFragment(activity!!, this)
         closeMenuButton.setOnClickListener {
             fragmentManager!!.beginTransaction()
                 .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)

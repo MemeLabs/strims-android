@@ -15,11 +15,12 @@ import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
 import gg.strims.android.CurrentUser
 import gg.strims.android.R
+import gg.strims.android.hideFragment
 import gg.strims.android.keyRequestFocus
 import gg.strims.android.models.ChatUser
 import kotlinx.android.synthetic.main.activity_chat.*
-import kotlinx.android.synthetic.main.activity_user_list.*
-import kotlinx.android.synthetic.main.chat_user_row.view.*
+import kotlinx.android.synthetic.main.fragment_user_list.*
+import kotlinx.android.synthetic.main.chat_user_item.view.*
 
 class UserListFragment : Fragment() {
     private val userListAdapter =
@@ -30,7 +31,7 @@ class UserListFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.activity_user_list, container, false)
+        return inflater.inflate(R.layout.fragment_user_list, container, false)
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
@@ -79,6 +80,7 @@ class UserListFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        hideFragment(activity!!, this)
         val layoutManager =
             LinearLayoutManager(view.context)
         layoutManager.stackFromEnd = true
@@ -95,7 +97,7 @@ class UserListFragment : Fragment() {
 
     inner class UserListItem(val user: ChatUser) : Item<GroupieViewHolder>() {
         override fun getLayout(): Int {
-            return R.layout.chat_user_row
+            return R.layout.chat_user_item
         }
 
         @SuppressLint("SetTextI18n")

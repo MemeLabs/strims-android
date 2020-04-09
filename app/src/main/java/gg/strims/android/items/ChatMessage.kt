@@ -11,12 +11,12 @@ import gg.strims.android.R
 import gg.strims.android.models.Message
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.android.synthetic.main.activity_chat.*
-import kotlinx.android.synthetic.main.chat_message.view.*
+import kotlinx.android.synthetic.main.chat_message_item.view.*
 import java.util.*
 
 class ChatMessage(private val messageData: Message) : Item<GroupieViewHolder>() {
     override fun getLayout(): Int {
-        return R.layout.chat_message
+        return R.layout.chat_message_item
     }
 
     @KtorExperimentalAPI
@@ -96,7 +96,7 @@ class ChatMessage(private val messageData: Message) : Item<GroupieViewHolder>() 
 
         viewHolder.itemView.usernameChatMessage.setOnClickListener {
             for (i in 0 until ChatActivity().adapter.itemCount) {
-                if (ChatActivity().adapter.getItem(i).layout == R.layout.chat_message) {
+                if (ChatActivity().adapter.getItem(i).layout == R.layout.chat_message_item) {
                     val item = ChatActivity().adapter.getItem(i) as ChatMessage
                     if (item.messageData.nick == messageData.nick) {
                         val adapterItem =
@@ -113,8 +113,9 @@ class ChatMessage(private val messageData: Message) : Item<GroupieViewHolder>() 
         }
 
         viewHolder.itemView.setOnClickListener {
+            CurrentUser.tempHighlightNick = null
             for (i in 0 until ChatActivity().adapter.itemCount) {
-                if (ChatActivity().adapter.getItem(i).layout == R.layout.chat_message) {
+                if (ChatActivity().adapter.getItem(i).layout == R.layout.chat_message_item) {
                     val item = ChatActivity().adapter.getItem(i) as ChatMessage
                     if (item.messageData.features.isEmpty()) {
                         val adapterItem =
@@ -122,7 +123,6 @@ class ChatMessage(private val messageData: Message) : Item<GroupieViewHolder>() 
 
                         adapterItem?.itemView?.usernameChatMessage?.setTextColor(Color.parseColor("#FFFFFF"))
                     }
-                    CurrentUser.tempHighlightNick = null
                 }
             }
         }
