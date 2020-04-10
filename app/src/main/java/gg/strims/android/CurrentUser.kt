@@ -20,7 +20,6 @@ object CurrentUser {
     var tempStream: Stream? = null //Currently playing AngelThump stream object
     var tempTwitchUrl: String? = null //Currently playing Twitch URL
     var tempYouTubeId: String? = null //Currently playing YouTube Video ID
-    var jwt: String? = null
 
     fun saveOptions(context: Context) {
         val userOptions = options

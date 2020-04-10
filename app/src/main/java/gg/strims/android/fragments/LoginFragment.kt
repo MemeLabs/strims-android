@@ -1,12 +1,12 @@
 package gg.strims.android.fragments
 
 import android.annotation.SuppressLint
+import android.content.Intent
+import android.graphics.Bitmap
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.webkit.CookieManager
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.fragment.app.Fragment
@@ -28,16 +28,19 @@ class LoginFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         hideFragment(activity!!, this)
-        loginWebView.settings.javaScriptEnabled = true
-        loginWebView.settings.domStorageEnabled = true
-        loginWebView.loadUrl("https://strims.gg/login")
-        loginWebView.webViewClient = object: WebViewClient() {
-            override fun onPageFinished(view: WebView?, url: String?) {
-                if (url == "https://strims.gg/" || url == "https://chat.strims.gg/") {
-                    fragmentManager!!.beginTransaction()
-                        .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
-                        .hide(this@LoginFragment)
-                        .commit()
+    }
+
+    override fun onHiddenChanged(hidden: Boolean) {
+        if (!hidden) {
+            loginWebView.settings.javaScriptEnabled = true
+            loginWebView.settings.domStorageEnabled = true
+            loginWebView.loadUrl("https://strims.gg/login")
+            loginWebView.webViewClient = object: WebViewClient() {
+                override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                    if (url == "https://strims.gg/" || url == "https://chat.strims.gg/") {
+                        startActivity((Intent(context, ChatActivity::class.java)))
+                        activity!!.finish()
+                    }
                 }
             }
         }
