@@ -193,8 +193,8 @@ class ChatActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.chatLogin -> {
-//                showHideFragment(this, supportFragmentManager.findFragmentById(R.id.login_fragment)!!)
-                startActivity(Intent(this, LoginActivity::class.java))
+                showFragment(this, supportFragmentManager.findFragmentById(R.id.login_fragment)!!)
+//                startActivity(Intent(this, LoginActivity::class.java))
             }
             R.id.chatProfile -> {
                 showHideFragment(this, supportFragmentManager.findFragmentById(R.id.profile_fragment)!!)
@@ -399,7 +399,9 @@ class ChatActivity : AppCompatActivity() {
         }
 
         private fun retrieveCookie() {
-            val cookies = CookieManager.getInstance().getCookie("https://strims.gg")
+            val cookieManager = CookieManager.getInstance()
+            val cookies = cookieManager.getCookie("https://strims.gg")
+            cookieManager.flush()
             if (cookies != null) {
                 Log.d("TAG", "Cookies: $cookies")
                 val jwt = cookies.substringAfter("jwt=").substringBefore(" ")
