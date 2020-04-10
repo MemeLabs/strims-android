@@ -675,6 +675,11 @@ class ChatActivity : AppCompatActivity() {
                 "MSG" -> {
                     return Klaxon().parse<Message>(msg[1])
                 }
+                "MUTE" -> {
+                    val message = Klaxon().parse<Message>(msg[1])
+                    message!!.data = message.data.plus(" muted by Bot.")
+                    return message
+                }
             }
             return null
         }
