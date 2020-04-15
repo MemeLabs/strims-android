@@ -96,6 +96,7 @@ class ChatActivity : AppCompatActivity() {
         supportActionBar!!.hide()
         chatBottomNavigationView.selectedItemId = chatBottomNavigationView.menu.findItem(R.id.chatChat).itemId
         chatBottomNavigationView.setOnNavigationItemSelectedListener {
+            hideKeyboardFrom(this, sendMessageText)
             when (it.itemId) {
                 R.id.chatChat -> {
                     hideFragment(this, supportFragmentManager.findFragmentById(R.id.profile_fragment)!!)
@@ -193,7 +194,10 @@ class ChatActivity : AppCompatActivity() {
             val lastItem = layoutTest.findLastVisibleItemPosition()
             if (lastItem < recyclerViewChat.adapter!!.itemCount - 1
                 && (supportFragmentManager.findFragmentById(R.id.profile_fragment)!!.isHidden
-                        || supportFragmentManager.findFragmentById(R.id.streams_fragment)!!.isHidden)) {
+                        && supportFragmentManager.findFragmentById(R.id.streams_fragment)!!.isHidden
+                        && supportFragmentManager.findFragmentById(R.id.options_fragment)!!.isHidden
+                        && supportFragmentManager.findFragmentById(R.id.user_list_fragment)!!.isHidden
+                        && supportFragmentManager.findFragmentById(R.id.login_fragment)!!.isHidden)) {
                 goToBottom.visibility = View.VISIBLE
                 goToBottom.isEnabled = true
             } else {
@@ -209,6 +213,8 @@ class ChatActivity : AppCompatActivity() {
         }
 
         optionsButton.setOnClickListener {
+            goToBottom.visibility = View.GONE
+            hideKeyboardFrom(this, sendMessageText)
             val fragment = supportFragmentManager.findFragmentById(R.id.user_list_fragment)
             if (!fragment!!.isHidden) {
                 showHideFragment(this, fragment)
@@ -217,6 +223,8 @@ class ChatActivity : AppCompatActivity() {
         }
 
         userListButton.setOnClickListener {
+            goToBottom.visibility = View.GONE
+            hideKeyboardFrom(this, sendMessageText)
             val fragment = supportFragmentManager.findFragmentById(R.id.options_fragment)
             if (!fragment!!.isHidden) {
                 showHideFragment(this, fragment)
@@ -364,19 +372,31 @@ class ChatActivity : AppCompatActivity() {
             }
 
             viewHolder.itemView.usernameChatMessage.text = "${messageData.nick}:"
+
             val ssb = SpannableStringBuilder(messageData.data)
-            if (messageData.entities.emotes != null && messageData.entities.emotes!!.isNotEmpty() && messageData.entities.emotes!![0].name != "") {
-                messageData.entities.emotes!!.forEach {
-                    val bitmap = bitmapMemoryCache.get(it.name)
-                    if (bitmap != null) {
-                        var width = bitmap.width*3
-                        if (it.modifiers.contains("wide")) {
-                            width = bitmap.width*6
+
+            if (CurrentUser.options!!.emotes) {
+                if (messageData.entities.emotes != null && messageData.entities.emotes!!.isNotEmpty() && messageData.entities.emotes!![0].name != "") {
+                    messageData.entities.emotes!!.forEach {
+                        val bitmap = bitmapMemoryCache.get(it.name)
+                        if (bitmap != null) {
+                            var width = bitmap.width * 3
+                            if (it.modifiers.contains("wide")) {
+                                width = bitmap.width * 6
+                            }
+                            val height = bitmap.height * 3
+                            val resized = Bitmap.createScaledBitmap(bitmap, width, height, false)
+                            ssb.setSpan(
+                                ImageSpan(this@ChatActivity, resized),
+                                it.bounds[0],
+                                it.bounds[1],
+                                Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                            )
+                            viewHolder.itemView.messageChatMessage.setText(
+                                ssb,
+                                TextView.BufferType.SPANNABLE
+                            )
                         }
-                        val height = bitmap.height*3
-                        val resized = Bitmap.createScaledBitmap(bitmap, width, height, false)
-                        ssb.setSpan(ImageSpan(this@ChatActivity, resized), it.bounds[0], it.bounds[1], Spannable.SPAN_INCLUSIVE_INCLUSIVE)
-                        viewHolder.itemView.messageChatMessage.setText(ssb, TextView.BufferType.SPANNABLE)
                     }
                 }
             }

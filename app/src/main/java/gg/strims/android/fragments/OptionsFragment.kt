@@ -5,11 +5,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.RecyclerView
 import gg.strims.android.CurrentUser
 import gg.strims.android.R
 import gg.strims.android.hideFragment
+import io.ktor.util.KtorExperimentalAPI
 import kotlinx.android.synthetic.main.fragment_chat_options.*
 
+@KtorExperimentalAPI
 class OptionsFragment : Fragment() {
 
     override fun onCreateView(
@@ -51,6 +54,8 @@ class OptionsFragment : Fragment() {
 
         saveOptionsButton.setOnClickListener {
             CurrentUser.saveOptions(context!!)
+            val recycler = activity!!.findViewById<RecyclerView>(R.id.recyclerViewChat)
+            recycler.adapter!!.notifyDataSetChanged()
             fragmentManager!!.beginTransaction()
                 .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
                 .hide(this)

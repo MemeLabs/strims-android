@@ -36,8 +36,7 @@ class StreamsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         hideFragment(activity!!, this)
         view.setOnTouchListener { view, motionEvent -> return@setOnTouchListener true }
-        val layoutManager =
-            LinearLayoutManager(view.context)
+        val layoutManager = LinearLayoutManager(view.context)
         layoutManager.stackFromEnd = true
         recyclerViewStreams.layoutManager = layoutManager
         recyclerViewStreams.adapter = streamsAdapter
@@ -45,10 +44,14 @@ class StreamsFragment : Fragment() {
 
     override fun onHiddenChanged(hidden: Boolean) {
         if (CurrentUser.streams != null && !hidden) {
+            streamsAdapter.clear()
             CurrentUser.streams!!.sortByDescending {
                 it.live
             }
             CurrentUser.streams!!.forEach {
+                if (!CurrentUser.user!!.show_hidden && it.hidden) {
+                    return@forEach
+                }
                 streamsAdapter.add(StreamItem(it))
             }
         }
