@@ -44,15 +44,15 @@ class StreamsFragment : Fragment() {
 
     override fun onHiddenChanged(hidden: Boolean) {
         if (CurrentUser.streams != null && !hidden) {
+            streamsAdapter.clear()
             CurrentUser.streams!!.sortByDescending {
                 it.live
             }
             CurrentUser.streams!!.forEach {
-                if (!CurrentUser.user!!.show_hidden && !it.hidden) {
-                    streamsAdapter.add(StreamItem(it))
-                } else if (CurrentUser.user!!.show_hidden) {
-                    streamsAdapter.add(StreamItem(it))
+                if (!CurrentUser.user!!.show_hidden && it.hidden) {
+                    return@forEach
                 }
+                streamsAdapter.add(StreamItem(it))
             }
         }
         recyclerViewStreams.scrollToPosition(0)
