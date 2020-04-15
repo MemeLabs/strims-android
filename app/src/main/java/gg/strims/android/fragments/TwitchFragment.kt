@@ -24,15 +24,27 @@ class TwitchFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         hideFragment(activity!!, this)
+        view.setOnTouchListener { view, motionEvent -> return@setOnTouchListener true }
         webViewTwitch.settings.domStorageEnabled = true
         webViewTwitch.settings.javaScriptEnabled = true
+        twitchClose.setOnClickListener {
+            webViewTwitch.loadUrl("")
+            CurrentUser.tempTwitchVod = null
+            CurrentUser.tempYouTubeId = null
+            fragmentManager!!.beginTransaction()
+                .hide(this)
+                .commit()
+        }
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
         if (CurrentUser.tempTwitchUrl != null && !hidden) {
-            webViewTwitch.loadUrl("https://player.twitch.tv/?channel=${CurrentUser.tempTwitchUrl}")
+            if (CurrentUser.tempTwitchVod!!) {
+                webViewTwitch.loadUrl("https://player.twitch.tv/?video=${CurrentUser.tempTwitchUrl}")
+            } else {
+                webViewTwitch.loadUrl("https://player.twitch.tv/?channel=${CurrentUser.tempTwitchUrl}")
+            }
         } else {
-            CurrentUser.tempTwitchUrl = null
             webViewTwitch.loadUrl("")
         }
     }

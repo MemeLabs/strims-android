@@ -73,7 +73,12 @@ class UserListFragment : Fragment() {
                 }
                 userListAdapter.clear()
                 list.forEach {
-                    userListAdapter.add(UserListItem(it))
+                    for (i in 0 until userListAdapter.itemCount) {
+                        val item = userListAdapter.getItem(i) as UserListItem
+                        if (item.user.nick != it.nick) {
+                            userListAdapter.add(UserListItem(it))
+                        }
+                    }
                 }
             }
         })
@@ -81,6 +86,7 @@ class UserListFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         hideFragment(activity!!, this)
+        view.setOnTouchListener { view, motionEvent -> return@setOnTouchListener true }
         val layoutManager =
             LinearLayoutManager(view.context)
         layoutManager.stackFromEnd = true

@@ -24,6 +24,18 @@ class YouTubeFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         hideFragment(activity!!, this)
+        view.setOnTouchListener { view, motionEvent -> return@setOnTouchListener true }
+        youTubeClose.setOnClickListener {
+            youTubeView.getYouTubePlayerWhenReady(object : YouTubePlayerCallback {
+                override fun onYouTubePlayer(youTubePlayer: YouTubePlayer) {
+                    youTubePlayer.pause()
+                }
+            })
+            CurrentUser.tempYouTubeId = null
+            fragmentManager!!.beginTransaction()
+                .hide(this)
+                .commit()
+        }
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
@@ -33,8 +45,6 @@ class YouTubeFragment: Fragment() {
                     youTubePlayer.loadVideo(CurrentUser.tempYouTubeId!!, 0f)
                 }
             })
-        } else {
-            CurrentUser.tempYouTubeId = null
         }
     }
 }
