@@ -8,20 +8,20 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.squareup.picasso.Picasso
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
-import gg.strims.android.CurrentUser
-import gg.strims.android.R
-import gg.strims.android.hideFragment
+import gg.strims.android.*
 import gg.strims.android.models.Stream
-import gg.strims.android.showFragment
-import kotlinx.android.synthetic.main.fragment_strims_homepage.*
+import io.ktor.util.KtorExperimentalAPI
+import kotlinx.android.synthetic.main.fragment_streams.*
 import kotlinx.android.synthetic.main.stream_item.view.*
 
 @SuppressLint("SetTextI18n")
-class HomeFragment : Fragment() {
+@KtorExperimentalAPI
+class StreamsFragment : Fragment() {
 
     private val streamsAdapter = GroupAdapter<GroupieViewHolder>()
 
@@ -30,11 +30,12 @@ class HomeFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_strims_homepage, container, false)
+        return inflater.inflate(R.layout.fragment_streams, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         hideFragment(activity!!, this)
+        view.setOnTouchListener { view, motionEvent -> return@setOnTouchListener true }
         val layoutManager =
             LinearLayoutManager(view.context)
         layoutManager.stackFromEnd = true
@@ -69,30 +70,39 @@ class HomeFragment : Fragment() {
             viewHolder.itemView.streamTitle.text = "${stream.channel} presents ${stream.title} via ${stream.service}"
             viewHolder.itemView.streamViewerCount.text = stream.rustlers.toString()
             if (stream.live) {
-                viewHolder.itemView.streamViewerCount.setTextColor(Color.parseColor("#4CAF50"))
+                viewHolder.itemView.streamViewerCount.setTextColor(Color.parseColor("#FFFFFF"))
             } else {
                 viewHolder.itemView.streamViewerCount.setTextColor(Color.parseColor("#F44336"))
             }
 
             viewHolder.itemView.setOnClickListener {
-                hideFragment(activity!!, this@HomeFragment)
+                hideFragment(activity!!, this@StreamsFragment)
                 hideFragment(activity!!, fragmentManager!!.findFragmentById(R.id.angelthump_fragment)!!)
                 hideFragment(activity!!, fragmentManager!!.findFragmentById(R.id.twitch_fragment)!!)
                 hideFragment(activity!!, fragmentManager!!.findFragmentById(R.id.youtube_fragment)!!)
+                val bottomNavigationView = activity!!.findViewById<BottomNavigationView>(R.id.chatBottomNavigationView)
+                bottomNavigationView.selectedItemId = bottomNavigationView.menu.findItem(R.id.chatChat).itemId
                 when (stream.service) {
-                    "angelthump" -> {
+                    "angelthump", "m3u8" -> {
                         CurrentUser.tempStream = stream
                         val fragment = fragmentManager!!.findFragmentById(R.id.angelthump_fragment)
                         showFragment(activity!!, fragment!!)
                     }
                     "twitch" -> {
                         CurrentUser.tempTwitchUrl = stream.channel
+                        CurrentUser.tempTwitchVod = false
                         val fragment = fragmentManager!!.findFragmentById(R.id.twitch_fragment)
                         showFragment(activity!!, fragment!!)
                     }
                     "youtube" -> {
                         CurrentUser.tempYouTubeId = stream.channel
                         val fragment = fragmentManager!!.findFragmentById(R.id.youtube_fragment)
+                        showFragment(activity!!, fragment!!)
+                    }
+                    "twitch-vod" -> {
+                        CurrentUser.tempTwitchUrl = stream.channel
+                        CurrentUser.tempTwitchVod = true
+                        val fragment = fragmentManager!!.findFragmentById(R.id.twitch_fragment)
                         showFragment(activity!!, fragment!!)
                     }
                 }
