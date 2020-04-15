@@ -13,7 +13,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginBottom="4dp"
-        android:background="#000000"
+        android:background="#080808"
         app:layout_constraintBottom_toTopOf="@+id/sendMessageText"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
@@ -31,7 +31,8 @@
         android:background="@drawable/rounded_text_enter_message"
         android:ems="10"
         android:hint="Log in to send messages"
-        android:inputType="textMultiLine"
+        android:imeOptions="actionSend"
+        android:inputType="text"
         android:maxLines="3"
         android:paddingStart="4dp"
         android:paddingEnd="40dp"
@@ -39,13 +40,13 @@
         android:textColorHighlight="#40FF5722"
         android:textCursorDrawable="@drawable/orange_cursor"
         android:textSize="14sp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/chatBottomNavigationView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/userListButton" />
 
     <Button
         android:id="@+id/sendMessageButton"
-        android:layout_width="28dp"
+        android:layout_width="26dp"
         android:layout_height="30dp"
         android:layout_marginEnd="6dp"
         android:background="@drawable/ic_send_orange_24dp"
@@ -54,22 +55,67 @@
         app:layout_constraintEnd_toEndOf="@+id/sendMessageText"
         app:layout_constraintTop_toTopOf="@+id/sendMessageText" />
 
+    <ImageView
+        android:id="@+id/optionsButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        app:layout_constraintBottom_toBottomOf="@id/sendMessageText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/sendMessageText"
+        app:srcCompat="@drawable/ic_settings_orange_24dp" />
+
+    <ImageView
+        android:id="@+id/userListButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        app:layout_constraintBottom_toBottomOf="@+id/optionsButton"
+        app:layout_constraintStart_toEndOf="@+id/optionsButton"
+        app:layout_constraintTop_toTopOf="@+id/optionsButton"
+        app:srcCompat="@drawable/ic_person_orange_24dp" />
+
+    <ImageView
+        android:id="@+id/emotesButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="@+id/sendMessageText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/sendMessageText"
+        app:layout_constraintTop_toTopOf="@+id/sendMessageText"
+        app:srcCompat="@drawable/ic_sentiment_satisfied_orange_24dp" />
+
     <Button
         android:id="@+id/goToBottom"
         android:layout_width="0dp"
-        android:layout_height="35dp"
+        android:layout_height="25dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
+        android:layout_marginBottom="2dp"
         android:animateLayoutChanges="true"
-        android:backgroundTint="#181818"
-        android:paddingLeft="0dp"
-        android:paddingTop="0dp"
-        android:paddingRight="0dp"
-        android:paddingBottom="0dp"
+        android:background="@drawable/rounded_recyclerview_autofill"
         android:text="More messages below"
         android:textColor="#959595"
         android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@id/sendMessageText"
+        app:layout_constraintBottom_toBottomOf="@+id/recyclerViewChat"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        tools:visibility="visible" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewAutofill"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
+        android:layout_marginBottom="2dp"
+        android:background="@drawable/rounded_recyclerview_autofill"
+        android:scrollbars="horizontal"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/goToBottom"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:listitem="@layout/autofill_item" />
 
     <fragment
         android:id="@+id/angelthump_fragment"
@@ -144,58 +190,24 @@
         android:name="gg.strims.android.fragments.ProfileFragment"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="80dp"
         android:layout_weight="2"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/chatBottomNavigationView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:layout="@layout/fragment_profile"
         tools:visibility="gone" />
 
-    <ImageView
-        android:id="@+id/optionsButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="4dp"
-        app:layout_constraintBottom_toBottomOf="@id/sendMessageText"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/sendMessageText"
-        app:srcCompat="@drawable/ic_settings_orange_24dp" />
-
-    <ImageView
-        android:id="@+id/userListButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="4dp"
-        app:layout_constraintBottom_toBottomOf="@+id/optionsButton"
-        app:layout_constraintStart_toEndOf="@+id/optionsButton"
-        app:layout_constraintTop_toTopOf="@+id/optionsButton"
-        app:srcCompat="@drawable/ic_person_orange_24dp" />
-
-    <ImageView
-        android:id="@+id/emotesButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="@+id/sendMessageText"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/sendMessageText"
-        app:layout_constraintTop_toTopOf="@+id/sendMessageText"
-        app:srcCompat="@drawable/ic_sentiment_satisfied_orange_24dp" />
-
     <fragment
-        android:id="@+id/home_fragment"
-        android:name="gg.strims.android.fragments.HomeFragment"
+        android:id="@+id/streams_fragment"
+        android:name="gg.strims.android.fragments.StreamsFragment"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/chatBottomNavigationView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:layout="@layout/fragment_strims_homepage"
+        tools:layout="@layout/fragment_streams"
         tools:visibility="gone" />
 
     <fragment
@@ -210,19 +222,17 @@
         tools:layout="@layout/fragment_login"
         tools:visibility="gone" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerViewAutofill"
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/chatBottomNavigationView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="4dp"
-        android:layout_marginEnd="4dp"
-        android:layout_marginBottom="8dp"
-        android:background="@drawable/rounded_recyclerview_autofil"
-        android:scrollbars="horizontal"
-        android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@+id/goToBottom"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        tools:listitem="@layout/autofill_item" />
+        app:itemBackground="@color/colorPrimary"
+        app:itemIconTint="@drawable/nav_item_icon_colour"
+        app:itemTextColor="@color/nav_item_text_colour"
+        app:labelVisibilityMode="labeled"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:menu="@menu/chat_navigation" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

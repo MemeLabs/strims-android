@@ -38,7 +38,7 @@ class LoginFragment: Fragment() {
             loginWebView.webViewClient = object: WebViewClient() {
                 override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                     if (url == "https://strims.gg/" || url == "https://chat.strims.gg/") {
-                        startActivity((Intent(context, ChatActivity::class.java)))
+                        startActivity(Intent(context, ChatActivity::class.java))
                         activity!!.finish()
                     }
                 }

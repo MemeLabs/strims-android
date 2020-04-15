@@ -5,13 +5,13 @@
     android:id="@+id/constraintLayoutStreamItem"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="8dp"
-    android:background="@drawable/rounded_streams_background">
+    android:layout_marginTop="8dp"
+    android:background="@drawable/streams_background">
 
     <ImageView
         android:id="@+id/streamThumbnail"
         android:layout_width="0dp"
-        android:layout_height="165dp"
+        android:layout_height="200dp"
         android:layout_marginStart="1dp"
         android:layout_marginTop="1dp"
         android:layout_marginEnd="1dp"
@@ -25,23 +25,47 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:layout_marginBottom="4dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="6dp"
         android:text="Streamer"
         android:textColor="#FF5722"
         android:textSize="18sp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/streamViewerCount"
+        app:layout_constraintEnd_toStartOf="@+id/constraintLayoutStreamViewers"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/streamThumbnail" />
 
-    <TextView
-        android:id="@+id/streamViewerCount"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constraintLayoutStreamViewers"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:text="Viewers"
-        android:textColor="#4CAF50"
-        android:textSize="18sp"
+        android:layout_height="0dp"
+        android:layout_marginEnd="6dp"
+        android:background="@drawable/rounded_text_viewers"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/streamTitle" />
+        app:layout_constraintTop_toTopOf="@+id/streamTitle">
+
+        <TextView
+            android:id="@+id/streamViewerCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:text="999"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/streamViewerImage"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/streamViewerImage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="2dp"
+            app:layout_constraintBottom_toBottomOf="@id/streamViewerCount"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/streamViewerCount"
+            app:srcCompat="@drawable/ic_person_white_24dp" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
