@@ -6,9 +6,9 @@ class Options(
     var harshIgnore: Boolean,
     var hideNsfw: Boolean,
     var notifications: Boolean,
-    var greentext: Boolean,
-    var emotes: Boolean,
+    var greentext: Boolean = true,
+    var emotes: Boolean = true,
     var customHighlights: MutableList<String>
 ) {
-    constructor(): this(false, mutableListOf(), false, false , false, false, false, mutableListOf())
+    constructor(): this(false, mutableListOf(), false, false , false, true, true, mutableListOf())
 }

@@ -18,7 +18,7 @@ object CurrentUser {
     var tempTwitchUrl: String? = null //Currently playing Twitch URL
     var tempTwitchVod: Boolean? = null //True if selected stream is a Twitch VOD
     var tempYouTubeId: String? = null //Currently playing YouTube Video ID
-    var emotes: MutableList<Emote>? = null
+    var emotes: MutableList<Emote>? = null //Collection of all emotes
 
     fun saveOptions(context: Context) {
         val userOptions = options
