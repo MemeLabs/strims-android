@@ -434,11 +434,11 @@ class ChatActivity : AppCompatActivity() {
                         if (!animated) {
                             val bitmap = bitmapMemoryCache.get(it.name)
                             if (bitmap != null) {
-                                var width = bitmap.width * 3
+                                var width = bitmap.width
                                 if (it.modifiers.contains("wide")) {
-                                    width = bitmap.width * 6
+                                    width = bitmap.width * 3
                                 }
-                                val height = bitmap.height * 3
+                                val height = bitmap.height
                                 val resized =
                                     Bitmap.createScaledBitmap(bitmap, width, height, false)
                                 ssb.setSpan(
@@ -664,8 +664,10 @@ class ChatActivity : AppCompatActivity() {
         private fun cacheEmotes() {
             runOnUiThread {
                 CurrentUser.emotes?.forEach {
-                    val url = "https://chat.strims.gg/${it.versions[0].path}"
-                    if (!it.versions[0].animated) {
+                    val size = it.versions.size - 1
+                    val biggestEmote = it.versions[size]
+                    val url = "https://chat.strims.gg/${biggestEmote.path}"
+                    if (!biggestEmote.animated) {
                         GlobalScope.launch {
                             val bitmap = getBitmapFromURL(url)
                             bitmapMemoryCache.put(it.name, bitmap)
