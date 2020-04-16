@@ -695,7 +695,7 @@ class ChatActivity : AppCompatActivity() {
         }
 
         suspend fun onConnect() = client.wss(
-            host = "chat2.strims.gg",
+            host = "chat.strims.gg",
             path = "/ws",
             request = {
                 retrieveCookie()
