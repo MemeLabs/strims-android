@@ -1,6 +1,6 @@
 package gg.strims.android.models
 
-class Emote(val name: String, val path: String, val animated: Boolean) {
+class Emote(val name: String, val versions: List<EmoteVersion>) {
 
-    constructor(): this("", "", false)
+    constructor(): this("", listOf())
 }
