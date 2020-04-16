@@ -558,7 +558,6 @@ class ChatActivity : AppCompatActivity() {
             if (isConsecutive) {
                 viewHolder.itemView.usernameChatMessage.visibility = View.GONE
                 viewHolder.itemView.botFlairChatMessage.visibility = View.GONE
-                viewHolder
             }
         }
 
@@ -696,7 +695,7 @@ class ChatActivity : AppCompatActivity() {
         }
 
         suspend fun onConnect() = client.wss(
-            host = "chat.strims.gg",
+            host = "chat2.strims.gg",
             path = "/ws",
             request = {
                 retrieveCookie()
