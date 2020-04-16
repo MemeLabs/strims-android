@@ -15,6 +15,7 @@ import android.text.Editable
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.TextWatcher
+import android.text.style.DynamicDrawableSpan
 import android.text.style.ImageSpan
 import android.util.Log
 import android.util.LruCache
@@ -34,7 +35,6 @@ import com.beust.klaxon.Klaxon
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
-import gg.strims.android.items.PrivateChatMessage
 import gg.strims.android.models.*
 import io.ktor.client.HttpClient
 import io.ktor.client.features.websocket.WebSockets
@@ -49,7 +49,7 @@ import io.ktor.util.KtorExperimentalAPI
 import kotlinx.android.synthetic.main.activity_chat.*
 import kotlinx.android.synthetic.main.autofill_item.view.*
 import kotlinx.android.synthetic.main.chat_message_item.view.*
-import kotlinx.android.synthetic.main.chat_message_item.view.messageChatMessage
+import kotlinx.android.synthetic.main.private_chat_message_item.view.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.io.BufferedReader
@@ -58,7 +58,7 @@ import java.io.InputStream
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
-import java.util.*
+import java.text.SimpleDateFormat
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -85,6 +85,14 @@ class ChatActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chat)
 
+        GlobalScope.launch {
+            ChatClient().onConnect()
+        }
+
+        GlobalScope.launch {
+            StrimsClient().onConnect()
+        }
+
         val maxMemory = (Runtime.getRuntime().maxMemory() / 1024).toInt()
         val cacheSize = maxMemory / 8
         bitmapMemoryCache = object : LruCache<String, Bitmap>(cacheSize) {
@@ -92,9 +100,12 @@ class ChatActivity : AppCompatActivity() {
                 return bitmap.byteCount / 1024
             }
         }
+        gifMemoryCache = object : LruCache<String, Drawable>(cacheSize) {}
 
         supportActionBar!!.hide()
+
         chatBottomNavigationView.selectedItemId = chatBottomNavigationView.menu.findItem(R.id.chatChat).itemId
+
         chatBottomNavigationView.setOnNavigationItemSelectedListener {
             hideKeyboardFrom(this, sendMessageText)
             when (it.itemId) {
@@ -124,17 +135,6 @@ class ChatActivity : AppCompatActivity() {
             }
             true
         }
-
-        GlobalScope.launch {
-            ChatClient().onConnect()
-        }
-
-        GlobalScope.launch {
-            StrimsClient().onConnect()
-        }
-
-        recyclerViewAutofill.adapter = autofillAdapter
-        recyclerViewAutofill.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
 
         sendMessageText.addTextChangedListener(object: TextWatcher {
             override fun afterTextChanged(s: Editable?) {
@@ -170,14 +170,14 @@ class ChatActivity : AppCompatActivity() {
             }
         })
 
-        sendMessageText.setOnEditorActionListener { v, actionId, event ->
+        sendMessageText.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEND) {
                 sendMessageButton.performClick()
             }
             true
         }
 
-        sendMessageText.setOnKeyListener { v, keyCode, event ->
+        sendMessageText.setOnKeyListener { _, keyCode, _ ->
             if (keyCode == KeyEvent.KEYCODE_ENTER) {
                 sendMessageButton.performClick()
             }
@@ -189,7 +189,7 @@ class ChatActivity : AppCompatActivity() {
         recyclerViewChat.layoutManager = layoutManager
         recyclerViewChat.adapter = adapter
 
-        recyclerViewChat.setOnScrollChangeListener { v, scrollX, scrollY, oldScrollX, oldScrollY ->
+        recyclerViewChat.setOnScrollChangeListener { _, _, _, _, _ ->
             val layoutTest = recyclerViewChat.layoutManager as LinearLayoutManager
             val lastItem = layoutTest.findLastVisibleItemPosition()
             if (lastItem < recyclerViewChat.adapter!!.itemCount - 1
@@ -207,6 +207,9 @@ class ChatActivity : AppCompatActivity() {
         }
 
         recyclerViewChat.itemAnimator = null
+
+        recyclerViewAutofill.adapter = autofillAdapter
+        recyclerViewAutofill.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
 
         goToBottom.setOnClickListener {
             recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
@@ -283,7 +286,6 @@ class ChatActivity : AppCompatActivity() {
         } else {
             CurrentUser.options = Options()
         }
-        Log.d("TAG", "${CurrentUser.options!!.greentext}, ${CurrentUser.options!!.emotes}")
     }
 
     private fun displayNotification(message: Message) {
@@ -324,12 +326,8 @@ class ChatActivity : AppCompatActivity() {
 
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
             if (CurrentUser.options!!.showTime) {
-                val date = Date(messageData.timestamp)
-                val time = if (date.minutes < 10) {
-                    "${date.hours}:0${date.minutes}"
-                } else {
-                    "${date.hours}:${date.minutes}"
-                }
+                val dateFormat = SimpleDateFormat("HH:mm")
+                val time = dateFormat.format(messageData.timestamp)
                 viewHolder.itemView.timestampChatMessage.visibility = View.VISIBLE
                 viewHolder.itemView.timestampChatMessage.text = time
             }
@@ -378,30 +376,47 @@ class ChatActivity : AppCompatActivity() {
             if (CurrentUser.options!!.emotes) {
                 if (messageData.entities.emotes != null && messageData.entities.emotes!!.isNotEmpty() && messageData.entities.emotes!![0].name != "") {
                     messageData.entities.emotes!!.forEach {
-                        val bitmap = bitmapMemoryCache.get(it.name)
-                        if (bitmap != null) {
-                            var width = bitmap.width * 3
-                            if (it.modifiers.contains("wide")) {
-                                width = bitmap.width * 6
+                        var animated = false
+                        CurrentUser.emotes!!.forEach { it2 ->
+                            if (it.name == it2.name && it2.versions[0].animated) {
+                                animated = true
                             }
-                            val height = bitmap.height * 3
-                            val resized = Bitmap.createScaledBitmap(bitmap, width, height, false)
-                            ssb.setSpan(
-                                ImageSpan(this@ChatActivity, resized),
-                                it.bounds[0],
-                                it.bounds[1],
-                                Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                            )
-                            viewHolder.itemView.messageChatMessage.setText(
-                                ssb,
-                                TextView.BufferType.SPANNABLE
-                            )
+                        }
+                        if (!animated) {
+                            val bitmap = bitmapMemoryCache.get(it.name)
+                            if (bitmap != null) {
+                                var width = bitmap.width * 3
+                                if (it.modifiers.contains("wide")) {
+                                    width = bitmap.width * 6
+                                }
+                                val height = bitmap.height * 3
+                                val resized =
+                                    Bitmap.createScaledBitmap(bitmap, width, height, false)
+                                ssb.setSpan(
+                                    ImageSpan(this@ChatActivity, resized),
+                                    it.bounds[0],
+                                    it.bounds[1],
+                                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                                )
+                                viewHolder.itemView.messageChatMessage.setText(
+                                    ssb,
+                                    TextView.BufferType.SPANNABLE
+                                )
+                            }
+                        } else {
+                            val gif = gifMemoryCache.get(it.name)
+                            if (gif != null) {
+                                ssb.setSpan(
+                                    ImageSpan(gif, DynamicDrawableSpan.ALIGN_BOTTOM),
+                                    it.bounds[0],
+                                    it.bounds[1],
+                                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                                )
+                            }
                         }
                     }
                 }
             }
-
-            viewHolder.itemView.messageChatMessage.setText(ssb, TextView.BufferType.SPANNABLE)
 
 //            if (messageData.entities.me!!.bounds.isNotEmpty()) {
 //                ssb.setSpan(Typeface.ITALIC, messageData.entities.me!!.bounds[0], messageData.entities.me!!.bounds[1], Spannable.SPAN_INCLUSIVE_INCLUSIVE)
@@ -436,8 +451,8 @@ class ChatActivity : AppCompatActivity() {
             viewHolder.itemView.usernameChatMessage.setOnLongClickListener {
                 val pop = PopupMenu(it.context, it)
                 pop.inflate(R.menu.chat_message_username_menu)
-                pop.setOnMenuItemClickListener {
-                    when (it.itemId) {
+                pop.setOnMenuItemClickListener { itMenuItem ->
+                    when (itMenuItem.itemId) {
                         R.id.chatWhisper -> {
                             sendMessageText.setText("/w ${messageData.nick} ")
                             keyRequestFocus(sendMessageText, this@ChatActivity)
@@ -486,6 +501,28 @@ class ChatActivity : AppCompatActivity() {
         }
     }
 
+    inner class PrivateChatMessage(private val messageData: Message) : Item<GroupieViewHolder>() {
+        override fun getLayout(): Int {
+            return R.layout.private_chat_message_item
+        }
+
+        override fun bind(viewHolder: GroupieViewHolder, position: Int) {
+            if (CurrentUser.options!!.ignoreList.contains(messageData.nick)) {
+                return
+            }
+
+            if (CurrentUser.options!!.showTime) {
+                val dateFormat = SimpleDateFormat("HH:mm")
+                val time = dateFormat.format(messageData.timestamp)
+                viewHolder.itemView.timestampPrivateMessage.visibility = View.VISIBLE
+                viewHolder.itemView.timestampPrivateMessage.text = time
+            }
+
+            viewHolder.itemView.usernamePrivateMessage.text = messageData.nick
+            viewHolder.itemView.messagePrivateMessage.text = " whispered: ${messageData.data}"
+        }
+    }
+
     inner class ChatClient {
 
         private var jwt: String? = null
@@ -496,7 +533,6 @@ class ChatActivity : AppCompatActivity() {
 
         private fun retrieveHistory() {
             val messageHistory = Klaxon().parseArray<String>(URL("https://chat.strims.gg/api/chat/history").readText())
-            Log.d("TAG", messageHistory.toString())
             runOnUiThread {
                 messageHistory?.forEach {
                     if (parseMessage(it) != null) {
@@ -509,8 +545,7 @@ class ChatActivity : AppCompatActivity() {
         }
         private suspend fun retrieveEmotes() {
             val text: String = client.get("https://chat.strims.gg/emote-manifest.json")
-            val newText = text.substringAfter("\"emotes\":").substringBefore("]").plus(']')
-            Log.d("TAG", newText)
+            val newText = text.substringAfter("\"emotes\":").substringBeforeLast("]").plus(']')
             val emotes: List<Emote>? = Klaxon().parseArray(newText)
             CurrentUser.emotes = emotes?.toMutableList()
         }
@@ -520,12 +555,10 @@ class ChatActivity : AppCompatActivity() {
             val cookies = cookieManager.getCookie("https://strims.gg")
             cookieManager.flush()
             if (cookies != null) {
-                Log.d("TAG", "Cookies: $cookies")
                 val jwt = cookies.substringAfter("jwt=").substringBefore(" ")
                 if (jwt != cookies) {
                     this.jwt = jwt
                 }
-                Log.d("TAG", "JWT: $jwt")
             }
         }
 
@@ -542,14 +575,32 @@ class ChatActivity : AppCompatActivity() {
             }
         }
 
+        private fun getGifFromURL(src: String?): Drawable? {
+            return try {
+                val url = URL(src)
+                val connection: HttpURLConnection = url.openConnection() as HttpURLConnection
+                connection.doInput = true
+                connection.connect()
+                val input: InputStream = connection.inputStream
+                Drawable.createFromStream(input, src)
+            } catch (e: IOException) {
+                null
+            }
+        }
+
         private fun cacheEmotes() {
             runOnUiThread {
                 CurrentUser.emotes?.forEach {
-                    if (!it.animated) {
-                        val url = "https://chat.strims.gg${it.path}"
+                    val url = "https://chat.strims.gg/${it.versions[0].path}"
+                    if (!it.versions[0].animated) {
                         GlobalScope.launch {
                             val bitmap = getBitmapFromURL(url)
                             bitmapMemoryCache.put(it.name, bitmap)
+                        }
+                    } else {
+                        GlobalScope.launch {
+                            val gif = getGifFromURL(url)
+                            gifMemoryCache.put(it.name, gif)
                         }
                     }
                 }
@@ -560,7 +611,6 @@ class ChatActivity : AppCompatActivity() {
             val text: String = client.get("https://strims.gg/api/profile") {
                 header("Cookie", "jwt=$jwt")
             }
-            Log.d("TAG", "Profile: $text")
             GlobalScope.launch {
                 runOnUiThread {
                     CurrentUser.user = Klaxon().parse(text)
@@ -616,6 +666,17 @@ class ChatActivity : AppCompatActivity() {
                             val nickIgnore = messageText.substringAfter("/ignore ").substringBefore(' ')
                             CurrentUser.options!!.ignoreList.add(nickIgnore)
                             CurrentUser.saveOptions(this@ChatActivity)
+                            runOnUiThread {
+                                adapter.add(
+                                    ChatMessage(
+                                        Message(
+                                            false,
+                                            "Info",
+                                            "Ignoring: $nickIgnore"
+                                        )
+                                    )
+                                )
+                            }
                         } else if (messageText.substringAfter(first).substringBefore(' ') == "unignore") {
                             val nickUnignore = messageText.substringAfter("/unignore ").substringBefore(' ')
                             if (CurrentUser.options!!.ignoreList.contains(nickUnignore)) {
@@ -678,6 +739,18 @@ class ChatActivity : AppCompatActivity() {
                             val nickUnhighlight = messageText.substringAfter("/unhighlight ").substringBefore(' ')
                             if (CurrentUser.options!!.customHighlights.contains(nickUnhighlight)) {
                                 CurrentUser.options!!.customHighlights.remove(nickUnhighlight)
+                                CurrentUser.saveOptions(this@ChatActivity)
+                                runOnUiThread {
+                                    adapter.add(
+                                        ChatMessage(
+                                            Message(
+                                                false,
+                                                "Info",
+                                                "No longer highlighting user: $nickUnhighlight"
+                                            )
+                                        )
+                                    )
+                                }
                             } else {
                                 runOnUiThread {
                                     adapter.add(
@@ -768,12 +841,9 @@ class ChatActivity : AppCompatActivity() {
             val msg = input.split(" ", limit = 2)
             when (msg[0]) {
                 "NAMES" -> {
-                    Log.d("TAG", "Names: ${msg[1]}")
                     val users: List<ChatUser>? = Klaxon().parseArray(msg[1].substringAfter("\"users\":").substringBefore(",\"connectioncount\":"))
                     CurrentUser.users = users?.toMutableList()
                     CurrentUser.connectionCount = msg[1].substringAfter("\"connectioncount\":").substringBefore('}').toInt()
-                    Log.d("TAG", CurrentUser.connectionCount.toString())
-                    Log.d("TAG", CurrentUser.users!![0].nick)
                     runOnUiThread {
                         adapter.add(
                             ChatMessage(
