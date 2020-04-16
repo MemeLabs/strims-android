@@ -104,7 +104,8 @@ class ChatActivity : AppCompatActivity() {
 
         supportActionBar!!.hide()
 
-        chatBottomNavigationView.selectedItemId = chatBottomNavigationView.menu.findItem(R.id.chatChat).itemId
+        chatBottomNavigationView.selectedItemId =
+            chatBottomNavigationView.menu.findItem(R.id.chatChat).itemId
 
         chatBottomNavigationView.setOnNavigationItemSelectedListener {
             hideKeyboardFrom(this, sendMessageText)
@@ -160,7 +161,7 @@ class ChatActivity : AppCompatActivity() {
             true
         }
 
-        sendMessageText.addTextChangedListener(object: TextWatcher {
+        sendMessageText.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
                 sendMessageButton.isEnabled = sendMessageText.text.isNotEmpty()
             }
@@ -234,7 +235,8 @@ class ChatActivity : AppCompatActivity() {
         recyclerViewChat.itemAnimator = null
 
         recyclerViewAutofill.adapter = autofillAdapter
-        recyclerViewAutofill.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        recyclerViewAutofill.layoutManager =
+            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
 
         goToBottom.setOnClickListener {
             recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
@@ -354,7 +356,10 @@ class ChatActivity : AppCompatActivity() {
         NotificationManagerCompat.from(this).notify(NOTIFICATION_ID, notificationBuilder.build())
     }
 
-    inner class ChatMessage(private val messageData: Message, private val isConsecutive: Boolean=false) :
+    inner class ChatMessage(
+        private val messageData: Message,
+        private val isConsecutive: Boolean = false
+    ) :
         Item<GroupieViewHolder>() {
         override fun getLayout(): Int {
             if (isConsecutive) {
@@ -552,10 +557,12 @@ class ChatActivity : AppCompatActivity() {
             }
             if (isConsecutive) {
                 viewHolder.itemView.usernameChatMessage.visibility = View.GONE
+                viewHolder.itemView.botFlairChatMessage.visibility = View.GONE
+                viewHolder
             }
         }
 
-        public fun isNickSame(nick: String): Boolean {
+        fun isNickSame(nick: String): Boolean {
             return messageData.nick == nick
         }
     }
@@ -591,12 +598,19 @@ class ChatActivity : AppCompatActivity() {
         }
 
         private fun retrieveHistory() {
-            val messageHistory = Klaxon().parseArray<String>(URL("https://chat.strims.gg/api/chat/history").readText())
+            val messageHistory =
+                Klaxon().parseArray<String>(URL("https://chat.strims.gg/api/chat/history").readText())
             runOnUiThread {
                 messageHistory?.forEach {
-                    if (parseMessage(it) != null) {
+                    val msg = parseMessage(it)
+                    if (msg != null) {
+                        var consecutiveMessage = false
+                        if (adapter.itemCount > 0) {
+                            val lastMessage = adapter?.getItem(adapter.itemCount - 1) as ChatMessage
+                            consecutiveMessage = lastMessage.isNickSame(msg.nick)
+                        }
                         adapter.add(
-                            ChatMessage(parseMessage(it)!!)
+                            ChatMessage(msg!!, consecutiveMessage)
                         )
                     }
                 }
@@ -908,9 +922,11 @@ class ChatActivity : AppCompatActivity() {
             val msg = input.split(" ", limit = 2)
             when (msg[0]) {
                 "NAMES" -> {
-                    val users: List<ChatUser>? = Klaxon().parseArray(msg[1].substringAfter("\"users\":").substringBefore(",\"connectioncount\":"))
+                    val users: List<ChatUser>? =
+                        Klaxon().parseArray(msg[1].substringAfter("\"users\":").substringBefore(",\"connectioncount\":"))
                     CurrentUser.users = users?.toMutableList()
-                    CurrentUser.connectionCount = msg[1].substringAfter("\"connectioncount\":").substringBefore('}').toInt()
+                    CurrentUser.connectionCount =
+                        msg[1].substringAfter("\"connectioncount\":").substringBefore('}').toInt()
                     runOnUiThread {
                         adapter.add(
                             ChatMessage(

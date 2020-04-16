@@ -7,6 +7,17 @@
     android:layout_height="wrap_content"
     android:background="#000000">
 
+
+    <ImageView
+        android:id="@+id/chevronChatMessage"
+        android:layout_width="12dp"
+        android:layout_height="12dp"
+        android:layout_marginTop="2dp"
+        app:layout_constraintBottom_toBottomOf="@+id/timestampChatMessage"
+        app:layout_constraintStart_toEndOf="@id/timestampChatMessage"
+        app:layout_constraintTop_toTopOf="@id/timestampChatMessage"
+        app:srcCompat="@drawable/gray_right_chevron" />
+
     <TextView
         android:id="@+id/usernameChatMessage"
         android:layout_width="wrap_content"
@@ -22,7 +33,6 @@
         android:id="@+id/messageChatMessage"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="4dp"
         android:layout_marginTop="2dp"
         android:layout_marginBottom="4dp"
         android:autoLink="web"
@@ -31,7 +41,7 @@
         android:textColor="#D8D8D8"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/botFlairChatMessage"
+        app:layout_constraintStart_toEndOf="@id/chevronChatMessage"
         app:layout_constraintTop_toTopOf="parent"
         tools:visibility="visible" />
 
@@ -40,11 +50,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="4dp"
-        android:layout_marginTop="2dp"
         android:textColor="#737373"
         android:textSize="12sp"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="@id/messageChatMessage"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@id/messageChatMessage"
         tools:visibility="visible" />
@@ -54,7 +62,7 @@
         android:layout_width="12dp"
         android:layout_height="12dp"
         android:layout_marginStart="4dp"
-        android:visibility="gone"
+        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="@+id/timestampChatMessage"
         app:layout_constraintStart_toEndOf="@id/timestampChatMessage"
         app:layout_constraintTop_toTopOf="@id/timestampChatMessage"
