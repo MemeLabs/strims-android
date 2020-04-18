@@ -605,11 +605,11 @@ class ChatActivity : AppCompatActivity() {
                     if (msg != null) {
                         var consecutiveMessage = false
                         if (adapter.itemCount > 0) {
-                            val lastMessage = adapter?.getItem(adapter.itemCount - 1) as ChatMessage
+                            val lastMessage = adapter.getItem(adapter.itemCount - 1) as ChatMessage
                             consecutiveMessage = lastMessage.isNickSame(msg.nick)
                         }
                         adapter.add(
-                            ChatMessage(msg!!, consecutiveMessage)
+                            ChatMessage(msg, consecutiveMessage)
                         )
                     }
                 }
@@ -895,9 +895,13 @@ class ChatActivity : AppCompatActivity() {
                                             displayNotification(msg)
                                         }
                                     } else {
-                                        val lastMessage =
-                                            adapter.getItem(adapter.itemCount - 1) as ChatMessage
-                                        val consecutiveMessage = lastMessage.isNickSame(msg.nick)
+                                        var consecutiveMessage = false
+                                        if (adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item) {
+                                            val lastMessage =
+                                                adapter.getItem(adapter.itemCount - 1) as ChatMessage
+                                            consecutiveMessage =
+                                                lastMessage.isNickSame(msg.nick)
+                                        }
                                         adapter.add(
                                             ChatMessage(
                                                 msg, consecutiveMessage
