@@ -501,7 +501,10 @@ class ChatActivity : AppCompatActivity() {
 
             if (messageData.entities.me!!.bounds.isNotEmpty()) {
                 viewHolder.itemView.messageChatMessage.setTypeface(Typeface.DEFAULT, Typeface.ITALIC)
-                ssb.delete(0, 3)
+                ssb.setSpan(RelativeSizeSpan(0f),
+                    0,
+                    3,
+                    Spannable.SPAN_INCLUSIVE_INCLUSIVE)
             } else {
                 viewHolder.itemView.messageChatMessage.setTypeface(Typeface.DEFAULT)
             }
@@ -815,7 +818,7 @@ class ChatActivity : AppCompatActivity() {
 
         private fun retrieveHistory() {
             val messageHistory =
-                Klaxon().parseArray<String>(URL("https://chat.strims.gg/api/chat/history").readText())
+                Klaxon().parseArray<String>(URL("https://chat2.strims.gg/api/chat/history").readText())
             runOnUiThread {
                 messageHistory?.forEach {
                     val msg = parseMessage(it)
@@ -913,7 +916,7 @@ class ChatActivity : AppCompatActivity() {
         }
 
         suspend fun onConnect() = client.wss(
-            host = "chat.strims.gg",
+            host = "chat2.strims.gg",
             path = "/ws",
             request = {
                 retrieveCookie()
