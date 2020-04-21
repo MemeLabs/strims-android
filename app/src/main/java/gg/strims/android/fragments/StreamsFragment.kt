@@ -49,8 +49,10 @@ class StreamsFragment : Fragment() {
                 it.live
             }
             CurrentUser.streams!!.forEach {
-                if (!CurrentUser.user!!.show_hidden && it.hidden) {
-                    return@forEach
+                if (CurrentUser.user != null) {
+                    if (!CurrentUser.user!!.show_hidden && it.hidden) {
+                        return@forEach
+                    }
                 }
                 streamsAdapter.add(StreamItem(it))
             }
