@@ -818,7 +818,7 @@ class ChatActivity : AppCompatActivity() {
 
         private fun retrieveHistory() {
             val messageHistory =
-                Klaxon().parseArray<String>(URL("https://chat2.strims.gg/api/chat/history").readText())
+                Klaxon().parseArray<String>(URL("https://chat.strims.gg/api/chat/history").readText())
             runOnUiThread {
                 messageHistory?.forEach {
                     val msg = parseMessage(it)
@@ -916,7 +916,7 @@ class ChatActivity : AppCompatActivity() {
         }
 
         suspend fun onConnect() = client.wss(
-            host = "chat2.strims.gg",
+            host = "chat.strims.gg",
             path = "/ws",
             request = {
                 retrieveCookie()
