@@ -13,7 +13,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:buttonTint="#FF5722"
-        android:text="Show timestamps on messages"
+        android:text="@string/show_timestamps_on_messages"
         android:textColor="#BBBBBB"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -23,7 +23,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:buttonTint="#FF5722"
-        android:text="Greentext"
+        android:text="@string/greentext"
         android:textColor="#BBBBBB"
         app:layout_constraintStart_toStartOf="@+id/checkBoxTimestamp"
         app:layout_constraintTop_toBottomOf="@+id/checkBoxTimestamp" />
@@ -33,7 +33,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:buttonTint="#FF5722"
-        android:text="Harsh Ignore"
+        android:text="@string/harsh_ignore"
         android:textColor="#BBBBBB"
         app:layout_constraintStart_toStartOf="@+id/checkBoxGreentext"
         app:layout_constraintTop_toBottomOf="@+id/checkBoxGreentext" />
@@ -43,7 +43,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:buttonTint="#FF5722"
-        android:text="Hide NSFW/NSFL content"
+        android:text="@string/hide_nsfw_nsfl_content"
         android:textColor="#BBBBBB"
         app:layout_constraintStart_toStartOf="@+id/checkBoxHarshIgnore"
         app:layout_constraintTop_toBottomOf="@+id/checkBoxHarshIgnore" />
@@ -53,7 +53,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:buttonTint="#FF5722"
-        android:text="Push notifications"
+        android:text="@string/push_notifications"
         android:textColor="#BBBBBB"
         app:layout_constraintStart_toStartOf="@+id/checkBoxHideNsfw"
         app:layout_constraintTop_toBottomOf="@+id/checkBoxHideNsfw" />
@@ -63,7 +63,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:buttonTint="#FF5722"
-        android:text="Emotes"
+        android:text="@string/emotes"
         android:textColor="#BBBBBB"
         app:layout_constraintStart_toStartOf="@+id/checkBoxNotifications"
         app:layout_constraintTop_toBottomOf="@+id/checkBoxNotifications" />
@@ -74,7 +74,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="6dp"
         android:layout_marginTop="4dp"
-        android:text="Ignored Users:"
+        android:text="@string/ignored_users"
         android:textColor="#BBBBBB"
         app:layout_constraintStart_toStartOf="@+id/checkBoxEmotes"
         app:layout_constraintTop_toBottomOf="@+id/checkBoxEmotes" />
@@ -102,7 +102,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="Highlighted Users:"
+        android:text="@string/highlighted_users"
         android:textColor="#BBBBBB"
         app:layout_constraintStart_toStartOf="@+id/ignoredUsersTextViewOptions"
         app:layout_constraintTop_toBottomOf="@+id/ignoredUsersTextViewOptions" />
@@ -130,7 +130,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
         android:backgroundTint="#FF5722"
-        android:text="Close"
+        android:text="@string/close"
         app:layout_constraintStart_toStartOf="@+id/customHighlightsTextViewOptions"
         app:layout_constraintTop_toBottomOf="@+id/customHighlightsTextViewOptions" />
 
@@ -140,7 +140,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
         android:backgroundTint="#FF5722"
-        android:text="Save"
+        android:text="@string/save"
         app:layout_constraintEnd_toEndOf="@+id/customHighlightsTextViewOptions"
         app:layout_constraintTop_toBottomOf="@+id/customHighlightsTextViewOptions" />
 

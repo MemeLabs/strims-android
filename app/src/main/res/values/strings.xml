@@ -1,6 +1,26 @@
 <resources>
     <string name="app_name">Strims Mobile</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="username">Username</string>
+    <string name="message">Message</string>
+    <string name="log_in_to_send_messages">Log in to send messages</string>
+    <string name="more_messages_below">More messages below</string>
+    <string name="title">Title</string>
+    <string name="exit">Exit</string>
+    <string name="show_timestamps_on_messages">Show timestamps on messages</string>
+    <string name="greentext">Greentext</string>
+    <string name="harsh_ignore">Harsh Ignore</string>
+    <string name="hide_nsfw_nsfl_content">Hide NSFW/NSFL content</string>
+    <string name="push_notifications">Push notifications</string>
+    <string name="emotes">Emotes</string>
+    <string name="ignored_users">Ignored Users:</string>
+    <string name="highlighted_users">Highlighted Users:</string>
+    <string name="close">Close</string>
+    <string name="save">Save</string>
+    <string name="stream_path">Stream Path</string>
+    <string name="streaming_service">Streaming Service</string>
+    <string name="channel_video_id">Channel/Video ID</string>
+    <string name="username_search">Username search …</string>
+    <string name="timestamp">Timestamp</string>
+    <string name="streamer">Streamer</string>
 </resources>
