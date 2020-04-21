@@ -14,7 +14,7 @@
         android:layout_marginStart="4dp"
         android:layout_marginTop="2dp"
         android:layout_marginBottom="2dp"
-        android:text="Username"
+        android:text="@string/username"
         android:textColor="#FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"

@@ -35,7 +35,7 @@ class StreamsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         hideFragment(activity!!, this)
-        view.setOnTouchListener { view, motionEvent -> return@setOnTouchListener true }
+        view.setOnTouchListener { _, _ -> return@setOnTouchListener true }
         val layoutManager = LinearLayoutManager(view.context)
         layoutManager.stackFromEnd = true
         recyclerViewStreams.layoutManager = layoutManager

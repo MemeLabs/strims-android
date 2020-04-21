@@ -9,14 +9,13 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.graphics.Typeface
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Bundle
-import android.text.Editable
-import android.text.Spannable
-import android.text.SpannableStringBuilder
-import android.text.TextWatcher
-import android.text.style.DynamicDrawableSpan
-import android.text.style.ImageSpan
+import android.text.*
+import android.text.method.LinkMovementMethod
+import android.text.style.*
 import android.util.Log
 import android.util.LruCache
 import android.view.KeyEvent
@@ -56,6 +55,7 @@ import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStream
 import java.io.InputStreamReader
+import java.lang.reflect.Method
 import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
@@ -150,6 +150,12 @@ class ChatActivity : AppCompatActivity() {
                         hideFragment(
                             this,
                             supportFragmentManager.findFragmentById(R.id.profile_fragment)!!
+                        )
+                    }
+                    if (supportFragmentManager.findFragmentById(R.id.login_fragment)!!.isVisible) {
+                        hideFragment(
+                            this,
+                            supportFragmentManager.findFragmentById(R.id.login_fragment)!!
                         )
                     }
                     showFragment(
@@ -420,7 +426,33 @@ class ChatActivity : AppCompatActivity() {
 
             viewHolder.itemView.usernameChatMessage.text = "${messageData.nick}:"
 
+            viewHolder.itemView.messageChatMessage.movementMethod = LinkMovementMethod.getInstance()
+
             val ssb = SpannableStringBuilder(messageData.data)
+
+            class ColouredUnderlineSpan(mColor: Int) : CharacterStyle(), UpdateAppearance {
+
+                var color = mColor
+
+                override fun updateDrawState(tp: TextPaint) {
+                    try {
+                        val method: Method = TextPaint::class.java.getMethod(
+                            "setUnderlineText",
+                            Integer.TYPE,
+                            java.lang.Float.TYPE
+                        )
+                        method.invoke(tp, color, 8.0f)
+                    } catch (e: Exception) {
+                        tp.isUnderlineText = true
+                    }
+                }
+            }
+
+            abstract class NoUnderlineClickableSpan : ClickableSpan() {
+                override fun updateDrawState(ds: TextPaint) {
+                    ds.isUnderlineText = false
+                }
+            }
 
             if (CurrentUser.options!!.emotes) {
                 if (messageData.entities.emotes != null && messageData.entities.emotes!!.isNotEmpty() && messageData.entities.emotes!![0].name != "") {
@@ -467,15 +499,203 @@ class ChatActivity : AppCompatActivity() {
                 }
             }
 
-//            if (messageData.entities.me!!.bounds.isNotEmpty()) {
-//                ssb.setSpan(Typeface.ITALIC, messageData.entities.me!!.bounds[0], messageData.entities.me!!.bounds[1], Spannable.SPAN_INCLUSIVE_INCLUSIVE)
-//                messageData.data = messageData.data.substringAfter(' ')
-//                viewHolder.itemView.messageChatMessage.setTypeface(Typeface.DEFAULT, Typeface.ITALIC)
-//            }
-//
-//            if (messageData.entities.greentext!!.bounds.isNotEmpty()) {
-//
-//            }
+            if (messageData.entities.me!!.bounds.isNotEmpty()) {
+                viewHolder.itemView.messageChatMessage.setTypeface(Typeface.DEFAULT, Typeface.ITALIC)
+                ssb.setSpan(RelativeSizeSpan(0f),
+                    0,
+                    3,
+                    Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+            } else {
+                viewHolder.itemView.messageChatMessage.setTypeface(Typeface.DEFAULT)
+            }
+
+            if (messageData.entities.greentext!!.bounds.isNotEmpty()) {
+                ssb.setSpan(ForegroundColorSpan(Color.parseColor("#789922")),
+                    messageData.entities.greentext!!.bounds[0],
+                    messageData.entities.greentext!!.bounds[1],
+                    Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+            }
+
+            if (messageData.entities.links!!.isNotEmpty()) {
+                messageData.entities.links!!.forEach {
+                    val clickSpan: ClickableSpan = object : ClickableSpan() {
+                        override fun onClick(widget: View) {
+                            if (messageData.entities.spoilers!!.isNotEmpty()) {
+                                messageData.entities.spoilers!!.forEach { it2 ->
+                                    if (it.bounds[0] >= it2.bounds[0] && it.bounds[1] <= it2.bounds[1]) {
+                                        val span3 = ssb.getSpans(
+                                            it.bounds[0],
+                                            it.bounds[1],
+                                            ForegroundColorSpan::class.java
+                                        )
+                                        if (span3[span3.size - 1].foregroundColor == Color.parseColor("#FFFFFF") ||
+                                            span3[span3.size - 1].foregroundColor == Color.parseColor("#03DAC5")
+                                        ) {
+                                            var webpage = Uri.parse(it.url)
+
+                                            if (!it.url!!.startsWith("http://") && !it.url!!.startsWith(
+                                                    "https://"
+                                                )
+                                            ) {
+                                                webpage = Uri.parse("http://${it.url}")
+                                            }
+
+                                            val intent = Intent(Intent.ACTION_VIEW, webpage)
+                                            if (intent.resolveActivity(packageManager) != null) {
+                                                startActivity(intent)
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                var webpage = Uri.parse(it.url)
+
+                                if (!it.url!!.startsWith("http://") && !it.url!!.startsWith(
+                                        "https://"
+                                    )
+                                ) {
+                                    webpage = Uri.parse("http://${it.url}")
+                                }
+
+                                val intent = Intent(Intent.ACTION_VIEW, webpage)
+                                if (intent.resolveActivity(packageManager) != null) {
+                                    startActivity(intent)
+                                }
+                            }
+                        }
+                    }
+                    if (messageData.entities.codes!!.isNotEmpty()) {
+                        messageData.entities.codes!!.forEach { it2 ->
+                            if (it.bounds[0] >= it2.bounds[0] && it.bounds[1] <= it2.bounds[1]) {
+                                return@forEach
+                            } else {
+                                ssb.setSpan(clickSpan, it.bounds[0], it.bounds[1], Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+                            }
+                        }
+                    } else {
+                        ssb.setSpan(clickSpan, it.bounds[0], it.bounds[1], Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+                    }
+                }
+                if (messageData.data.contains("nsfl")) {
+                    messageData.entities.links!!.forEach {
+                        ssb.setSpan(
+                            ColouredUnderlineSpan(Color.parseColor("#FFFF00")),
+                            it.bounds[0],
+                            it.bounds[1],
+                            Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                        )
+                    }
+                } else if (messageData.data.contains("nsfw")) {
+                    messageData.entities.links!!.forEach {
+                        ssb.setSpan(
+                            ColouredUnderlineSpan(Color.parseColor("#FF2D00")),
+                            it.bounds[0],
+                            it.bounds[1],
+                            Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                        )
+                    }
+                }
+            }
+
+            if (messageData.entities.codes!!.isNotEmpty()) {
+                messageData.entities.codes!!.forEach {
+                    ssb.setSpan(BackgroundColorSpan(Color.parseColor("#353535")), it.bounds[0], it.bounds[1], Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+                    ssb.setSpan(ForegroundColorSpan(Color.parseColor("#D8D8D8")), it.bounds[0], it.bounds[1], Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+                    ssb.setSpan(TypefaceSpan("monospace"), it.bounds[0], it.bounds[1], Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+                    ssb.setSpan(RelativeSizeSpan(0f), it.bounds[0], it.bounds[0] + 1, Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+                    ssb.setSpan(RelativeSizeSpan(0f), it.bounds[1] - 1, it.bounds[1], Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+                    if (messageData.entities.links!!.isNotEmpty()) {
+                        messageData.entities.links!!.forEach { it2 ->
+                            if (it2.bounds[0] >= it.bounds[0] && it2.bounds[1] <= it.bounds[1]) {
+                                val span3 = ssb.getSpans(it2.bounds[0], it2.bounds[1], ColouredUnderlineSpan::class.java)
+                                if (span3.isNotEmpty()) {
+                                    span3[span3.size - 1].color = Color.parseColor("#00000000")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (messageData.entities.spoilers!!.isNotEmpty()) {
+                messageData.entities.spoilers!!.forEach {
+                    val span1: NoUnderlineClickableSpan = object : NoUnderlineClickableSpan() {
+                        override fun onClick(widget: View) {
+                            val span = ssb.getSpans(it.bounds[0], it.bounds[1],
+                                ForegroundColorSpan::class.java
+                            )
+                            if (span[span.size - 1].foregroundColor == Color.parseColor("#00000000")) {
+                                ssb.setSpan(
+                                    ForegroundColorSpan(Color.parseColor("#FFFFFF")),
+                                    it.bounds[0] + 2,
+                                    it.bounds[1] - 2,
+                                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                                )
+                                if (messageData.entities.links!!.isNotEmpty()) {
+                                    messageData.entities.links!!.forEach { it2 ->
+                                        if (it2.bounds[0] >= it.bounds[0] && it2.bounds[1] <= it.bounds[1]) {
+                                            ssb.setSpan(ForegroundColorSpan(Color.parseColor("#03DAC5")), it2.bounds[0], it2.bounds[1], Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+                                            messageData.entities.tags!!.forEach { it3 ->
+                                                if (it3.name == "nsfl") {
+                                                    ssb.setSpan(
+                                                        ColouredUnderlineSpan(Color.parseColor("#FFFF00")),
+                                                        it2.bounds[0],
+                                                        it2.bounds[1],
+                                                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                                                    )
+                                                } else if (it3.name == "nsfw") {
+                                                    ssb.setSpan(
+                                                        ColouredUnderlineSpan(Color.parseColor("#FF2D00")),
+                                                        it2.bounds[0],
+                                                        it2.bounds[1],
+                                                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            } else if (span[span.size - 1].foregroundColor == Color.parseColor("#FFFFFF") ||
+                                span[span.size - 1].foregroundColor == Color.parseColor("#03DAC5")) {
+                                ssb.setSpan(
+                                    ForegroundColorSpan(Color.parseColor("#00000000")),
+                                    it.bounds[0] + 2,
+                                    it.bounds[1] - 2,
+                                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                                )
+                                if (messageData.entities.links!!.isNotEmpty()) {
+                                    messageData.entities.links!!.forEach { it2 ->
+                                        if (it2.bounds[0] >= it.bounds[0] && it2.bounds[1] <= it.bounds[1]) {
+                                            val span3 = ssb.getSpans(it2.bounds[0], it2.bounds[1], ColouredUnderlineSpan::class.java)
+                                            if (span3.isNotEmpty()) {
+                                                span3[span3.size - 1].color = Color.parseColor("#00000000")
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            viewHolder.itemView.messageChatMessage.setText(ssb, TextView.BufferType.SPANNABLE)
+                        }
+                    }
+
+                    if (messageData.entities.links!!.isNotEmpty()) {
+                        messageData.entities.links!!.forEach { it2 ->
+                            if (it2.bounds[0] >= it.bounds[0] && it2.bounds[1] <= it.bounds[1]) {
+                                val span3 = ssb.getSpans(it2.bounds[0], it2.bounds[1], ColouredUnderlineSpan::class.java)
+                                if (span3.isNotEmpty()) {
+                                    span3[span3.size - 1].color = Color.parseColor("#00000000")
+                                }
+                            }
+                        }
+                    }
+
+                    ssb.setSpan(span1, it.bounds[0], it.bounds[1], Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+                    ssb.setSpan(RelativeSizeSpan(0f), it.bounds[0], it.bounds[0] + 2, Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+                    ssb.setSpan(RelativeSizeSpan(0f), it.bounds[1] - 2, it.bounds[1], Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+                    ssb.setSpan(BackgroundColorSpan(Color.parseColor("#353535")), it.bounds[0], it.bounds[1], Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+                    ssb.setSpan(ForegroundColorSpan(Color.parseColor("#00000000")), it.bounds[0], it.bounds[1], Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+                }
+            }
 
             viewHolder.itemView.messageChatMessage.setText(ssb, TextView.BufferType.SPANNABLE)
 
@@ -618,9 +838,8 @@ class ChatActivity : AppCompatActivity() {
 
         private suspend fun retrieveEmotes() {
             val text: String = client.get("https://chat.strims.gg/emote-manifest.json")
-            val newText = text.substringAfter("\"emotes\":").substringBeforeLast("]").plus(']')
-            val emotes: List<Emote>? = Klaxon().parseArray(newText)
-            CurrentUser.emotes = emotes?.toMutableList()
+            val emotesParsed: EmotesParsed = Klaxon().parse(text)!!
+            CurrentUser.emotes = emotesParsed.emotes.toMutableList()
         }
 
         private fun retrieveCookie() {
@@ -927,20 +1146,16 @@ class ChatActivity : AppCompatActivity() {
             val msg = input.split(" ", limit = 2)
             when (msg[0]) {
                 "NAMES" -> {
-                    val users: List<ChatUser>? =
-                        Klaxon().parseArray(msg[1].substringAfter("\"users\":").substringBefore(",\"connectioncount\":"))
-                    CurrentUser.users = users?.toMutableList()
-                    CurrentUser.connectionCount =
-                        msg[1].substringAfter("\"connectioncount\":").substringBefore('}').toInt()
+                    val names: NamesMessage = Klaxon().parse(msg[1])!!
+                    CurrentUser.users = names.users.toMutableList()
+                    CurrentUser.connectionCount = names.connectioncount
                     runOnUiThread {
                         adapter.add(
                             ChatMessage(
                                 Message(
                                     false,
                                     "Info",
-                                    "Connected users: ${CurrentUser.connectionCount}",
-                                    System.currentTimeMillis(),
-                                    arrayOf()
+                                    "Connected users: ${CurrentUser.connectionCount}"
                                 )
                             )
                         )
@@ -1023,11 +1238,12 @@ class ChatActivity : AppCompatActivity() {
         }
 
         private fun parseStream(input: String) {
-            if (input.substringAfter("[\"").substringBefore("\"") == "STREAMS_SET") {
+            val input2 = input.substringAfter("[\"").substringBefore("\"")
+            if (input2 == "STREAMS_SET") {
                 val msg = input.substringAfter("\",").substringBeforeLast(']')
                 val streams: List<Stream>? = Klaxon().parseArray(msg)
                 CurrentUser.streams = streams?.toMutableList()
-            } else if (input.substringAfter("[\"").substringBefore("\"") == "RUSTLERS_SET") {
+            } else if (input2 == "RUSTLERS_SET") {
                 val id = input.substringAfter("\"RUSTLERS_SET\",").substringBefore(",").toLong()
                 if (CurrentUser.streams != null) {
                     CurrentUser.streams!!.forEach {

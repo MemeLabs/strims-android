@@ -11,7 +11,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="Username"
+        android:text="@string/username"
         android:textColor="#BBBBBB"
         app:layout_constraintStart_toStartOf="@+id/usernameEditTextProfile"
         app:layout_constraintTop_toTopOf="parent" />
@@ -37,7 +37,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="Stream Path"
+        android:text="@string/stream_path"
         android:textColor="#BBBBBB"
         app:layout_constraintStart_toStartOf="@+id/streamPathEditTextProfile"
         app:layout_constraintTop_toBottomOf="@+id/usernameEditTextProfile" />
@@ -63,7 +63,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="Streaming Service"
+        android:text="@string/streaming_service"
         android:textColor="#BBBBBB"
         app:layout_constraintStart_toStartOf="@+id/streamingServiceEditTextProfile"
         app:layout_constraintTop_toBottomOf="@+id/streamPathEditTextProfile" />
@@ -89,7 +89,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="Channel/Video ID"
+        android:text="@string/channel_video_id"
         android:textColor="#BBBBBB"
         app:layout_constraintStart_toStartOf="@+id/channelEditTextProfile"
         app:layout_constraintTop_toBottomOf="@+id/streamingServiceEditTextProfile" />
@@ -116,7 +116,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:backgroundTint="#FF5722"
-        android:text="Save"
+        android:text="@string/save"
         android:textColor="#000000"
         app:layout_constraintEnd_toEndOf="@+id/channelEditTextProfile"
         app:layout_constraintTop_toBottomOf="@+id/channelEditTextProfile" />
@@ -127,7 +127,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:backgroundTint="#FF5722"
-        android:text="CLose"
+        android:text="@string/close"
         app:layout_constraintStart_toStartOf="@+id/channelEditTextProfile"
         app:layout_constraintTop_toBottomOf="@+id/channelEditTextProfile" />
 </androidx.constraintlayout.widget.ConstraintLayout>
