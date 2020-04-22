@@ -43,7 +43,7 @@ android {
 
             play {
                 track = 'internal' //'alpha','beta' or 'production'
-                serviceAccountEmail = "strims-mobile-android@api-8566907736315168348-960914.iam.gserviceaccount.com"
+                serviceAccountEmail = System.getenv('GOOGLE_SA_EMAIL')
                 serviceAccountCredentials = file(serviceAccountKeyFile)
             }
         }
