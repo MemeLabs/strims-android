@@ -1,3 +1,3 @@
 # Strims Android
 
-Android application for [strims](https://strims.gg/) :)
+Android application for [strims](https://strims.gg/) :-)

@@ -1,11 +1,11 @@
-name: Master Branch Test & Build
+name: Master Branch Test & Build & Publish
 on:
   push:
     branches:
       - 'master'
 jobs:
   main:
-    name: Test & Build Release
+    name: Test & Build & Publish
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v1
@@ -25,12 +25,12 @@ jobs:
           
       - name: Build Release APK
         run: bash ./gradlew assembleRelease --stacktrace
-        env:
-          GOOGLE_SA_EMAIL: ${{ secrets.GOOGLE_SA_EMAIL }}
 
-      - name: Upload Release APK
+      - name: Save Artifact
         uses: actions/upload-artifact@v1
         with:
           name: release-app
           path: app/build/outputs/apk/release/app-release.apk
 
+      - name: Publish APK
+        run: bash ./gradlew publishApk --stacktrace

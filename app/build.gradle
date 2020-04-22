@@ -1,11 +1,10 @@
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
-
 plugins {
     id 'com.android.application'
-    id 'com.github.triplet.play' version '2.7.5'
+    id 'kotlin-android'
+    id 'kotlin-android-extensions'
+    id 'com.github.triplet.play' version '2.4.0'
 }
+
 
 def keystorePropertiesFile = rootProject.file("keystore.properties")
 def keystoreProperties = new Properties()
@@ -43,11 +42,14 @@ android {
 
             play {
                 track = 'internal' //'alpha','beta' or 'production'
-                serviceAccountEmail = System.getenv('GOOGLE_SA_EMAIL')
                 serviceAccountCredentials = file(serviceAccountKeyFile)
+                resolutionStrategy = "auto"
             }
         }
     }
+
+  
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
