@@ -474,7 +474,7 @@ class ChatActivity : AppCompatActivity() {
                                 val resized =
                                     Bitmap.createScaledBitmap(bitmap, width, height, false)
                                 ssb.setSpan(
-                                    ImageSpan(this@ChatActivity, resized),
+                                    CenteredImageSpan(this@ChatActivity, resized),
                                     it.bounds[0],
                                     it.bounds[1],
                                     Spannable.SPAN_INCLUSIVE_INCLUSIVE
@@ -500,20 +500,27 @@ class ChatActivity : AppCompatActivity() {
             }
 
             if (messageData.entities.me!!.bounds.isNotEmpty()) {
-                viewHolder.itemView.messageChatMessage.setTypeface(Typeface.DEFAULT, Typeface.ITALIC)
-                ssb.setSpan(RelativeSizeSpan(0f),
+                viewHolder.itemView.messageChatMessage.setTypeface(
+                    Typeface.DEFAULT,
+                    Typeface.ITALIC
+                )
+                ssb.setSpan(
+                    RelativeSizeSpan(0f),
                     0,
                     3,
-                    Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                )
             } else {
                 viewHolder.itemView.messageChatMessage.setTypeface(Typeface.DEFAULT)
             }
 
             if (messageData.entities.greentext!!.bounds.isNotEmpty()) {
-                ssb.setSpan(ForegroundColorSpan(Color.parseColor("#789922")),
+                ssb.setSpan(
+                    ForegroundColorSpan(Color.parseColor("#789922")),
                     messageData.entities.greentext!!.bounds[0],
                     messageData.entities.greentext!!.bounds[1],
-                    Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                )
             }
 
             if (messageData.entities.links!!.isNotEmpty()) {
@@ -528,8 +535,12 @@ class ChatActivity : AppCompatActivity() {
                                             it.bounds[1],
                                             ForegroundColorSpan::class.java
                                         )
-                                        if (span3[span3.size - 1].foregroundColor == Color.parseColor("#FFFFFF") ||
-                                            span3[span3.size - 1].foregroundColor == Color.parseColor("#03DAC5")
+                                        if (span3[span3.size - 1].foregroundColor == Color.parseColor(
+                                                "#FFFFFF"
+                                            ) ||
+                                            span3[span3.size - 1].foregroundColor == Color.parseColor(
+                                                "#03DAC5"
+                                            )
                                         ) {
                                             var webpage = Uri.parse(it.url)
 
@@ -569,11 +580,21 @@ class ChatActivity : AppCompatActivity() {
                             if (it.bounds[0] >= it2.bounds[0] && it.bounds[1] <= it2.bounds[1]) {
                                 return@forEach
                             } else {
-                                ssb.setSpan(clickSpan, it.bounds[0], it.bounds[1], Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+                                ssb.setSpan(
+                                    clickSpan,
+                                    it.bounds[0],
+                                    it.bounds[1],
+                                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                                )
                             }
                         }
                     } else {
-                        ssb.setSpan(clickSpan, it.bounds[0], it.bounds[1], Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+                        ssb.setSpan(
+                            clickSpan,
+                            it.bounds[0],
+                            it.bounds[1],
+                            Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                        )
                     }
                 }
                 if (messageData.data.contains("nsfl")) {
@@ -599,15 +620,44 @@ class ChatActivity : AppCompatActivity() {
 
             if (messageData.entities.codes!!.isNotEmpty()) {
                 messageData.entities.codes!!.forEach {
-                    ssb.setSpan(BackgroundColorSpan(Color.parseColor("#353535")), it.bounds[0], it.bounds[1], Spannable.SPAN_INCLUSIVE_INCLUSIVE)
-                    ssb.setSpan(ForegroundColorSpan(Color.parseColor("#D8D8D8")), it.bounds[0], it.bounds[1], Spannable.SPAN_INCLUSIVE_INCLUSIVE)
-                    ssb.setSpan(TypefaceSpan("monospace"), it.bounds[0], it.bounds[1], Spannable.SPAN_INCLUSIVE_INCLUSIVE)
-                    ssb.setSpan(RelativeSizeSpan(0f), it.bounds[0], it.bounds[0] + 1, Spannable.SPAN_INCLUSIVE_INCLUSIVE)
-                    ssb.setSpan(RelativeSizeSpan(0f), it.bounds[1] - 1, it.bounds[1], Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+                    ssb.setSpan(
+                        BackgroundColorSpan(Color.parseColor("#353535")),
+                        it.bounds[0],
+                        it.bounds[1],
+                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                    )
+                    ssb.setSpan(
+                        ForegroundColorSpan(Color.parseColor("#D8D8D8")),
+                        it.bounds[0],
+                        it.bounds[1],
+                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                    )
+                    ssb.setSpan(
+                        TypefaceSpan("monospace"),
+                        it.bounds[0],
+                        it.bounds[1],
+                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                    )
+                    ssb.setSpan(
+                        RelativeSizeSpan(0f),
+                        it.bounds[0],
+                        it.bounds[0] + 1,
+                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                    )
+                    ssb.setSpan(
+                        RelativeSizeSpan(0f),
+                        it.bounds[1] - 1,
+                        it.bounds[1],
+                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                    )
                     if (messageData.entities.links!!.isNotEmpty()) {
                         messageData.entities.links!!.forEach { it2 ->
                             if (it2.bounds[0] >= it.bounds[0] && it2.bounds[1] <= it.bounds[1]) {
-                                val span3 = ssb.getSpans(it2.bounds[0], it2.bounds[1], ColouredUnderlineSpan::class.java)
+                                val span3 = ssb.getSpans(
+                                    it2.bounds[0],
+                                    it2.bounds[1],
+                                    ColouredUnderlineSpan::class.java
+                                )
                                 if (span3.isNotEmpty()) {
                                     span3[span3.size - 1].color = Color.parseColor("#00000000")
                                 }
@@ -621,7 +671,8 @@ class ChatActivity : AppCompatActivity() {
                 messageData.entities.spoilers!!.forEach {
                     val span1: NoUnderlineClickableSpan = object : NoUnderlineClickableSpan() {
                         override fun onClick(widget: View) {
-                            val span = ssb.getSpans(it.bounds[0], it.bounds[1],
+                            val span = ssb.getSpans(
+                                it.bounds[0], it.bounds[1],
                                 ForegroundColorSpan::class.java
                             )
                             if (span[span.size - 1].foregroundColor == Color.parseColor("#00000000")) {
@@ -634,7 +685,12 @@ class ChatActivity : AppCompatActivity() {
                                 if (messageData.entities.links!!.isNotEmpty()) {
                                     messageData.entities.links!!.forEach { it2 ->
                                         if (it2.bounds[0] >= it.bounds[0] && it2.bounds[1] <= it.bounds[1]) {
-                                            ssb.setSpan(ForegroundColorSpan(Color.parseColor("#03DAC5")), it2.bounds[0], it2.bounds[1], Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+                                            ssb.setSpan(
+                                                ForegroundColorSpan(Color.parseColor("#03DAC5")),
+                                                it2.bounds[0],
+                                                it2.bounds[1],
+                                                Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                                            )
                                             messageData.entities.tags!!.forEach { it3 ->
                                                 if (it3.name == "nsfl") {
                                                     ssb.setSpan(
@@ -656,7 +712,8 @@ class ChatActivity : AppCompatActivity() {
                                     }
                                 }
                             } else if (span[span.size - 1].foregroundColor == Color.parseColor("#FFFFFF") ||
-                                span[span.size - 1].foregroundColor == Color.parseColor("#03DAC5")) {
+                                span[span.size - 1].foregroundColor == Color.parseColor("#03DAC5")
+                            ) {
                                 ssb.setSpan(
                                     ForegroundColorSpan(Color.parseColor("#00000000")),
                                     it.bounds[0] + 2,
@@ -666,22 +723,34 @@ class ChatActivity : AppCompatActivity() {
                                 if (messageData.entities.links!!.isNotEmpty()) {
                                     messageData.entities.links!!.forEach { it2 ->
                                         if (it2.bounds[0] >= it.bounds[0] && it2.bounds[1] <= it.bounds[1]) {
-                                            val span3 = ssb.getSpans(it2.bounds[0], it2.bounds[1], ColouredUnderlineSpan::class.java)
+                                            val span3 = ssb.getSpans(
+                                                it2.bounds[0],
+                                                it2.bounds[1],
+                                                ColouredUnderlineSpan::class.java
+                                            )
                                             if (span3.isNotEmpty()) {
-                                                span3[span3.size - 1].color = Color.parseColor("#00000000")
+                                                span3[span3.size - 1].color =
+                                                    Color.parseColor("#00000000")
                                             }
                                         }
                                     }
                                 }
                             }
-                            viewHolder.itemView.messageChatMessage.setText(ssb, TextView.BufferType.SPANNABLE)
+                            viewHolder.itemView.messageChatMessage.setText(
+                                ssb,
+                                TextView.BufferType.SPANNABLE
+                            )
                         }
                     }
 
                     if (messageData.entities.links!!.isNotEmpty()) {
                         messageData.entities.links!!.forEach { it2 ->
                             if (it2.bounds[0] >= it.bounds[0] && it2.bounds[1] <= it.bounds[1]) {
-                                val span3 = ssb.getSpans(it2.bounds[0], it2.bounds[1], ColouredUnderlineSpan::class.java)
+                                val span3 = ssb.getSpans(
+                                    it2.bounds[0],
+                                    it2.bounds[1],
+                                    ColouredUnderlineSpan::class.java
+                                )
                                 if (span3.isNotEmpty()) {
                                     span3[span3.size - 1].color = Color.parseColor("#00000000")
                                 }
@@ -689,11 +758,36 @@ class ChatActivity : AppCompatActivity() {
                         }
                     }
 
-                    ssb.setSpan(span1, it.bounds[0], it.bounds[1], Spannable.SPAN_INCLUSIVE_INCLUSIVE)
-                    ssb.setSpan(RelativeSizeSpan(0f), it.bounds[0], it.bounds[0] + 2, Spannable.SPAN_INCLUSIVE_INCLUSIVE)
-                    ssb.setSpan(RelativeSizeSpan(0f), it.bounds[1] - 2, it.bounds[1], Spannable.SPAN_INCLUSIVE_INCLUSIVE)
-                    ssb.setSpan(BackgroundColorSpan(Color.parseColor("#353535")), it.bounds[0], it.bounds[1], Spannable.SPAN_INCLUSIVE_INCLUSIVE)
-                    ssb.setSpan(ForegroundColorSpan(Color.parseColor("#00000000")), it.bounds[0], it.bounds[1], Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+                    ssb.setSpan(
+                        span1,
+                        it.bounds[0],
+                        it.bounds[1],
+                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                    )
+                    ssb.setSpan(
+                        RelativeSizeSpan(0f),
+                        it.bounds[0],
+                        it.bounds[0] + 2,
+                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                    )
+                    ssb.setSpan(
+                        RelativeSizeSpan(0f),
+                        it.bounds[1] - 2,
+                        it.bounds[1],
+                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                    )
+                    ssb.setSpan(
+                        BackgroundColorSpan(Color.parseColor("#353535")),
+                        it.bounds[0],
+                        it.bounds[1],
+                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                    )
+                    ssb.setSpan(
+                        ForegroundColorSpan(Color.parseColor("#00000000")),
+                        it.bounds[0],
+                        it.bounds[1],
+                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                    )
                 }
             }
 
@@ -956,7 +1050,9 @@ class ChatActivity : AppCompatActivity() {
                                     )
                                 )
                             }
-                        } else if (messageText.substringAfter(first).substringBefore(' ') == "ignore") {
+                        } else if (messageText.substringAfter(first)
+                                .substringBefore(' ') == "ignore"
+                        ) {
                             val nickIgnore =
                                 messageText.substringAfter("/ignore ").substringBefore(' ')
                             CurrentUser.options!!.ignoreList.add(nickIgnore)
@@ -972,7 +1068,9 @@ class ChatActivity : AppCompatActivity() {
                                     )
                                 )
                             }
-                        } else if (messageText.substringAfter(first).substringBefore(' ') == "unignore") {
+                        } else if (messageText.substringAfter(first)
+                                .substringBefore(' ') == "unignore"
+                        ) {
                             val nickUnignore =
                                 messageText.substringAfter("/unignore ").substringBefore(' ')
                             if (CurrentUser.options!!.ignoreList.contains(nickUnignore)) {
@@ -1002,7 +1100,9 @@ class ChatActivity : AppCompatActivity() {
                                     )
                                 }
                             }
-                        } else if (messageText.substringAfter(first).substringBefore(' ') == "highlight") {
+                        } else if (messageText.substringAfter(first)
+                                .substringBefore(' ') == "highlight"
+                        ) {
                             val nickHighlight =
                                 messageText.substringAfter("/highlight ").substringBefore(' ')
                             if (CurrentUser.options!!.customHighlights.contains(nickHighlight)) {
@@ -1032,7 +1132,9 @@ class ChatActivity : AppCompatActivity() {
                                     )
                                 }
                             }
-                        } else if (messageText.substringAfter(first).substringBefore(' ') == "unhighlight") {
+                        } else if (messageText.substringAfter(first)
+                                .substringBefore(' ') == "unhighlight"
+                        ) {
                             val nickUnhighlight =
                                 messageText.substringAfter("/unhighlight ").substringBefore(' ')
                             if (CurrentUser.options!!.customHighlights.contains(nickUnhighlight)) {
