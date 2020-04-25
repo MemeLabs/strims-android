@@ -79,6 +79,8 @@ class ChatActivity : AppCompatActivity() {
 
     private lateinit var gifMemoryCache: LruCache<String, Drawable>
 
+    private var privateMessageArray = arrayOf("w", "whisper", "msg", "tell", "t", "notify")
+
     private val autofillAdapter = GroupAdapter<GroupieViewHolder>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -181,18 +183,28 @@ class ChatActivity : AppCompatActivity() {
                 autofillAdapter.clear()
                 if (sendMessageText.text.isNotEmpty()) {
                     recyclerViewAutofill.visibility = View.VISIBLE
-                    val currentWord = sendMessageText.text.toString().substringAfterLast(' ')
-                    CurrentUser.users!!.sortByDescending {
-                        it.nick
-                    }
-                    CurrentUser.users!!.forEach {
-                        if (it.nick.contains(currentWord, true)) {
-                            autofillAdapter.add(AutofillItemUser(it))
+                    if (sendMessageText.text.first() == '/' && !sendMessageText.text.contains(' ')) {
+                        val currentWord = sendMessageText.text.toString().substringAfter('/')
+
+                        privateMessageArray.forEach {
+                            if (it.contains(currentWord, true)) {
+                                autofillAdapter.add(AutofillItemCommand(it))
+                            }
                         }
-                    }
-                    CurrentUser.emotes!!.forEach {
-                        if (it.name.contains(currentWord, true)) {
-                            autofillAdapter.add(AutofillItemEmote(it))
+                    } else {
+                        val currentWord = sendMessageText.text.toString().substringAfterLast(' ')
+                        CurrentUser.users!!.sortByDescending {
+                            it.nick
+                        }
+                        CurrentUser.users!!.forEach {
+                            if (it.nick.contains(currentWord, true)) {
+                                autofillAdapter.add(AutofillItemUser(it))
+                            }
+                        }
+                        CurrentUser.emotes!!.forEach {
+                            if (it.name.contains(currentWord, true)) {
+                                autofillAdapter.add(AutofillItemEmote(it))
+                            }
                         }
                     }
                 } else if (sendMessageText.text.isEmpty() || sendMessageText.text.last() == ' ') {
@@ -269,6 +281,23 @@ class ChatActivity : AppCompatActivity() {
                 this,
                 supportFragmentManager.findFragmentById(R.id.user_list_fragment)!!
             )
+        }
+    }
+
+    inner class AutofillItemCommand(private val command: String) : Item<GroupieViewHolder>() {
+        override fun getLayout(): Int {
+            return R.layout.autofill_item
+        }
+
+        override fun bind(viewHolder: GroupieViewHolder, position: Int) {
+            viewHolder.itemView.usernameAutofill.text = command
+
+            viewHolder.itemView.usernameAutofill.setOnClickListener {
+
+                sendMessageText.setText("/$command ")
+                sendMessageText.setSelection(sendMessageText.length())
+                recyclerViewAutofill.visibility = View.GONE
+            }
         }
     }
 
@@ -1010,7 +1039,7 @@ class ChatActivity : AppCompatActivity() {
         }
 
         suspend fun onConnect() = client.wss(
-            host = "chat.strims.gg",
+            host = "chat2.strims.gg",
             path = "/ws",
             request = {
                 retrieveCookie()
@@ -1035,9 +1064,13 @@ class ChatActivity : AppCompatActivity() {
                     }
                     val first = messageText.first()
                     if (first == '/' && messageText.substringBefore(' ') != "/me") {
-                        if (messageText.substringAfter(first).substringBefore(' ') == "w") {
-                            val nick = messageText.substringAfter("/w ").substringBefore(' ')
-                            val message = messageText.substringAfter("/w $nick ")
+                        if (privateMessageArray.contains(
+                                messageText.substringAfter(first).substringBefore(' ')
+                            )
+                        ) {
+                            val command = messageText.substring(0, messageText.indexOf(' '))
+                            val nick = messageText.substringAfter("$command ").substringBefore(' ')
+                            val message = messageText.substringAfter("$command $nick ")
                             send("PRIVMSG {\"nick\":\"$nick\", \"data\":\"$message\"}")
                             runOnUiThread {
                                 adapter.add(
