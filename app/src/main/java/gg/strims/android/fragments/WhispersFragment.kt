@@ -1,0 +1,164 @@
+package gg.strims.android.fragments
+
+import android.annotation.SuppressLint
+import android.graphics.Color
+import android.os.Bundle
+import android.os.Message
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.squareup.picasso.Picasso
+import com.xwray.groupie.GroupAdapter
+import com.xwray.groupie.GroupieViewHolder
+import com.xwray.groupie.Item
+import gg.strims.android.*
+import gg.strims.android.models.Stream
+import io.ktor.util.KtorExperimentalAPI
+import kotlinx.android.synthetic.main.fragment_whispers.*
+import kotlinx.android.synthetic.main.fragment_whispers.view.*
+import kotlinx.android.synthetic.main.private_chat_message_item.view.*
+import kotlinx.android.synthetic.main.whisper_item.*
+import kotlinx.android.synthetic.main.whisper_item.view.*
+
+@SuppressLint("SetTextI18n")
+@KtorExperimentalAPI
+class WhispersFragment : Fragment() {
+
+    private val whispersAdapter = GroupAdapter<GroupieViewHolder>()
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return inflater.inflate(R.layout.fragment_whispers, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        hideFragment(activity!!, this)
+        view.setOnTouchListener { _, _ -> return@setOnTouchListener true }
+        val layoutManager = LinearLayoutManager(view.context)
+        layoutManager.stackFromEnd = true
+        recyclerViewWhispers.layoutManager = layoutManager
+        recyclerViewWhispers.adapter = whispersAdapter
+        backWhispers.setOnClickListener {
+            showWhispers()
+            backWhispers.visibility = View.GONE
+        }
+    }
+
+    override fun onHiddenChanged(hidden: Boolean) {
+        if (CurrentUser.privateMessages != null) {
+            whispersAdapter.clear()
+            CurrentUser.privateMessages!!.forEach {
+                var b = true
+                for (i in 0 until whispersAdapter.itemCount) {
+
+                    val item = whispersAdapter.getItem(i) as WhisperItem
+                    if (item.getNick() == it.getNick()) {
+                        item.addMessage(it)
+                        b = false
+                        break
+                    }
+                }
+                //streamsAdapter.add(StreamItem(it))
+                if (b) {
+
+                    whispersAdapter.add(WhisperItem(it))
+
+                }
+            }
+            // showWhispers()
+        }
+        recyclerViewWhispers.scrollToPosition(0)
+        whispersAdapter.notifyDataSetChanged()
+    }
+
+    fun showWhispers() {
+        whispersAdapter.clear()
+        CurrentUser.privateMessages!!.forEach {
+            var b = true
+            for (i in 0 until whispersAdapter.itemCount) {
+
+                val item = whispersAdapter.getItem(i) as WhisperItem
+                if (item.getNick() == it.getNick()) {
+                    item.addMessage(it)
+                    b = false
+                    break
+                }
+            }
+            //streamsAdapter.add(StreamItem(it))
+            if (b) {
+                whispersAdapter.add(WhisperItem(it))
+            }
+        }
+        recyclerViewWhispers.scrollToPosition(0)
+        whispersAdapter.notifyDataSetChanged()
+    }
+
+
+    inner class WhisperItem(initialMessage: ChatActivity.WhisperSaveItem? = null) :
+        Item<GroupieViewHolder>() {
+        override fun getLayout(): Int {
+            return R.layout.whisper_item
+        }
+
+        private var pMessages: MutableList<ChatActivity.WhisperSaveItem>? = null
+
+        init {
+            if (initialMessage != null) {
+                pMessages = mutableListOf(initialMessage)
+            }
+
+
+        }
+
+        fun getNick(): String {
+            if (pMessages != null && pMessages!!.size > 0) {
+                return pMessages!![0].getNick()
+            }
+            return ""
+        }
+
+        fun addMessage(pMes: ChatActivity.WhisperSaveItem) {
+            if (pMessages == null) {
+                pMessages = mutableListOf(pMes)
+                return
+            }
+            pMessages!!.add(pMes)
+        }
+
+        fun removeMessage(pos: Int) {
+            if (pMessages != null && pos < pMessages!!.size) {
+                pMessages!!.removeAt(pos)
+            }
+            //TODO: remove from origin
+        }
+
+        override fun bind(viewHolder: GroupieViewHolder, position: Int) {
+            if (pMessages == null || pMessages!!.size < 1) {
+                return
+            }
+            viewHolder.itemView.usernameWhisperItem.text =
+                pMessages!![pMessages!!.size - 1].getNick()
+            viewHolder.itemView.setOnClickListener {
+                if (pMessages != null && pMessages!!.size > 0) {
+                    whispersAdapter.clear()
+                    pMessages!!.forEach { it2 ->
+                        if (it2 != null) {
+                            whispersAdapter.add(it2)
+                        }
+
+                    }
+                    //unhide back button
+                    //back button onclick , re-add private messages
+                }
+            }
+        }
+    }
+}
+

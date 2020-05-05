@@ -19,7 +19,7 @@ object CurrentUser {
     var tempTwitchVod: Boolean? = null //True if selected stream is a Twitch VOD
     var tempYouTubeId: String? = null //Currently playing YouTube Video ID
     var emotes: MutableList<Emote>? = null //Collection of all emotes
-
+    var privateMessages: MutableList<ChatActivity.WhisperSaveItem>? = null
     fun saveOptions(context: Context) {
         val userOptions = options
         val fileOutputStream: FileOutputStream
