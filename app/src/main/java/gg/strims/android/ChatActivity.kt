@@ -50,6 +50,7 @@ import kotlinx.android.synthetic.main.chat_message_item.view.*
 import kotlinx.android.synthetic.main.error_chat_message_item.view.*
 import kotlinx.android.synthetic.main.private_chat_message_item.view.*
 import kotlinx.android.synthetic.main.whisper_item.view.*
+import kotlinx.android.synthetic.main.whisper_user_item.view.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.io.*
@@ -80,6 +81,7 @@ class ChatActivity : AppCompatActivity() {
     private var privateMessageArray = arrayOf("w", "whisper", "msg", "tell", "t", "notify")
 
     private val autofillAdapter = GroupAdapter<GroupieViewHolder>()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -208,7 +210,18 @@ class ChatActivity : AppCompatActivity() {
             }
             true
         }
-
+        fun hideShowWhispersFragment() {
+            showHideFragment(
+                this,
+                supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!
+            )
+        }
+        fun hideShowWhispersUserFragment(){
+            showHideFragment(
+                this,
+                supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!
+            )
+        }
         sendMessageText.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
                 sendMessageButton.isEnabled = sendMessageText.text.isNotEmpty()
@@ -751,14 +764,14 @@ class ChatActivity : AppCompatActivity() {
         }
     }
 
-    fun savePrivateMessage(whisperSaveItem: WhisperSaveItem) {
+    fun savePrivateMessage(whisperMessageItem: WhisperMessageItem) {
         if (CurrentUser.privateMessages == null) {
             CurrentUser.privateMessages = mutableListOf()
         }
         if (CurrentUser.user == null) {
             return
         }
-        CurrentUser.privateMessages!!.add(whisperSaveItem)
+        CurrentUser.privateMessages!!.add(whisperMessageItem)
         val file =
             baseContext.getFileStreamPath("${CurrentUser.user!!.username}_private_messages.txt")
         if (file.exists()) {
@@ -767,7 +780,7 @@ class ChatActivity : AppCompatActivity() {
                     "${CurrentUser.user!!.username}_private_messages.txt",
                     Context.MODE_APPEND
                 )
-                fileOutputStream.write("\n${Gson().toJson(whisperSaveItem)}".toByteArray())
+                fileOutputStream.write("\n${Gson().toJson(whisperMessageItem)}".toByteArray())
             } catch (e: java.lang.Exception) {
                 e.printStackTrace()
             }
@@ -778,7 +791,7 @@ class ChatActivity : AppCompatActivity() {
                     Context.MODE_PRIVATE
                 )
 
-                fileOutputStream.write(Gson().toJson(whisperSaveItem).toByteArray())
+                fileOutputStream.write(Gson().toJson(whisperMessageItem).toByteArray())
             } catch (e: java.lang.Exception) {
                 e.printStackTrace()
             }
@@ -804,11 +817,11 @@ class ChatActivity : AppCompatActivity() {
 
                 val line = bufferedReader.readLine()
                 Log.d("test", line)
-                val curPMessage: WhisperSaveItem? =
-                    Gson().fromJson(line, WhisperSaveItem::class.java)
+                val curPMessage: WhisperMessageItem? =
+                    Gson().fromJson(line, WhisperMessageItem::class.java)
                 if (curPMessage != null) {
                     CurrentUser.privateMessages!!.add(
-                        WhisperSaveItem(
+                        WhisperMessageItem(
                             curPMessage.message,
                             curPMessage.isReceived
                         )
@@ -1130,7 +1143,7 @@ class ChatActivity : AppCompatActivity() {
         }
 
         init {
-            savePrivateMessage(WhisperSaveItem(messageData, isReceived))
+            savePrivateMessage(WhisperMessageItem(messageData, isReceived))
         }
 
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
@@ -1340,7 +1353,7 @@ class ChatActivity : AppCompatActivity() {
         }
     }
 
-    inner class WhisperSaveItem(val message: Message, val isReceived: Boolean) :
+    inner class WhisperMessageItem(val message: Message, val isReceived: Boolean) :
         Item<GroupieViewHolder>() {
         override fun getLayout(): Int {
             return R.layout.whisper_item
@@ -1349,16 +1362,17 @@ class ChatActivity : AppCompatActivity() {
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
 
             viewHolder.itemView.usernameWhisperItem.text = message.nick
-            if (message != null) {
-                val ssb = createMessageSSB(message)
-                viewHolder.itemView.messageWhisperItem.setText(ssb, TextView.BufferType.SPANNABLE)
-            }
+
+            val ssb = createMessageSSB(message)
+            viewHolder.itemView.messageWhisperItem.setText(ssb, TextView.BufferType.SPANNABLE)
+
         }
 
         fun getNick(): String {
             return message.nick
         }
     }
+
 
     inner class ChatClient {
 
