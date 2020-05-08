@@ -352,7 +352,16 @@ class ChatActivity : AppCompatActivity() {
         }
     }
 
-    fun createMessageSSB(messageData: Message): SpannableStringBuilder {
+    fun createMessageTextView(
+        messageData: Message,
+        messageTextView: TextView,
+        emotes: Boolean = true,
+        greentext: Boolean = true,
+        links: Boolean = true,
+        codes: Boolean = true,
+        spoilers: Boolean = true,
+        me: Boolean = true
+    ) {
         val ssb = SpannableStringBuilder(messageData.data)
 
         class ColouredUnderlineSpan(mColor: Int) : CharacterStyle(), UpdateAppearance {
@@ -411,7 +420,8 @@ class ChatActivity : AppCompatActivity() {
                 return rect.right;
             }
         }
-        if (CurrentUser.options!!.emotes) {
+
+        if (CurrentUser.options!!.emotes && emotes) {
             if (messageData.entities.emotes != null && messageData.entities.emotes!!.isNotEmpty() && messageData.entities.emotes!![0].name != "") {
                 messageData.entities.emotes!!.forEach {
                     var animated = false
@@ -451,7 +461,7 @@ class ChatActivity : AppCompatActivity() {
                 }
             }
         }
-        if (messageData.entities.greentext!!.bounds.isNotEmpty()) {
+        if (messageData.entities.greentext!!.bounds.isNotEmpty() && greentext) {
             ssb.setSpan(
                 ForegroundColorSpan(Color.parseColor("#789922")),
                 messageData.entities.greentext!!.bounds[0],
@@ -460,7 +470,7 @@ class ChatActivity : AppCompatActivity() {
             )
         }
 
-        if (messageData.entities.links!!.isNotEmpty()) {
+        if (messageData.entities.links!!.isNotEmpty() && links) {
             messageData.entities.links!!.forEach {
                 val clickSpan: ClickableSpan = object : ClickableSpan() {
                     override fun onClick(widget: View) {
@@ -555,7 +565,7 @@ class ChatActivity : AppCompatActivity() {
             }
         }
 
-        if (messageData.entities.codes!!.isNotEmpty()) {
+        if (messageData.entities.codes!!.isNotEmpty() && codes) {
             messageData.entities.codes!!.forEach {
                 ssb.setSpan(
                     BackgroundColorSpan(Color.parseColor("#353535")),
@@ -604,7 +614,7 @@ class ChatActivity : AppCompatActivity() {
             }
         }
 
-        if (messageData.entities.spoilers!!.isNotEmpty()) {
+        if (messageData.entities.spoilers!!.isNotEmpty() && spoilers) {
             messageData.entities.spoilers!!.forEach {
                 val span1: NoUnderlineClickableSpan = object : NoUnderlineClickableSpan() {
                     override fun onClick(widget: View) {
@@ -673,6 +683,10 @@ class ChatActivity : AppCompatActivity() {
                                 }
                             }
                         }
+                        messageTextView.setText(
+                            ssb,
+                            TextView.BufferType.SPANNABLE
+                        )
                     }
                 }
 
@@ -723,7 +737,21 @@ class ChatActivity : AppCompatActivity() {
                 )
             }
         }
-        return ssb
+        if (messageData.entities.me!!.bounds.isNotEmpty() && me) {
+            messageTextView.setTypeface(
+                Typeface.DEFAULT,
+                Typeface.ITALIC
+            )
+            ssb.setSpan(
+                RelativeSizeSpan(0f),
+                0,
+                3,
+                Spannable.SPAN_INCLUSIVE_INCLUSIVE
+            )
+        } else {
+            messageTextView.setTypeface(Typeface.DEFAULT)
+        }
+        messageTextView.setText(ssb, TextView.BufferType.SPANNABLE)
     }
 
     inner class AutofillItemCommand(private val command: String) : Item<GroupieViewHolder>() {
@@ -1014,22 +1042,8 @@ class ChatActivity : AppCompatActivity() {
 
             viewHolder.itemView.messageChatMessage.movementMethod = LinkMovementMethod.getInstance()
 
-            val ssb = createMessageSSB(messageData)
-            if (messageData.entities.me!!.bounds.isNotEmpty()) {
-                viewHolder.itemView.messageChatMessage.setTypeface(
-                    Typeface.DEFAULT,
-                    Typeface.ITALIC
-                )
-                ssb.setSpan(
-                    RelativeSizeSpan(0f),
-                    0,
-                    3,
-                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                )
-            } else {
-                viewHolder.itemView.messageChatMessage.setTypeface(Typeface.DEFAULT)
-            }
-            viewHolder.itemView.messageChatMessage.setText(ssb, TextView.BufferType.SPANNABLE)
+            createMessageTextView(messageData, viewHolder.itemView.messageChatMessage)
+
 
             viewHolder.itemView.usernameChatMessage.setOnClickListener {
                 for (i in 0 until adapter.itemCount) {
@@ -1238,22 +1252,10 @@ class ChatActivity : AppCompatActivity() {
             viewHolder.itemView.messagePrivateMessage.movementMethod =
                 LinkMovementMethod.getInstance()
 
-            val ssb = createMessageSSB(messageData)
-            if (messageData.entities.me!!.bounds.isNotEmpty()) {
-                viewHolder.itemView.messagePrivateMessage.setTypeface(
-                    Typeface.DEFAULT,
-                    Typeface.ITALIC
-                )
-                ssb.setSpan(
-                    RelativeSizeSpan(0f),
-                    0,
-                    3,
-                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                )
-            } else {
-                viewHolder.itemView.messagePrivateMessage.setTypeface(Typeface.DEFAULT)
-            }
-            viewHolder.itemView.messagePrivateMessage.setText(ssb, TextView.BufferType.SPANNABLE)
+            createMessageTextView(
+                messageData,
+                viewHolder.itemView.messagePrivateMessage
+            )
 
             viewHolder.itemView.usernamePrivateMessage.setOnClickListener {
                 for (i in 0 until adapter.itemCount) {
@@ -1396,11 +1398,7 @@ class ChatActivity : AppCompatActivity() {
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
 
 
-            val ssb = createMessageSSB(message)
-            viewHolder.itemView.messageWhisperMessageItem.setText(
-                ssb,
-                TextView.BufferType.SPANNABLE
-            )
+            createMessageTextView(message, viewHolder.itemView.messageWhisperMessageItem)
 
         }
 
