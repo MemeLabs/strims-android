@@ -5,7 +5,7 @@
     android:id="@+id/constraintLayoutWhisperUserItem"
     android:layout_width="match_parent"
     android:layout_height="48dp"
-    android:background="#222222">
+    android:background="@drawable/rounded_whisper_user">
 
     <ImageView
         android:id="@+id/onlineWhisperUser"

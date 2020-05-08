@@ -32,7 +32,6 @@ import com.google.gson.Gson
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
-import gg.strims.android.fragments.WhispersFragment
 import gg.strims.android.models.*
 import io.ktor.client.HttpClient
 import io.ktor.client.features.websocket.WebSockets
@@ -49,8 +48,7 @@ import kotlinx.android.synthetic.main.autofill_item.view.*
 import kotlinx.android.synthetic.main.chat_message_item.view.*
 import kotlinx.android.synthetic.main.error_chat_message_item.view.*
 import kotlinx.android.synthetic.main.private_chat_message_item.view.*
-import kotlinx.android.synthetic.main.whisper_item.view.*
-import kotlinx.android.synthetic.main.whisper_user_item.view.*
+import kotlinx.android.synthetic.main.whisper_message_item_right.view.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.io.*
@@ -129,6 +127,10 @@ class ChatActivity : AppCompatActivity() {
                         this,
                         supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!
                     )
+                    hideFragment(
+                        this,
+                        supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!
+                    )
                 }
 
                 R.id.chatLogin -> {
@@ -150,6 +152,12 @@ class ChatActivity : AppCompatActivity() {
                         hideFragment(
                             this,
                             supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!
+                        )
+                    }
+                    if (supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!.isVisible) {
+                        hideFragment(
+                            this,
+                            supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!
                         )
                     }
                     showFragment(
@@ -177,13 +185,21 @@ class ChatActivity : AppCompatActivity() {
                             supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!
                         )
                     }
+                    if (supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!.isVisible) {
+                        hideFragment(
+                            this,
+                            supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!
+                        )
+                    }
                     showFragment(
                         this,
                         supportFragmentManager.findFragmentById(R.id.streams_fragment)!!
                     )
 
                 }
+
                 R.id.chatWhispers -> {
+                    goToBottom.visibility = View.GONE
                     if (supportFragmentManager.findFragmentById(R.id.profile_fragment)!!.isVisible) {
                         hideFragment(
                             this,
@@ -202,6 +218,12 @@ class ChatActivity : AppCompatActivity() {
                             supportFragmentManager.findFragmentById(R.id.streams_fragment)!!
                         )
                     }
+                    if (supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!.isVisible) {
+                        hideFragment(
+                            this,
+                            supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!
+                        )
+                    }
                     showFragment(
                         this,
                         supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!
@@ -210,18 +232,7 @@ class ChatActivity : AppCompatActivity() {
             }
             true
         }
-        fun hideShowWhispersFragment() {
-            showHideFragment(
-                this,
-                supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!
-            )
-        }
-        fun hideShowWhispersUserFragment(){
-            showHideFragment(
-                this,
-                supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!
-            )
-        }
+
         sendMessageText.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
                 sendMessageButton.isEnabled = sendMessageText.text.isNotEmpty()
@@ -294,7 +305,10 @@ class ChatActivity : AppCompatActivity() {
                         && supportFragmentManager.findFragmentById(R.id.streams_fragment)!!.isHidden
                         && supportFragmentManager.findFragmentById(R.id.options_fragment)!!.isHidden
                         && supportFragmentManager.findFragmentById(R.id.user_list_fragment)!!.isHidden
-                        && supportFragmentManager.findFragmentById(R.id.login_fragment)!!.isHidden)
+                        && supportFragmentManager.findFragmentById(R.id.login_fragment)!!.isHidden
+                        && supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!.isHidden
+                        && supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!.isHidden)
+
             ) {
                 goToBottom.visibility = View.VISIBLE
                 goToBottom.isEnabled = true
@@ -772,6 +786,22 @@ class ChatActivity : AppCompatActivity() {
             return
         }
         CurrentUser.privateMessages!!.add(whisperMessageItem)
+        if (CurrentUser.tempWhisperUser != null) {
+            if (CurrentUser.tempWhisperUser == whisperMessageItem.getNick()) {
+                if (supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!.isVisible) {
+                    supportFragmentManager.beginTransaction()
+                        .hide(supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!)
+                        .commit()
+                    supportFragmentManager.beginTransaction()
+                        .show(supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!)
+                        .commit()
+                }
+            }
+        }
+        if (supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!.isVisible) {
+            supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!
+                .onHiddenChanged(false)
+        }
         val file =
             baseContext.getFileStreamPath("${CurrentUser.user!!.username}_private_messages.txt")
         if (file.exists()) {
@@ -1152,6 +1182,7 @@ class ChatActivity : AppCompatActivity() {
             }
             if (isReceived) {
                 viewHolder.itemView.whisperedPrivateMessage.visibility = View.VISIBLE
+
             } else {
                 viewHolder.itemView.toPrivateMessage.visibility = View.VISIBLE
                 viewHolder.itemView.whisperedPrivateMessage.text = ":"
@@ -1356,15 +1387,20 @@ class ChatActivity : AppCompatActivity() {
     inner class WhisperMessageItem(val message: Message, val isReceived: Boolean) :
         Item<GroupieViewHolder>() {
         override fun getLayout(): Int {
-            return R.layout.whisper_item
+            if (isReceived) {
+                return R.layout.whisper_message_item_left
+            }
+            return R.layout.whisper_message_item_right
         }
 
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
 
-            viewHolder.itemView.usernameWhisperItem.text = message.nick
 
             val ssb = createMessageSSB(message)
-            viewHolder.itemView.messageWhisperItem.setText(ssb, TextView.BufferType.SPANNABLE)
+            viewHolder.itemView.messageWhisperMessageItem.setText(
+                ssb,
+                TextView.BufferType.SPANNABLE
+            )
 
         }
 
@@ -1482,7 +1518,7 @@ class ChatActivity : AppCompatActivity() {
         }
 
         suspend fun onConnect() = client.wss(
-            host = "chat2.strims.gg",
+            host = "chat.strims.gg",
             path = "/ws",
             request = {
                 retrieveCookie()
@@ -1507,7 +1543,32 @@ class ChatActivity : AppCompatActivity() {
                         return@launch
                     }
                     val first = messageText.first()
-                    if (first == '/' && messageText.substringBefore(' ') != "/me") {
+                    if (supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!.isVisible) {
+                        when {
+                            messageText.trim() == "" -> {
+                                //TODO: empty message notify in chat ?
+                                return@launch
+                            }
+                            CurrentUser.tempWhisperUser == null -> {
+                                // TODO: error
+                            }
+                            else -> {
+                                val nick = CurrentUser.tempWhisperUser!!
+                                send("PRIVMSG {\"nick\":\"$nick\", \"data\":\"$messageText\"}")
+                                runOnUiThread {
+                                    adapter.add(
+                                        PrivateChatMessage(
+                                            Message(
+                                                true,
+                                                nick,
+                                                messageText
+                                            )
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    } else if (first == '/' && messageText.substringBefore(' ') != "/me") {
                         var privateMessageCommand = ""
                         for (privateMessageItem in privateMessageArray) {
                             if (privateMessageItem.contains(
