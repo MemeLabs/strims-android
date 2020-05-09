@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.graphics.Rect
 import android.os.Bundle
 import android.os.Message
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -61,7 +62,15 @@ class WhispersFragment : Fragment() {
                 }
             }
         }
-        recyclerViewWhispers.addItemDecoration(MarginItemDecoration(5))
+        recyclerViewWhispers.addItemDecoration(
+            MarginItemDecoration(
+                (TypedValue.applyDimension(
+                    TypedValue.COMPLEX_UNIT_DIP,
+                    5f,
+                    resources.displayMetrics
+                )).toInt()
+            )
+        )
 
     }
 
@@ -72,9 +81,9 @@ class WhispersFragment : Fragment() {
             CurrentUser.privateMessages!!.forEach {
                 var b = true
                 for (i in 0 until whispersAdapter.itemCount) {
-
                     val item = whispersAdapter.getItem(i) as WhisperUserItem
                     if (item.nick == it.getNick()) {
+                        item.replaceLatestMessage(it)
                         b = false
                         break
                     }
@@ -96,30 +105,28 @@ class WhispersFragment : Fragment() {
             return R.layout.whisper_user_item
         }
 
-        private var pMessages: MutableList<ChatActivity.WhisperMessageItem>? = null
+        private var latestMessage: ChatActivity.WhisperMessageItem? = null
         var nick: String? = null
 
         init {
             if (initialMessage != null) {
-                pMessages = mutableListOf(initialMessage)
+                latestMessage = initialMessage
                 nick = initialMessage.getNick()
             }
 
 
         }
 
+        fun replaceLatestMessage(newMessage: ChatActivity.WhisperMessageItem? = null) {
+            latestMessage = newMessage
+        }
 
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
 
-            if (pMessages == null || pMessages!!.size < 1) {
-                //TODO: no messages
-                return
-
-            }
             viewHolder.itemView.usernameWhisperUser.text = nick
-            var online = false
-            if (CurrentUser.users != null) {
 
+            if (CurrentUser.users != null) {
+                var online = false
                 CurrentUser.users!!.forEach { user ->
 
                     if (user.nick == nick) {

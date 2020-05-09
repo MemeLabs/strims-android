@@ -1397,7 +1397,7 @@ class ChatActivity : AppCompatActivity() {
 
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
 
-
+            viewHolder.itemView.messageWhisperMessageItem.movementMethod = LinkMovementMethod.getInstance()
             createMessageTextView(message, viewHolder.itemView.messageWhisperMessageItem)
 
         }
