@@ -1397,7 +1397,8 @@ class ChatActivity : AppCompatActivity() {
 
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
 
-            viewHolder.itemView.messageWhisperMessageItem.movementMethod = LinkMovementMethod.getInstance()
+            viewHolder.itemView.messageWhisperMessageItem.movementMethod =
+                LinkMovementMethod.getInstance()
             createMessageTextView(message, viewHolder.itemView.messageWhisperMessageItem)
 
         }
@@ -1511,6 +1512,7 @@ class ChatActivity : AppCompatActivity() {
                     sendMessageText.hint = "Write something ${CurrentUser.user!!.username} ..."
                     chatBottomNavigationView.menu.findItem(R.id.chatProfile).isVisible = true
                     chatBottomNavigationView.menu.findItem(R.id.chatLogin).isVisible = false
+                    chatBottomNavigationView.menu.findItem(R.id.chatWhispers).isVisible = true
                 }
             }
         }
