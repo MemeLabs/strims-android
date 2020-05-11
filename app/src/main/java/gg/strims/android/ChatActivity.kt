@@ -6,10 +6,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Color
-import android.graphics.Typeface
+import android.graphics.*
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
@@ -31,6 +28,7 @@ import androidx.core.app.RemoteInput
 import androidx.core.app.TaskStackBuilder
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.beust.klaxon.Klaxon
+import com.google.gson.Gson
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
@@ -48,13 +46,12 @@ import io.ktor.util.KtorExperimentalAPI
 import kotlinx.android.synthetic.main.activity_chat.*
 import kotlinx.android.synthetic.main.autofill_item.view.*
 import kotlinx.android.synthetic.main.chat_message_item.view.*
+import kotlinx.android.synthetic.main.error_chat_message_item.view.*
 import kotlinx.android.synthetic.main.private_chat_message_item.view.*
+import kotlinx.android.synthetic.main.whisper_message_item_right.view.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import java.io.BufferedReader
-import java.io.IOException
-import java.io.InputStream
-import java.io.InputStreamReader
+import java.io.*
 import java.lang.reflect.Method
 import java.net.HttpURLConnection
 import java.net.URL
@@ -79,7 +76,10 @@ class ChatActivity : AppCompatActivity() {
 
     private lateinit var gifMemoryCache: LruCache<String, Drawable>
 
+    private var privateMessageArray = arrayOf("w", "whisper", "msg", "tell", "t", "notify")
+
     private val autofillAdapter = GroupAdapter<GroupieViewHolder>()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -123,7 +123,16 @@ class ChatActivity : AppCompatActivity() {
                         this,
                         supportFragmentManager.findFragmentById(R.id.login_fragment)!!
                     )
+                    hideFragment(
+                        this,
+                        supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!
+                    )
+                    hideFragment(
+                        this,
+                        supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!
+                    )
                 }
+
                 R.id.chatLogin -> {
                     goToBottom.visibility = View.GONE
                     showFragment(
@@ -137,6 +146,18 @@ class ChatActivity : AppCompatActivity() {
                         hideFragment(
                             this,
                             supportFragmentManager.findFragmentById(R.id.streams_fragment)!!
+                        )
+                    }
+                    if (supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!.isVisible) {
+                        hideFragment(
+                            this,
+                            supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!
+                        )
+                    }
+                    if (supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!.isVisible) {
+                        hideFragment(
+                            this,
+                            supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!
                         )
                     }
                     showFragment(
@@ -158,9 +179,54 @@ class ChatActivity : AppCompatActivity() {
                             supportFragmentManager.findFragmentById(R.id.login_fragment)!!
                         )
                     }
+                    if (supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!.isVisible) {
+                        hideFragment(
+                            this,
+                            supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!
+                        )
+                    }
+                    if (supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!.isVisible) {
+                        hideFragment(
+                            this,
+                            supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!
+                        )
+                    }
                     showFragment(
                         this,
                         supportFragmentManager.findFragmentById(R.id.streams_fragment)!!
+                    )
+
+                }
+
+                R.id.chatWhispers -> {
+                    goToBottom.visibility = View.GONE
+                    if (supportFragmentManager.findFragmentById(R.id.profile_fragment)!!.isVisible) {
+                        hideFragment(
+                            this,
+                            supportFragmentManager.findFragmentById(R.id.profile_fragment)!!
+                        )
+                    }
+                    if (supportFragmentManager.findFragmentById(R.id.login_fragment)!!.isVisible) {
+                        hideFragment(
+                            this,
+                            supportFragmentManager.findFragmentById(R.id.login_fragment)!!
+                        )
+                    }
+                    if (supportFragmentManager.findFragmentById(R.id.streams_fragment)!!.isVisible) {
+                        hideFragment(
+                            this,
+                            supportFragmentManager.findFragmentById(R.id.streams_fragment)!!
+                        )
+                    }
+                    if (supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!.isVisible) {
+                        hideFragment(
+                            this,
+                            supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!
+                        )
+                    }
+                    showFragment(
+                        this,
+                        supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!
                     )
                 }
             }
@@ -181,18 +247,29 @@ class ChatActivity : AppCompatActivity() {
                 autofillAdapter.clear()
                 if (sendMessageText.text.isNotEmpty()) {
                     recyclerViewAutofill.visibility = View.VISIBLE
-                    val currentWord = sendMessageText.text.toString().substringAfterLast(' ')
-                    CurrentUser.users!!.sortByDescending {
-                        it.nick
-                    }
-                    CurrentUser.users!!.forEach {
-                        if (it.nick.contains(currentWord, true)) {
-                            autofillAdapter.add(AutofillItemUser(it))
+                    if (sendMessageText.text.first() == '/' && !sendMessageText.text.contains(' ')) {
+                        val currentWord = sendMessageText.text.toString().substringAfter('/')
+
+                        privateMessageArray.forEach {
+                            if (it.contains(currentWord, true)) {
+                                autofillAdapter.add(AutofillItemCommand(it))
+                            }
                         }
-                    }
-                    CurrentUser.emotes!!.forEach {
-                        if (it.name.contains(currentWord, true)) {
-                            autofillAdapter.add(AutofillItemEmote(it))
+                    } else {
+
+                        val currentWord = sendMessageText.text.toString().substringAfterLast(' ')
+                        CurrentUser.users!!.sortByDescending {
+                            it.nick
+                        }
+                        CurrentUser.users!!.forEach {
+                            if (it.nick.contains(currentWord, true)) {
+                                autofillAdapter.add(AutofillItemUser(it))
+                            }
+                        }
+                        CurrentUser.emotes!!.forEach {
+                            if (it.name.contains(currentWord, true)) {
+                                autofillAdapter.add(AutofillItemEmote(it))
+                            }
                         }
                     }
                 } else if (sendMessageText.text.isEmpty() || sendMessageText.text.last() == ' ') {
@@ -228,7 +305,10 @@ class ChatActivity : AppCompatActivity() {
                         && supportFragmentManager.findFragmentById(R.id.streams_fragment)!!.isHidden
                         && supportFragmentManager.findFragmentById(R.id.options_fragment)!!.isHidden
                         && supportFragmentManager.findFragmentById(R.id.user_list_fragment)!!.isHidden
-                        && supportFragmentManager.findFragmentById(R.id.login_fragment)!!.isHidden)
+                        && supportFragmentManager.findFragmentById(R.id.login_fragment)!!.isHidden
+                        && supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!.isHidden
+                        && supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!.isHidden)
+
             ) {
                 goToBottom.visibility = View.VISIBLE
                 goToBottom.isEnabled = true
@@ -272,6 +352,425 @@ class ChatActivity : AppCompatActivity() {
         }
     }
 
+    fun createMessageTextView(
+        messageData: Message,
+        messageTextView: TextView,
+        emotes: Boolean = true,
+        greentext: Boolean = true,
+        links: Boolean = true,
+        codes: Boolean = true,
+        spoilers: Boolean = true,
+        me: Boolean = true
+    ) {
+        val ssb = SpannableStringBuilder(messageData.data)
+
+        class ColouredUnderlineSpan(mColor: Int) : CharacterStyle(), UpdateAppearance {
+
+            var color = mColor
+
+            override fun updateDrawState(tp: TextPaint) {
+                try {
+                    val method: Method = TextPaint::class.java.getMethod(
+                        "setUnderlineText",
+                        Integer.TYPE,
+                        java.lang.Float.TYPE
+                    )
+                    method.invoke(tp, color, 8.0f)
+                } catch (e: Exception) {
+                    tp.isUnderlineText = true
+                }
+            }
+        }
+
+        abstract class NoUnderlineClickableSpan : ClickableSpan() {
+            override fun updateDrawState(ds: TextPaint) {
+                ds.isUnderlineText = false
+            }
+        }
+
+        class CenteredImageSpan(
+            context: Context,
+            private val bitmap: Bitmap
+        ) : ImageSpan(context, bitmap) {
+            private var initialDescent: Int = 0
+            private var extraSpace: Int = 0
+            override fun getSize(
+                paint: Paint,
+                text: CharSequence?,
+                start: Int,
+                end: Int,
+                fm: Paint.FontMetricsInt?
+            ): Int {
+                val rect = drawable.bounds
+                if (fm != null) {
+                    // Centers the text with the ImageSpan
+                    if (rect.bottom - (fm.descent - fm.ascent) >= 0) {
+                        // Stores the initial descent and computes the margin available
+                        initialDescent = fm.descent;
+                        extraSpace = rect.bottom - (fm.descent - fm.ascent);
+                    }
+
+                    fm.descent = extraSpace / 2 + initialDescent;
+                    fm.bottom = fm.descent;
+
+                    fm.ascent = -rect.bottom + fm.descent;
+                    fm.top = fm.ascent;
+                }
+
+                return rect.right;
+            }
+        }
+
+        if (CurrentUser.options!!.emotes && emotes) {
+            if (messageData.entities.emotes != null && messageData.entities.emotes!!.isNotEmpty() && messageData.entities.emotes!![0].name != "") {
+                messageData.entities.emotes!!.forEach {
+                    var animated = false
+                    CurrentUser.emotes!!.forEach { it2 ->
+                        if (it.name == it2.name && it2.versions[0].animated) {
+                            animated = true
+                        }
+                    }
+                    if (!animated) {
+                        val bitmap = bitmapMemoryCache.get(it.name)
+                        if (bitmap != null) {
+                            var width = bitmap.width
+                            if (it.modifiers.contains("wide")) {
+                                width = bitmap.width * 3
+                            }
+                            val height = bitmap.height
+                            val resized =
+                                Bitmap.createScaledBitmap(bitmap, width, height, false)
+                            ssb.setSpan(
+                                CenteredImageSpan(this@ChatActivity, resized),
+                                it.bounds[0],
+                                it.bounds[1],
+                                Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                            )
+                        }
+                    } else {
+                        val gif = gifMemoryCache.get(it.name)
+                        if (gif != null) {
+                            ssb.setSpan(
+                                ImageSpan(gif, DynamicDrawableSpan.ALIGN_BOTTOM),
+                                it.bounds[0],
+                                it.bounds[1],
+                                Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        if (messageData.entities.greentext!!.bounds.isNotEmpty() && greentext) {
+            ssb.setSpan(
+                ForegroundColorSpan(Color.parseColor("#789922")),
+                messageData.entities.greentext!!.bounds[0],
+                messageData.entities.greentext!!.bounds[1],
+                Spannable.SPAN_INCLUSIVE_INCLUSIVE
+            )
+        }
+
+        if (messageData.entities.links!!.isNotEmpty() && links) {
+            messageData.entities.links!!.forEach {
+                val clickSpan: ClickableSpan = object : ClickableSpan() {
+                    override fun onClick(widget: View) {
+                        if (messageData.entities.spoilers!!.isNotEmpty()) {
+                            messageData.entities.spoilers!!.forEach { it2 ->
+                                if (it.bounds[0] >= it2.bounds[0] && it.bounds[1] <= it2.bounds[1]) {
+                                    val span3 = ssb.getSpans(
+                                        it.bounds[0],
+                                        it.bounds[1],
+                                        ForegroundColorSpan::class.java
+                                    )
+                                    if (span3[span3.size - 1].foregroundColor == Color.parseColor(
+                                            "#FFFFFF"
+                                        ) ||
+                                        span3[span3.size - 1].foregroundColor == Color.parseColor(
+                                            "#03DAC5"
+                                        )
+                                    ) {
+                                        var webpage = Uri.parse(it.url)
+
+                                        if (!it.url!!.startsWith("http://") && !it.url!!.startsWith(
+                                                "https://"
+                                            )
+                                        ) {
+                                            webpage = Uri.parse("http://${it.url}")
+                                        }
+
+                                        val intent = Intent(Intent.ACTION_VIEW, webpage)
+                                        if (intent.resolveActivity(packageManager) != null) {
+                                            startActivity(intent)
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            var webpage = Uri.parse(it.url)
+
+                            if (!it.url!!.startsWith("http://") && !it.url!!.startsWith(
+                                    "https://"
+                                )
+                            ) {
+                                webpage = Uri.parse("http://${it.url}")
+                            }
+
+                            val intent = Intent(Intent.ACTION_VIEW, webpage)
+                            if (intent.resolveActivity(packageManager) != null) {
+                                startActivity(intent)
+                            }
+                        }
+                    }
+                }
+                if (messageData.entities.codes!!.isNotEmpty()) {
+                    messageData.entities.codes!!.forEach { it2 ->
+                        if (it.bounds[0] >= it2.bounds[0] && it.bounds[1] <= it2.bounds[1]) {
+                            return@forEach
+                        } else {
+                            ssb.setSpan(
+                                clickSpan,
+                                it.bounds[0],
+                                it.bounds[1],
+                                Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                            )
+                        }
+                    }
+                } else {
+                    ssb.setSpan(
+                        clickSpan,
+                        it.bounds[0],
+                        it.bounds[1],
+                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                    )
+                }
+            }
+            if (messageData.data.contains("nsfl")) {
+                messageData.entities.links!!.forEach {
+                    ssb.setSpan(
+                        ColouredUnderlineSpan(Color.parseColor("#FFFF00")),
+                        it.bounds[0],
+                        it.bounds[1],
+                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                    )
+                }
+            } else if (messageData.data.contains("nsfw")) {
+                messageData.entities.links!!.forEach {
+                    ssb.setSpan(
+                        ColouredUnderlineSpan(Color.parseColor("#FF2D00")),
+                        it.bounds[0],
+                        it.bounds[1],
+                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                    )
+                }
+            }
+        }
+
+        if (messageData.entities.codes!!.isNotEmpty() && codes) {
+            messageData.entities.codes!!.forEach {
+                ssb.setSpan(
+                    BackgroundColorSpan(Color.parseColor("#353535")),
+                    it.bounds[0],
+                    it.bounds[1],
+                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                )
+                ssb.setSpan(
+                    ForegroundColorSpan(Color.parseColor("#D8D8D8")),
+                    it.bounds[0],
+                    it.bounds[1],
+                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                )
+                ssb.setSpan(
+                    TypefaceSpan("monospace"),
+                    it.bounds[0],
+                    it.bounds[1],
+                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                )
+                ssb.setSpan(
+                    RelativeSizeSpan(0f),
+                    it.bounds[0],
+                    it.bounds[0] + 1,
+                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                )
+                ssb.setSpan(
+                    RelativeSizeSpan(0f),
+                    it.bounds[1] - 1,
+                    it.bounds[1],
+                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                )
+                if (messageData.entities.links!!.isNotEmpty()) {
+                    messageData.entities.links!!.forEach { it2 ->
+                        if (it2.bounds[0] >= it.bounds[0] && it2.bounds[1] <= it.bounds[1]) {
+                            val span3 = ssb.getSpans(
+                                it2.bounds[0],
+                                it2.bounds[1],
+                                ColouredUnderlineSpan::class.java
+                            )
+                            if (span3.isNotEmpty()) {
+                                span3[span3.size - 1].color = Color.parseColor("#00000000")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (messageData.entities.spoilers!!.isNotEmpty() && spoilers) {
+            messageData.entities.spoilers!!.forEach {
+                val span1: NoUnderlineClickableSpan = object : NoUnderlineClickableSpan() {
+                    override fun onClick(widget: View) {
+                        val span = ssb.getSpans(
+                            it.bounds[0], it.bounds[1],
+                            ForegroundColorSpan::class.java
+                        )
+                        if (span[span.size - 1].foregroundColor == Color.parseColor("#00000000")) {
+                            ssb.setSpan(
+                                ForegroundColorSpan(Color.parseColor("#FFFFFF")),
+                                it.bounds[0] + 2,
+                                it.bounds[1] - 2,
+                                Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                            )
+                            if (messageData.entities.links!!.isNotEmpty()) {
+                                messageData.entities.links!!.forEach { it2 ->
+                                    if (it2.bounds[0] >= it.bounds[0] && it2.bounds[1] <= it.bounds[1]) {
+                                        ssb.setSpan(
+                                            ForegroundColorSpan(Color.parseColor("#03DAC5")),
+                                            it2.bounds[0],
+                                            it2.bounds[1],
+                                            Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                                        )
+                                        messageData.entities.tags!!.forEach { it3 ->
+                                            if (it3.name == "nsfl") {
+                                                ssb.setSpan(
+                                                    ColouredUnderlineSpan(Color.parseColor("#FFFF00")),
+                                                    it2.bounds[0],
+                                                    it2.bounds[1],
+                                                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                                                )
+                                            } else if (it3.name == "nsfw") {
+                                                ssb.setSpan(
+                                                    ColouredUnderlineSpan(Color.parseColor("#FF2D00")),
+                                                    it2.bounds[0],
+                                                    it2.bounds[1],
+                                                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else if (span[span.size - 1].foregroundColor == Color.parseColor("#FFFFFF") ||
+                            span[span.size - 1].foregroundColor == Color.parseColor("#03DAC5")
+                        ) {
+                            ssb.setSpan(
+                                ForegroundColorSpan(Color.parseColor("#00000000")),
+                                it.bounds[0] + 2,
+                                it.bounds[1] - 2,
+                                Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                            )
+                            if (messageData.entities.links!!.isNotEmpty()) {
+                                messageData.entities.links!!.forEach { it2 ->
+                                    if (it2.bounds[0] >= it.bounds[0] && it2.bounds[1] <= it.bounds[1]) {
+                                        val span3 = ssb.getSpans(
+                                            it2.bounds[0],
+                                            it2.bounds[1],
+                                            ColouredUnderlineSpan::class.java
+                                        )
+                                        if (span3.isNotEmpty()) {
+                                            span3[span3.size - 1].color =
+                                                Color.parseColor("#00000000")
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        messageTextView.setText(
+                            ssb,
+                            TextView.BufferType.SPANNABLE
+                        )
+                    }
+                }
+
+                if (messageData.entities.links!!.isNotEmpty()) {
+                    messageData.entities.links!!.forEach { it2 ->
+                        if (it2.bounds[0] >= it.bounds[0] && it2.bounds[1] <= it.bounds[1]) {
+                            val span3 = ssb.getSpans(
+                                it2.bounds[0],
+                                it2.bounds[1],
+                                ColouredUnderlineSpan::class.java
+                            )
+                            if (span3.isNotEmpty()) {
+                                span3[span3.size - 1].color = Color.parseColor("#00000000")
+                            }
+                        }
+                    }
+                }
+
+                ssb.setSpan(
+                    span1,
+                    it.bounds[0],
+                    it.bounds[1],
+                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                )
+                ssb.setSpan(
+                    RelativeSizeSpan(0f),
+                    it.bounds[0],
+                    it.bounds[0] + 2,
+                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                )
+                ssb.setSpan(
+                    RelativeSizeSpan(0f),
+                    it.bounds[1] - 2,
+                    it.bounds[1],
+                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                )
+                ssb.setSpan(
+                    BackgroundColorSpan(Color.parseColor("#353535")),
+                    it.bounds[0],
+                    it.bounds[1],
+                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                )
+                ssb.setSpan(
+                    ForegroundColorSpan(Color.parseColor("#00000000")),
+                    it.bounds[0],
+                    it.bounds[1],
+                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                )
+            }
+        }
+        if (messageData.entities.me!!.bounds.isNotEmpty() && me) {
+            messageTextView.setTypeface(
+                Typeface.DEFAULT,
+                Typeface.ITALIC
+            )
+            ssb.setSpan(
+                RelativeSizeSpan(0f),
+                0,
+                3,
+                Spannable.SPAN_INCLUSIVE_INCLUSIVE
+            )
+        } else {
+            messageTextView.setTypeface(Typeface.DEFAULT)
+        }
+        messageTextView.setText(ssb, TextView.BufferType.SPANNABLE)
+    }
+
+    inner class AutofillItemCommand(private val command: String) : Item<GroupieViewHolder>() {
+        override fun getLayout(): Int {
+            return R.layout.autofill_item
+        }
+
+        override fun bind(viewHolder: GroupieViewHolder, position: Int) {
+            viewHolder.itemView.usernameAutofill.text = "/$command"
+
+            viewHolder.itemView.usernameAutofill.setOnClickListener {
+
+                sendMessageText.setText("/$command ")
+                sendMessageText.setSelection(sendMessageText.length())
+                recyclerViewAutofill.visibility = View.GONE
+            }
+        }
+    }
+
     inner class AutofillItemUser(private val user: ChatUser) : Item<GroupieViewHolder>() {
         override fun getLayout(): Int {
             return R.layout.autofill_item
@@ -305,6 +804,95 @@ class ChatActivity : AppCompatActivity() {
                 recyclerViewAutofill.visibility = View.GONE
             }
         }
+    }
+
+    fun savePrivateMessage(whisperMessageItem: WhisperMessageItem) {
+        if (CurrentUser.privateMessages == null) {
+            CurrentUser.privateMessages = mutableListOf()
+        }
+        if (CurrentUser.user == null) {
+            return
+        }
+        CurrentUser.privateMessages!!.add(whisperMessageItem)
+        if (CurrentUser.tempWhisperUser != null) {
+            if (CurrentUser.tempWhisperUser == whisperMessageItem.getNick()) {
+                if (supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!.isVisible) {
+                    supportFragmentManager.beginTransaction()
+                        .hide(supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!)
+                        .commit()
+                    supportFragmentManager.beginTransaction()
+                        .show(supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!)
+                        .commit()
+                }
+            }
+        }
+        if (supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!.isVisible) {
+            supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!
+                .onHiddenChanged(false)
+        }
+        val file =
+            baseContext.getFileStreamPath("${CurrentUser.user!!.username}_private_messages.txt")
+        if (file.exists()) {
+            try {
+                val fileOutputStream = baseContext.openFileOutput(
+                    "${CurrentUser.user!!.username}_private_messages.txt",
+                    Context.MODE_APPEND
+                )
+                fileOutputStream.write("\n${Gson().toJson(whisperMessageItem)}".toByteArray())
+            } catch (e: java.lang.Exception) {
+                e.printStackTrace()
+            }
+        } else {
+            try {
+                val fileOutputStream = baseContext.openFileOutput(
+                    "${CurrentUser.user!!.username}_private_messages.txt",
+                    Context.MODE_PRIVATE
+                )
+
+                fileOutputStream.write(Gson().toJson(whisperMessageItem).toByteArray())
+            } catch (e: java.lang.Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun retrievePrivateMessages() {
+        if (CurrentUser.privateMessages == null) {
+            CurrentUser.privateMessages = mutableListOf()
+        }
+        if (CurrentUser.user == null) {
+            return
+        }
+        val file =
+            baseContext.getFileStreamPath("${CurrentUser.user!!.username}_private_messages.txt")
+        if (file.exists()) {
+            val fileInputStream =
+                openFileInput("${CurrentUser.user!!.username}_private_messages.txt")
+            val inputStreamReader = InputStreamReader(fileInputStream)
+            val bufferedReader = BufferedReader(inputStreamReader)
+            Log.d("test", "SAVED MESSAGES -----------")
+            while (bufferedReader.ready()) {
+
+                val line = bufferedReader.readLine()
+                Log.d("test", line)
+                val curPMessage: WhisperMessageItem? =
+                    Gson().fromJson(line, WhisperMessageItem::class.java)
+                if (curPMessage != null) {
+                    CurrentUser.privateMessages!!.add(
+                        WhisperMessageItem(
+                            curPMessage.message,
+                            curPMessage.isReceived
+                        )
+                    )
+
+                }
+
+            }
+            Log.d("test", "SAVED MESSAGES ----------- ${CurrentUser.privateMessages!!.size}")
+
+        }
+
+
     }
 
     fun retrieveOptions() {
@@ -362,6 +950,22 @@ class ChatActivity : AppCompatActivity() {
         NotificationManagerCompat.from(this).notify(NOTIFICATION_ID, notificationBuilder.build())
     }
 
+    inner class ErrorChatMessage(private val message: String) : Item<GroupieViewHolder>() {
+        override fun getLayout(): Int {
+            return R.layout.error_chat_message_item
+        }
+
+        override fun bind(viewHolder: GroupieViewHolder, position: Int) {
+            if (CurrentUser.options!!.showTime) {
+                val dateFormat = SimpleDateFormat("HH:mm")
+                val time = dateFormat.format(System.currentTimeMillis())
+                viewHolder.itemView.timestampErrorChatMessage.visibility = View.VISIBLE
+                viewHolder.itemView.timestampErrorChatMessage.text = time
+            }
+            viewHolder.itemView.messageErrorChatMessage.text = message
+        }
+    }
+
     inner class ChatMessage(
         private val messageData: Message,
         private val isConsecutive: Boolean = false
@@ -371,6 +975,7 @@ class ChatActivity : AppCompatActivity() {
             if (isConsecutive) {
                 return R.layout.chat_message_item_consecutive_nick
             }
+
             return R.layout.chat_message_item
         }
 
@@ -417,397 +1022,76 @@ class ChatActivity : AppCompatActivity() {
                 viewHolder.itemView.botFlairChatMessage.visibility = View.GONE
             }
 
-            if (CurrentUser.tempHighlightNick != null && CurrentUser.tempHighlightNick!!.contains(
-                    messageData.nick
-                )
-            ) {
-                viewHolder.itemView.usernameChatMessage.setTextColor(Color.parseColor("#FFF44336"))
+            if (CurrentUser.tempHighlightNick != null) {
+                when {
+                    CurrentUser.tempHighlightNick!!.contains(messageData.nick) -> {
+                        viewHolder.itemView.alpha = 1f
+                    }
+                    CurrentUser.tempHighlightNick!!.isEmpty() -> {
+                        viewHolder.itemView.alpha = 1f
+                    }
+                    else -> {
+                        viewHolder.itemView.alpha = 0.5f
+                    }
+                }
+            } else {
+                viewHolder.itemView.alpha = 1f
             }
 
             viewHolder.itemView.usernameChatMessage.text = "${messageData.nick}:"
 
             viewHolder.itemView.messageChatMessage.movementMethod = LinkMovementMethod.getInstance()
 
-            val ssb = SpannableStringBuilder(messageData.data)
+            createMessageTextView(messageData, viewHolder.itemView.messageChatMessage)
 
-            class ColouredUnderlineSpan(mColor: Int) : CharacterStyle(), UpdateAppearance {
-
-                var color = mColor
-
-                override fun updateDrawState(tp: TextPaint) {
-                    try {
-                        val method: Method = TextPaint::class.java.getMethod(
-                            "setUnderlineText",
-                            Integer.TYPE,
-                            java.lang.Float.TYPE
-                        )
-                        method.invoke(tp, color, 8.0f)
-                    } catch (e: Exception) {
-                        tp.isUnderlineText = true
-                    }
-                }
-            }
-
-            abstract class NoUnderlineClickableSpan : ClickableSpan() {
-                override fun updateDrawState(ds: TextPaint) {
-                    ds.isUnderlineText = false
-                }
-            }
-
-            if (CurrentUser.options!!.emotes) {
-                if (messageData.entities.emotes != null && messageData.entities.emotes!!.isNotEmpty() && messageData.entities.emotes!![0].name != "") {
-                    messageData.entities.emotes!!.forEach {
-                        var animated = false
-                        CurrentUser.emotes!!.forEach { it2 ->
-                            if (it.name == it2.name && it2.versions[0].animated) {
-                                animated = true
-                            }
-                        }
-                        if (!animated) {
-                            val bitmap = bitmapMemoryCache.get(it.name)
-                            if (bitmap != null) {
-                                var width = bitmap.width
-                                if (it.modifiers.contains("wide")) {
-                                    width = bitmap.width * 3
-                                }
-                                val height = bitmap.height
-                                val resized =
-                                    Bitmap.createScaledBitmap(bitmap, width, height, false)
-                                ssb.setSpan(
-                                    CenteredImageSpan(this@ChatActivity, resized),
-                                    it.bounds[0],
-                                    it.bounds[1],
-                                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                                )
-                                viewHolder.itemView.messageChatMessage.setText(
-                                    ssb,
-                                    TextView.BufferType.SPANNABLE
-                                )
-                            }
-                        } else {
-                            val gif = gifMemoryCache.get(it.name)
-                            if (gif != null) {
-                                ssb.setSpan(
-                                    ImageSpan(gif, DynamicDrawableSpan.ALIGN_BOTTOM),
-                                    it.bounds[0],
-                                    it.bounds[1],
-                                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (messageData.entities.me!!.bounds.isNotEmpty()) {
-                viewHolder.itemView.messageChatMessage.setTypeface(
-                    Typeface.DEFAULT,
-                    Typeface.ITALIC
-                )
-                ssb.setSpan(
-                    RelativeSizeSpan(0f),
-                    0,
-                    3,
-                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                )
-            } else {
-                viewHolder.itemView.messageChatMessage.setTypeface(Typeface.DEFAULT)
-            }
-
-            if (messageData.entities.greentext!!.bounds.isNotEmpty()) {
-                ssb.setSpan(
-                    ForegroundColorSpan(Color.parseColor("#789922")),
-                    messageData.entities.greentext!!.bounds[0],
-                    messageData.entities.greentext!!.bounds[1],
-                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                )
-            }
-
-            if (messageData.entities.links!!.isNotEmpty()) {
-                messageData.entities.links!!.forEach {
-                    val clickSpan: ClickableSpan = object : ClickableSpan() {
-                        override fun onClick(widget: View) {
-                            if (messageData.entities.spoilers!!.isNotEmpty()) {
-                                messageData.entities.spoilers!!.forEach { it2 ->
-                                    if (it.bounds[0] >= it2.bounds[0] && it.bounds[1] <= it2.bounds[1]) {
-                                        val span3 = ssb.getSpans(
-                                            it.bounds[0],
-                                            it.bounds[1],
-                                            ForegroundColorSpan::class.java
-                                        )
-                                        if (span3[span3.size - 1].foregroundColor == Color.parseColor(
-                                                "#FFFFFF"
-                                            ) ||
-                                            span3[span3.size - 1].foregroundColor == Color.parseColor(
-                                                "#03DAC5"
-                                            )
-                                        ) {
-                                            var webpage = Uri.parse(it.url)
-
-                                            if (!it.url!!.startsWith("http://") && !it.url!!.startsWith(
-                                                    "https://"
-                                                )
-                                            ) {
-                                                webpage = Uri.parse("http://${it.url}")
-                                            }
-
-                                            val intent = Intent(Intent.ACTION_VIEW, webpage)
-                                            if (intent.resolveActivity(packageManager) != null) {
-                                                startActivity(intent)
-                                            }
-                                        }
-                                    }
-                                }
-                            } else {
-                                var webpage = Uri.parse(it.url)
-
-                                if (!it.url!!.startsWith("http://") && !it.url!!.startsWith(
-                                        "https://"
-                                    )
-                                ) {
-                                    webpage = Uri.parse("http://${it.url}")
-                                }
-
-                                val intent = Intent(Intent.ACTION_VIEW, webpage)
-                                if (intent.resolveActivity(packageManager) != null) {
-                                    startActivity(intent)
-                                }
-                            }
-                        }
-                    }
-                    if (messageData.entities.codes!!.isNotEmpty()) {
-                        messageData.entities.codes!!.forEach { it2 ->
-                            if (it.bounds[0] >= it2.bounds[0] && it.bounds[1] <= it2.bounds[1]) {
-                                return@forEach
-                            } else {
-                                ssb.setSpan(
-                                    clickSpan,
-                                    it.bounds[0],
-                                    it.bounds[1],
-                                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                                )
-                            }
-                        }
-                    } else {
-                        ssb.setSpan(
-                            clickSpan,
-                            it.bounds[0],
-                            it.bounds[1],
-                            Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                        )
-                    }
-                }
-                if (messageData.data.contains("nsfl")) {
-                    messageData.entities.links!!.forEach {
-                        ssb.setSpan(
-                            ColouredUnderlineSpan(Color.parseColor("#FFFF00")),
-                            it.bounds[0],
-                            it.bounds[1],
-                            Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                        )
-                    }
-                } else if (messageData.data.contains("nsfw")) {
-                    messageData.entities.links!!.forEach {
-                        ssb.setSpan(
-                            ColouredUnderlineSpan(Color.parseColor("#FF2D00")),
-                            it.bounds[0],
-                            it.bounds[1],
-                            Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                        )
-                    }
-                }
-            }
-
-            if (messageData.entities.codes!!.isNotEmpty()) {
-                messageData.entities.codes!!.forEach {
-                    ssb.setSpan(
-                        BackgroundColorSpan(Color.parseColor("#353535")),
-                        it.bounds[0],
-                        it.bounds[1],
-                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                    )
-                    ssb.setSpan(
-                        ForegroundColorSpan(Color.parseColor("#D8D8D8")),
-                        it.bounds[0],
-                        it.bounds[1],
-                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                    )
-                    ssb.setSpan(
-                        TypefaceSpan("monospace"),
-                        it.bounds[0],
-                        it.bounds[1],
-                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                    )
-                    ssb.setSpan(
-                        RelativeSizeSpan(0f),
-                        it.bounds[0],
-                        it.bounds[0] + 1,
-                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                    )
-                    ssb.setSpan(
-                        RelativeSizeSpan(0f),
-                        it.bounds[1] - 1,
-                        it.bounds[1],
-                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                    )
-                    if (messageData.entities.links!!.isNotEmpty()) {
-                        messageData.entities.links!!.forEach { it2 ->
-                            if (it2.bounds[0] >= it.bounds[0] && it2.bounds[1] <= it.bounds[1]) {
-                                val span3 = ssb.getSpans(
-                                    it2.bounds[0],
-                                    it2.bounds[1],
-                                    ColouredUnderlineSpan::class.java
-                                )
-                                if (span3.isNotEmpty()) {
-                                    span3[span3.size - 1].color = Color.parseColor("#00000000")
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (messageData.entities.spoilers!!.isNotEmpty()) {
-                messageData.entities.spoilers!!.forEach {
-                    val span1: NoUnderlineClickableSpan = object : NoUnderlineClickableSpan() {
-                        override fun onClick(widget: View) {
-                            val span = ssb.getSpans(
-                                it.bounds[0], it.bounds[1],
-                                ForegroundColorSpan::class.java
-                            )
-                            if (span[span.size - 1].foregroundColor == Color.parseColor("#00000000")) {
-                                ssb.setSpan(
-                                    ForegroundColorSpan(Color.parseColor("#FFFFFF")),
-                                    it.bounds[0] + 2,
-                                    it.bounds[1] - 2,
-                                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                                )
-                                if (messageData.entities.links!!.isNotEmpty()) {
-                                    messageData.entities.links!!.forEach { it2 ->
-                                        if (it2.bounds[0] >= it.bounds[0] && it2.bounds[1] <= it.bounds[1]) {
-                                            ssb.setSpan(
-                                                ForegroundColorSpan(Color.parseColor("#03DAC5")),
-                                                it2.bounds[0],
-                                                it2.bounds[1],
-                                                Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                                            )
-                                            messageData.entities.tags!!.forEach { it3 ->
-                                                if (it3.name == "nsfl") {
-                                                    ssb.setSpan(
-                                                        ColouredUnderlineSpan(Color.parseColor("#FFFF00")),
-                                                        it2.bounds[0],
-                                                        it2.bounds[1],
-                                                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                                                    )
-                                                } else if (it3.name == "nsfw") {
-                                                    ssb.setSpan(
-                                                        ColouredUnderlineSpan(Color.parseColor("#FF2D00")),
-                                                        it2.bounds[0],
-                                                        it2.bounds[1],
-                                                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            } else if (span[span.size - 1].foregroundColor == Color.parseColor("#FFFFFF") ||
-                                span[span.size - 1].foregroundColor == Color.parseColor("#03DAC5")
-                            ) {
-                                ssb.setSpan(
-                                    ForegroundColorSpan(Color.parseColor("#00000000")),
-                                    it.bounds[0] + 2,
-                                    it.bounds[1] - 2,
-                                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                                )
-                                if (messageData.entities.links!!.isNotEmpty()) {
-                                    messageData.entities.links!!.forEach { it2 ->
-                                        if (it2.bounds[0] >= it.bounds[0] && it2.bounds[1] <= it.bounds[1]) {
-                                            val span3 = ssb.getSpans(
-                                                it2.bounds[0],
-                                                it2.bounds[1],
-                                                ColouredUnderlineSpan::class.java
-                                            )
-                                            if (span3.isNotEmpty()) {
-                                                span3[span3.size - 1].color =
-                                                    Color.parseColor("#00000000")
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            viewHolder.itemView.messageChatMessage.setText(
-                                ssb,
-                                TextView.BufferType.SPANNABLE
-                            )
-                        }
-                    }
-
-                    if (messageData.entities.links!!.isNotEmpty()) {
-                        messageData.entities.links!!.forEach { it2 ->
-                            if (it2.bounds[0] >= it.bounds[0] && it2.bounds[1] <= it.bounds[1]) {
-                                val span3 = ssb.getSpans(
-                                    it2.bounds[0],
-                                    it2.bounds[1],
-                                    ColouredUnderlineSpan::class.java
-                                )
-                                if (span3.isNotEmpty()) {
-                                    span3[span3.size - 1].color = Color.parseColor("#00000000")
-                                }
-                            }
-                        }
-                    }
-
-                    ssb.setSpan(
-                        span1,
-                        it.bounds[0],
-                        it.bounds[1],
-                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                    )
-                    ssb.setSpan(
-                        RelativeSizeSpan(0f),
-                        it.bounds[0],
-                        it.bounds[0] + 2,
-                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                    )
-                    ssb.setSpan(
-                        RelativeSizeSpan(0f),
-                        it.bounds[1] - 2,
-                        it.bounds[1],
-                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                    )
-                    ssb.setSpan(
-                        BackgroundColorSpan(Color.parseColor("#353535")),
-                        it.bounds[0],
-                        it.bounds[1],
-                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                    )
-                    ssb.setSpan(
-                        ForegroundColorSpan(Color.parseColor("#00000000")),
-                        it.bounds[0],
-                        it.bounds[1],
-                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                    )
-                }
-            }
-
-            viewHolder.itemView.messageChatMessage.setText(ssb, TextView.BufferType.SPANNABLE)
 
             viewHolder.itemView.usernameChatMessage.setOnClickListener {
                 for (i in 0 until adapter.itemCount) {
-                    if (adapter.getItem(i).layout == R.layout.chat_message_item) {
+                    if (adapter.getItem(i).layout == R.layout.chat_message_item || adapter.getItem(i).layout == R.layout.chat_message_item_consecutive_nick) {
                         val item = adapter.getItem(i) as ChatMessage
-                        if (item.messageData.nick == messageData.nick) {
+                        if (item.isNickSame(messageData.nick)) {
                             val adapterItem =
                                 recyclerViewChat.findViewHolderForAdapterPosition(i)
-
-                            adapterItem?.itemView?.usernameChatMessage?.setTextColor(
-                                Color.parseColor(
-                                    "#F44336"
+                            adapterItem?.itemView?.alpha = 1f
+                        } else {
+                            val adapterItem =
+                                recyclerViewChat.findViewHolderForAdapterPosition(i)
+                            if (CurrentUser.tempHighlightNick != null && CurrentUser.tempHighlightNick!!.contains(
+                                    item.getNick()
                                 )
-                            )
+                            ) {
+                                adapterItem?.itemView?.alpha = 1f
+                            } else {
+                                adapterItem?.itemView?.alpha = 0.5f
+                            }
+
                         }
+
+
+                    } else if (adapter.getItem(i).layout == R.layout.private_chat_message_item) {
+                        val item = adapter.getItem(i) as PrivateChatMessage
+                        if (item.isNickSame(messageData.nick)) {
+                            val adapterItem =
+                                recyclerViewChat.findViewHolderForAdapterPosition(i)
+                            adapterItem?.itemView?.alpha = 1f
+                        } else {
+                            val adapterItem =
+                                recyclerViewChat.findViewHolderForAdapterPosition(i)
+                            if (CurrentUser.tempHighlightNick != null && CurrentUser.tempHighlightNick!!.contains(
+                                    item.getNick()
+                                )
+                            ) {
+                                adapterItem?.itemView?.alpha = 1f
+                            } else {
+                                adapterItem?.itemView?.alpha = 0.5f
+                            }
+                        }
+                    } else if (adapter.getItem(i).layout == R.layout.error_chat_message_item) {
+                        val adapterItem =
+                            recyclerViewChat.findViewHolderForAdapterPosition(i)
+                        adapterItem?.itemView?.alpha = 0.5f
                     }
+                    adapter.notifyItemChanged(i)
                 }
                 if (CurrentUser.tempHighlightNick == null) {
                     CurrentUser.tempHighlightNick = mutableListOf()
@@ -854,19 +1138,24 @@ class ChatActivity : AppCompatActivity() {
             viewHolder.itemView.setOnClickListener {
                 CurrentUser.tempHighlightNick = null
                 for (i in 0 until adapter.itemCount) {
-                    if (adapter.getItem(i).layout == R.layout.chat_message_item) {
+                    if (adapter.getItem(i).layout == R.layout.chat_message_item || adapter.getItem(i).layout == R.layout.chat_message_item_consecutive_nick) {
                         val item = adapter.getItem(i) as ChatMessage
-                        if (item.messageData.features.isEmpty() && item.messageData.nick != "Info") {
-                            val adapterItem =
-                                recyclerViewChat.findViewHolderForAdapterPosition(i)
+                        val adapterItem =
+                            recyclerViewChat.findViewHolderForAdapterPosition(i)
+                        adapterItem?.itemView?.alpha = 1f
 
-                            adapterItem?.itemView?.usernameChatMessage?.setTextColor(
-                                Color.parseColor(
-                                    "#FFFFFF"
-                                )
-                            )
-                        }
+                    } else if (adapter.getItem(i).layout == R.layout.private_chat_message_item) {
+                        val item = adapter.getItem(i) as PrivateChatMessage
+                        val adapterItem =
+                            recyclerViewChat.findViewHolderForAdapterPosition(i)
+                        adapterItem?.itemView?.alpha = 1f
+
+                    } else if (adapter.getItem(i).layout == R.layout.error_chat_message_item) {
+                        val adapterItem =
+                            recyclerViewChat.findViewHolderForAdapterPosition(i)
+                        adapterItem?.itemView?.alpha = 1f
                     }
+                    adapter.notifyItemChanged(i)
                 }
             }
             if (isConsecutive) {
@@ -878,18 +1167,41 @@ class ChatActivity : AppCompatActivity() {
         fun isNickSame(nick: String): Boolean {
             return messageData.nick == nick
         }
+
+        fun isFeaturesEmpty(): Boolean {
+            return messageData.features.isEmpty()
+        }
+
+        fun getNick(): String {
+            return messageData.nick
+        }
     }
 
-    inner class PrivateChatMessage(private val messageData: Message) : Item<GroupieViewHolder>() {
+    inner class PrivateChatMessage(
+        private val messageData: Message,
+        private val isReceived: Boolean = false
+    ) :
+        Item<GroupieViewHolder>() {
         override fun getLayout(): Int {
             return R.layout.private_chat_message_item
+        }
+
+        init {
+            savePrivateMessage(WhisperMessageItem(messageData, isReceived))
         }
 
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
             if (CurrentUser.options!!.ignoreList.contains(messageData.nick)) {
                 return
             }
+            if (isReceived) {
+                viewHolder.itemView.whisperedPrivateMessage.visibility = View.VISIBLE
 
+            } else {
+                viewHolder.itemView.toPrivateMessage.visibility = View.VISIBLE
+                viewHolder.itemView.whisperedPrivateMessage.text = ":"
+                viewHolder.itemView.whisperedPrivateMessage.visibility = View.VISIBLE
+            }
             if (CurrentUser.options!!.showTime) {
                 val dateFormat = SimpleDateFormat("HH:mm")
                 val time = dateFormat.format(messageData.timestamp)
@@ -897,10 +1209,205 @@ class ChatActivity : AppCompatActivity() {
                 viewHolder.itemView.timestampPrivateMessage.text = time
             }
 
-            viewHolder.itemView.usernamePrivateMessage.text = messageData.nick
-            viewHolder.itemView.messagePrivateMessage.text = " whispered: ${messageData.data}"
+            if (CurrentUser.user != null) {
+                if (messageData.data.contains(CurrentUser.user!!.username)) {
+                    viewHolder.itemView.setBackgroundColor(Color.parseColor("#001D36"))
+                } else {
+                    viewHolder.itemView.setBackgroundColor(Color.parseColor("#151515"))
+                }
+            } else if (CurrentUser.user == null) {
+                if (messageData.data.contains("anonymous")) {
+                    viewHolder.itemView.setBackgroundColor(Color.parseColor("#001D36"))
+                } else {
+                    viewHolder.itemView.setBackgroundColor(Color.parseColor("#000000"))
+                }
+            }
+
+            if (CurrentUser.options!!.customHighlights.isNotEmpty()) {
+                CurrentUser.options!!.customHighlights.forEach {
+                    if (messageData.nick == it) {
+                        viewHolder.itemView.setBackgroundColor(Color.parseColor("#001D36"))
+                    }
+                }
+            }
+
+            if (CurrentUser.tempHighlightNick != null) {
+                when {
+                    CurrentUser.tempHighlightNick!!.contains(messageData.nick) -> {
+                        viewHolder.itemView.alpha = 1f
+                    }
+                    CurrentUser.tempHighlightNick!!.isEmpty() -> {
+                        viewHolder.itemView.alpha = 1f
+                    }
+                    else -> {
+                        viewHolder.itemView.alpha = 0.5f
+                    }
+                }
+            } else {
+                viewHolder.itemView.alpha = 1f
+            }
+
+            viewHolder.itemView.usernamePrivateMessage.text = "${messageData.nick}"
+
+            viewHolder.itemView.messagePrivateMessage.movementMethod =
+                LinkMovementMethod.getInstance()
+
+            createMessageTextView(
+                messageData,
+                viewHolder.itemView.messagePrivateMessage
+            )
+
+            viewHolder.itemView.usernamePrivateMessage.setOnClickListener {
+                for (i in 0 until adapter.itemCount) {
+                    if (adapter.getItem(i).layout == R.layout.chat_message_item || adapter.getItem(i).layout == R.layout.chat_message_item_consecutive_nick) {
+                        val item = adapter.getItem(i) as ChatMessage
+                        if (item.isNickSame(messageData.nick)) {
+                            val adapterItem =
+                                recyclerViewChat.findViewHolderForAdapterPosition(i)
+                            adapterItem?.itemView?.alpha = 1f
+
+                        } else {
+
+                            val adapterItem =
+                                recyclerViewChat.findViewHolderForAdapterPosition(i)
+
+                            if (CurrentUser.tempHighlightNick != null && CurrentUser.tempHighlightNick!!.contains(
+                                    item.getNick()
+                                )
+                            ) {
+                                adapterItem?.itemView?.alpha = 1f
+                            } else {
+                                adapterItem?.itemView?.alpha = 0.5f
+                            }
+                        }
+                    } else if (adapter.getItem(i).layout == R.layout.private_chat_message_item) {
+                        val item = adapter.getItem(i) as PrivateChatMessage
+                        if (item.messageData.nick == messageData.nick) {
+                            val adapterItem =
+                                recyclerViewChat.findViewHolderForAdapterPosition(i)
+                            adapterItem?.itemView?.alpha = 1f
+                        } else {
+                            val adapterItem =
+                                recyclerViewChat.findViewHolderForAdapterPosition(i)
+                            if (CurrentUser.tempHighlightNick != null && CurrentUser.tempHighlightNick!!.contains(
+                                    item.getNick()
+                                )
+                            ) {
+                                adapterItem?.itemView?.alpha = 1f
+                            } else {
+                                adapterItem?.itemView?.alpha = 0.5f
+                            }
+                        }
+                    } else if (adapter.getItem(i).layout == R.layout.error_chat_message_item) {
+                        val adapterItem =
+                            recyclerViewChat.findViewHolderForAdapterPosition(i)
+                        adapterItem?.itemView?.alpha = 0.5f
+                    }
+                    adapter.notifyItemChanged(i)
+                }
+                if (CurrentUser.tempHighlightNick == null) {
+                    CurrentUser.tempHighlightNick = mutableListOf()
+                }
+                CurrentUser.tempHighlightNick!!.add(messageData.nick)
+            }
+
+            viewHolder.itemView.usernamePrivateMessage.setOnLongClickListener {
+                val pop = PopupMenu(it.context, it)
+                pop.inflate(R.menu.chat_message_username_menu)
+                pop.setOnMenuItemClickListener { itMenuItem ->
+                    when (itMenuItem.itemId) {
+                        R.id.chatWhisper -> {
+                            sendMessageText.setText("/w ${messageData.nick} ")
+                            keyRequestFocus(sendMessageText, this@ChatActivity)
+                            sendMessageText.setSelection(sendMessageText.text.length)
+                        }
+                        R.id.chatMention -> {
+                            val currentMessage = sendMessageText.text.toString()
+                            if (currentMessage.isNotEmpty()) {
+                                if (currentMessage.last() == ' ') {
+                                    sendMessageText.setText(currentMessage.plus("${messageData.nick} "))
+                                } else {
+                                    sendMessageText.setText(currentMessage.plus(" ${messageData.nick} "))
+                                }
+                            } else {
+                                sendMessageText.setText("${messageData.nick} ")
+                            }
+                            keyRequestFocus(sendMessageText, this@ChatActivity)
+                            sendMessageText.setSelection(sendMessageText.text.length)
+                        }
+                        R.id.chatIgnore -> {
+                            CurrentUser.options!!.ignoreList.add(messageData.nick)
+                            CurrentUser.saveOptions(this@ChatActivity)
+                            adapter.notifyDataSetChanged()
+                        }
+                    }
+                    true
+                }
+                pop.show()
+                true
+            }
+
+            viewHolder.itemView.setOnClickListener {
+                CurrentUser.tempHighlightNick = null
+                for (i in 0 until adapter.itemCount) {
+                    if (adapter.getItem(i).layout == R.layout.chat_message_item || adapter.getItem(i).layout == R.layout.chat_message_item_consecutive_nick) {
+                        val item = adapter.getItem(i) as ChatMessage
+                        val adapterItem =
+                            recyclerViewChat.findViewHolderForAdapterPosition(i)
+                        adapterItem?.itemView?.alpha = 1f
+
+                    } else if (adapter.getItem(i).layout == R.layout.private_chat_message_item) {
+                        val item = adapter.getItem(i) as PrivateChatMessage
+                        val adapterItem =
+                            recyclerViewChat.findViewHolderForAdapterPosition(i)
+                        adapterItem?.itemView?.alpha = 1f
+
+                    } else if (adapter.getItem(i).layout == R.layout.error_chat_message_item) {
+                        val item = adapter.getItem(i) as ErrorChatMessage
+                        val adapterItem =
+                            recyclerViewChat.findViewHolderForAdapterPosition(i)
+                        adapterItem?.itemView?.alpha = 1f
+                    }
+                    adapter.notifyItemChanged(i)
+                }
+            }
+        }
+
+        fun isNickSame(nick: String): Boolean {
+            return nick == messageData.nick
+        }
+
+        fun isFeaturesEmpty(): Boolean {
+            return messageData.features.isEmpty()
+        }
+
+        fun getNick(): String {
+            return messageData.nick
         }
     }
+
+    inner class WhisperMessageItem(val message: Message, val isReceived: Boolean) :
+        Item<GroupieViewHolder>() {
+        override fun getLayout(): Int {
+            if (isReceived) {
+                return R.layout.whisper_message_item_left
+            }
+            return R.layout.whisper_message_item_right
+        }
+
+        override fun bind(viewHolder: GroupieViewHolder, position: Int) {
+
+            viewHolder.itemView.messageWhisperMessageItem.movementMethod =
+                LinkMovementMethod.getInstance()
+            createMessageTextView(message, viewHolder.itemView.messageWhisperMessageItem)
+
+        }
+
+        fun getNick(): String {
+            return message.nick
+        }
+    }
+
 
     inner class ChatClient {
 
@@ -1005,6 +1512,7 @@ class ChatActivity : AppCompatActivity() {
                     sendMessageText.hint = "Write something ${CurrentUser.user!!.username} ..."
                     chatBottomNavigationView.menu.findItem(R.id.chatProfile).isVisible = true
                     chatBottomNavigationView.menu.findItem(R.id.chatLogin).isVisible = false
+                    chatBottomNavigationView.menu.findItem(R.id.chatWhispers).isVisible = true
                 }
             }
         }
@@ -1027,6 +1535,7 @@ class ChatActivity : AppCompatActivity() {
             cacheEmotes()
             retrieveOptions()
             retrieveHistory()
+            retrievePrivateMessages()
             sendMessageButton.setOnClickListener {
                 GlobalScope.launch {
                     val messageText = sendMessageText.text.toString()
@@ -1034,21 +1543,82 @@ class ChatActivity : AppCompatActivity() {
                         return@launch
                     }
                     val first = messageText.first()
-                    if (first == '/' && messageText.substringBefore(' ') != "/me") {
-                        if (messageText.substringAfter(first).substringBefore(' ') == "w") {
-                            val nick = messageText.substringAfter("/w ").substringBefore(' ')
-                            val message = messageText.substringAfter("/w $nick ")
-                            send("PRIVMSG {\"nick\":\"$nick\", \"data\":\"$message\"}")
-                            runOnUiThread {
-                                adapter.add(
-                                    PrivateChatMessage(
-                                        Message(
-                                            true,
-                                            "To: $nick",
-                                            message
+                    if (supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!.isVisible) {
+                        when {
+                            messageText.trim() == "" -> {
+                                //TODO: empty message notify in chat ?
+                                return@launch
+                            }
+                            CurrentUser.tempWhisperUser == null -> {
+                                // TODO: error
+                            }
+                            else -> {
+                                val nick = CurrentUser.tempWhisperUser!!
+                                send("PRIVMSG {\"nick\":\"$nick\", \"data\":\"$messageText\"}")
+                                runOnUiThread {
+                                    adapter.add(
+                                        PrivateChatMessage(
+                                            Message(
+                                                true,
+                                                nick,
+                                                messageText
+                                            )
                                         )
                                     )
+                                }
+                            }
+                        }
+                    } else if (first == '/' && messageText.substringBefore(' ') != "/me") {
+                        var privateMessageCommand = ""
+                        for (privateMessageItem in privateMessageArray) {
+                            if (privateMessageItem.contains(
+                                    messageText.substringAfter(first).substringBefore(' '), true
                                 )
+                            ) {
+                                privateMessageCommand =
+                                    messageText.substringAfter(first).substringBefore(' ')
+                                break
+                            }
+
+                        }
+                        if (privateMessageCommand != "") {
+                            val command = privateMessageCommand
+                            if (messageText.length <= privateMessageCommand.length + 2) { // 1 for '/'  1 for space
+                                runOnUiThread {
+                                    adapter.add(ErrorChatMessage("Invalid nick - /$privateMessageCommand nick message"))
+                                }
+                            } else {
+                                val nick =
+                                    messageText.substringAfter("$command ").substringBefore(' ')
+                                val nickRegex = "^[A-Za-z0-9_]{3,20}$"
+                                val p: Pattern = Pattern.compile(nickRegex)
+                                val m: Matcher = p.matcher(nick)
+
+                                if (!m.find()) {
+                                    runOnUiThread {
+                                        adapter.add(ErrorChatMessage("Invalid nick - /$privateMessageCommand nick message"))
+                                    }
+                                } else {
+                                    var message = messageText.substringAfter("$command $nick")
+                                    message = message.substringAfter(" ")
+                                    if (message.trim() == "") {
+                                        //TODO: empty message notify in chat ?
+                                        return@launch
+                                    } else {
+                                        send("PRIVMSG {\"nick\":\"$nick\", \"data\":\"$message\"}")
+                                        runOnUiThread {
+                                            adapter.add(
+                                                PrivateChatMessage(
+                                                    Message(
+                                                        true,
+                                                        nick,
+                                                        message
+                                                    )
+                                                )
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         } else if (messageText.substringAfter(first)
                                 .substringBefore(' ') == "ignore"
@@ -1209,7 +1779,7 @@ class ChatActivity : AppCompatActivity() {
                                     if (msg.privMsg) {
                                         adapter.add(
                                             PrivateChatMessage(
-                                                msg
+                                                msg, true
                                             )
                                         )
                                         if (CurrentUser.options!!.notifications) {
@@ -1364,4 +1934,6 @@ class ChatActivity : AppCompatActivity() {
             }
         }
     }
+
+
 }

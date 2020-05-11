@@ -19,4 +19,9 @@
         android:id="@+id/chatLogin"
         android:icon="@drawable/ic_arrow_forward_orange_24dp"
         android:title="Login" />
+    <item
+        android:id="@+id/chatWhispers"
+        android:icon="@drawable/ic_mail_orange_24dp"
+        android:title="Whisper"
+        android:visible="false" />
 </menu>
