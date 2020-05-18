@@ -1,5 +1,7 @@
 package gg.strims.android
 
+import android.animation.ArgbEvaluator
+import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -13,10 +15,15 @@ import android.os.Bundle
 import android.text.*
 import android.text.method.LinkMovementMethod
 import android.text.style.*
+import android.util.DisplayMetrics
 import android.util.Log
 import android.util.LruCache
 import android.view.KeyEvent
 import android.view.View
+import android.view.animation.AlphaAnimation
+import android.view.animation.Animation
+import android.view.animation.ScaleAnimation
+import android.view.animation.TranslateAnimation
 import android.view.inputmethod.EditorInfo
 import android.webkit.CookieManager
 import android.widget.PopupMenu
@@ -46,12 +53,17 @@ import io.ktor.util.KtorExperimentalAPI
 import kotlinx.android.synthetic.main.activity_chat.*
 import kotlinx.android.synthetic.main.autofill_item.view.*
 import kotlinx.android.synthetic.main.chat_message_item.view.*
+import kotlinx.android.synthetic.main.chat_message_item_emote_combo.view.*
+import kotlinx.android.synthetic.main.chat_message_item_emote_combo.view.comboCountChatMessageCombo
 import kotlinx.android.synthetic.main.error_chat_message_item.view.*
 import kotlinx.android.synthetic.main.private_chat_message_item.view.*
 import kotlinx.android.synthetic.main.whisper_message_item_right.view.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import java.io.*
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStream
+import java.io.InputStreamReader
 import java.lang.reflect.Method
 import java.net.HttpURLConnection
 import java.net.URL
@@ -966,6 +978,403 @@ class ChatActivity : AppCompatActivity() {
         }
     }
 
+    inner class ChatMessageCombo(
+        private val messageData: Message,
+        private var count: Int = 2
+    ) :
+        Item<GroupieViewHolder>() {
+        var state: Int = 0 // 0 hit animation // 1 ccccombo animation // 2 combo static
+        private var comboCountInitialSize = -1f
+        private var xInitialSize = -1f
+        private var hitsInitialSize = -1f
+
+        override fun getLayout(): Int {
+            return R.layout.chat_message_item_emote_combo
+        }
+
+        override fun bind(viewHolder: GroupieViewHolder, position: Int) {
+            if (comboCountInitialSize == -1f) {
+                comboCountInitialSize =
+                    viewHolder.itemView.comboCountChatMessageCombo.textSize / resources.displayMetrics.scaledDensity
+            }
+            if (xInitialSize == -1f) {
+                xInitialSize =
+                    viewHolder.itemView.xChatMessageCombo.textSize / resources.displayMetrics.scaledDensity
+            }
+            if (hitsInitialSize == -1f) {
+                hitsInitialSize =
+                    viewHolder.itemView.hitsComboChatMessageCombo.textSize / resources.displayMetrics.scaledDensity
+            }
+            if (CurrentUser.options!!.showTime) {
+                val dateFormat = SimpleDateFormat("HH:mm")
+                val time = dateFormat.format(messageData.timestamp)
+                viewHolder.itemView.timestampChatMessage.visibility = View.VISIBLE
+                viewHolder.itemView.timestampChatMessage.text = time
+            }
+
+            if (CurrentUser.tempHighlightNick != null) {
+                viewHolder.itemView.alpha = 0.5f
+            }
+            viewHolder.itemView.setOnClickListener {
+                CurrentUser.tempHighlightNick = null
+                for (i in 0 until adapter.itemCount) {
+                    if (adapter.getItem(i).layout == R.layout.chat_message_item || adapter.getItem(i).layout == R.layout.chat_message_item_consecutive_nick) {
+                        val adapterItem =
+                            recyclerViewChat.findViewHolderForAdapterPosition(i)
+                        adapterItem?.itemView?.alpha = 1f
+
+                    } else if (adapter.getItem(i).layout == R.layout.private_chat_message_item) {
+                        val adapterItem =
+                            recyclerViewChat.findViewHolderForAdapterPosition(i)
+                        adapterItem?.itemView?.alpha = 1f
+
+                    } else {
+                        val adapterItem =
+                            recyclerViewChat.findViewHolderForAdapterPosition(i)
+                        adapterItem?.itemView?.alpha = 1f
+                    }
+                    adapter.notifyItemChanged(i)
+                }
+            }
+
+            viewHolder.itemView.comboCountChatMessageCombo.text = "$count"
+
+            //TODO: bold x10 and up
+            var scaleValue = 1.0
+            when {
+                count >= 50 -> {
+                    scaleValue = 2.5
+                }
+                count >= 30 -> {
+                    scaleValue = 2.0
+                }
+                count >= 20 -> {
+                    scaleValue = 1.75
+                }
+                count >= 10 -> {
+                    scaleValue = 1.50
+                }
+                count >= 5 -> {
+                    scaleValue = 1.25
+                }
+            }
+            viewHolder.itemView.comboCountChatMessageCombo.textSize =
+                (comboCountInitialSize * scaleValue).toFloat()
+            viewHolder.itemView.xChatMessageCombo.textSize =
+                (xInitialSize * scaleValue).toFloat()
+            viewHolder.itemView.hitsComboChatMessageCombo.textSize =
+                (hitsInitialSize * scaleValue).toFloat()
+            if (count >= 10) {
+                viewHolder.itemView.hitsComboChatMessageCombo.setTypeface(
+                    viewHolder.itemView.hitsComboChatMessageCombo.typeface,
+                    Typeface.BOLD_ITALIC
+                )
+            }
+            createMessageTextView(
+                messageData,
+                viewHolder.itemView.messageChatMessageCombo,
+                emotes = true,
+                greentext = false,
+                links = false,
+                codes = false,
+                spoilers = false,
+                me = false
+            )
+            if (state == 0) {
+                fun TextView.hitsAnimation(
+                ) {
+                    val bright = Color.parseColor("#FFF7F9")
+                    val red = Color.parseColor("#B91010")
+
+                    //sixth
+                    val sixthScaleAnimation = ScaleAnimation(
+                        2f, 1.0f, 2f, 1.0f, Animation.RELATIVE_TO_SELF,
+                        0f,
+                        Animation.RELATIVE_TO_SELF,
+                        0.5f
+                    )
+                    sixthScaleAnimation.fillAfter = true
+                    sixthScaleAnimation.duration = 570
+                    val sixthColorAnimation =
+                        ObjectAnimator.ofInt(
+                            this,
+                            "textColor",
+                            red,
+                            bright
+                        )
+                    sixthColorAnimation.duration = 570
+                    sixthColorAnimation.setEvaluator(ArgbEvaluator())
+                    sixthScaleAnimation.setAnimationListener(object : Animation.AnimationListener {
+
+                        override fun onAnimationStart(animation: Animation?) {
+                            sixthColorAnimation.start()
+                        }
+
+                        override fun onAnimationRepeat(animation: Animation?) {
+                        }
+
+                        override fun onAnimationEnd(animation: Animation?) {
+                        }
+                    })
+                    //fifth
+                    val fifthScaleAnimation = ScaleAnimation(
+                        1.9f, 2f, 1.9f, 2f, Animation.RELATIVE_TO_SELF,
+                        0f,
+                        Animation.RELATIVE_TO_SELF,
+                        0.5f
+                    )
+                    fifthScaleAnimation.fillAfter = true
+                    fifthScaleAnimation.duration = 6
+                    val fifthColorAnimation =
+                        ObjectAnimator.ofInt(
+                            this,
+                            "textColor",
+                            bright,
+                            red
+                        )
+                    fifthColorAnimation.duration = 6
+                    fifthColorAnimation.setEvaluator(ArgbEvaluator())
+                    fifthScaleAnimation.setAnimationListener(object : Animation.AnimationListener {
+
+                        override fun onAnimationStart(animation: Animation?) {
+                            fifthColorAnimation.start()
+                        }
+
+                        override fun onAnimationRepeat(animation: Animation?) {
+                        }
+
+                        override fun onAnimationEnd(animation: Animation?) {
+                            this@hitsAnimation.startAnimation(sixthScaleAnimation)
+                        }
+                    })
+                    //fourth
+                    val fourthScaleAnimation = ScaleAnimation(
+                        2f, 1.9f, 2f, 1.9f, Animation.RELATIVE_TO_SELF,
+                        0f,
+                        Animation.RELATIVE_TO_SELF,
+                        0.5f
+                    )
+                    fourthScaleAnimation.fillAfter = true
+                    fourthScaleAnimation.duration = 6
+                    val fourthColorAnimation =
+                        ObjectAnimator.ofInt(
+                            this,
+                            "textColor",
+                            red,
+                            bright
+                        )
+                    fourthColorAnimation.duration = 6
+                    fourthColorAnimation.setEvaluator(ArgbEvaluator())
+                    fourthScaleAnimation.setAnimationListener(object : Animation.AnimationListener {
+
+                        override fun onAnimationStart(animation: Animation?) {
+                            fourthColorAnimation.start()
+                        }
+
+                        override fun onAnimationRepeat(animation: Animation?) {
+                        }
+
+                        override fun onAnimationEnd(animation: Animation?) {
+                            this@hitsAnimation.startAnimation(fifthScaleAnimation)
+                        }
+                    })
+                    //third
+                    val thirdScaleAnimation = ScaleAnimation(
+                        1.9f, 2f, 1.9f, 2f, Animation.RELATIVE_TO_SELF,
+                        0f,
+                        Animation.RELATIVE_TO_SELF,
+                        0.5f
+                    )
+                    thirdScaleAnimation.fillAfter = true
+                    thirdScaleAnimation.duration = 6
+                    val thirdColorAnimation =
+                        ObjectAnimator.ofInt(
+                            this,
+                            "textColor",
+                            bright,
+                            red
+                        )
+                    thirdColorAnimation.duration = 6
+                    thirdColorAnimation.setEvaluator(ArgbEvaluator())
+                    thirdScaleAnimation.setAnimationListener(object : Animation.AnimationListener {
+
+                        override fun onAnimationStart(animation: Animation?) {
+                            thirdColorAnimation.start()
+                        }
+
+                        override fun onAnimationRepeat(animation: Animation?) {
+                        }
+
+                        override fun onAnimationEnd(animation: Animation?) {
+                            this@hitsAnimation.startAnimation(fourthScaleAnimation)
+                        }
+                    })
+                    //second
+                    val secondScaleAnimation = ScaleAnimation(
+                        2f, 1.9f, 2f, 1.9f, Animation.RELATIVE_TO_SELF,
+                        0f,
+                        Animation.RELATIVE_TO_SELF,
+                        0.5f
+                    )
+                    secondScaleAnimation.fillAfter = true
+                    secondScaleAnimation.duration = 6
+                    val secondColorAnimation =
+                        ObjectAnimator.ofInt(
+                            this,
+                            "textColor",
+                            red,
+                            bright
+                        )
+                    secondColorAnimation.duration = 6
+                    secondColorAnimation.setEvaluator(ArgbEvaluator())
+                    secondScaleAnimation.setAnimationListener(object : Animation.AnimationListener {
+
+                        override fun onAnimationStart(animation: Animation?) {
+                            secondColorAnimation.start()
+                        }
+
+                        override fun onAnimationRepeat(animation: Animation?) {
+                        }
+
+                        override fun onAnimationEnd(animation: Animation?) {
+                            this@hitsAnimation.startAnimation(thirdScaleAnimation)
+                        }
+                    })
+
+                    //first
+                    val firstScaleAnimation = ScaleAnimation(
+                        1f,
+                        2f,
+                        1f,
+                        2f,
+                        Animation.RELATIVE_TO_SELF,
+                        0f,
+                        Animation.RELATIVE_TO_SELF,
+                        0.5f
+                    )
+                    firstScaleAnimation.fillAfter = true
+                    firstScaleAnimation.duration = 6
+                    val firstColorAnimation =
+                        ObjectAnimator.ofInt(
+                            this,
+                            "textColor",
+                            bright,
+                            red
+                        )
+                    firstColorAnimation.duration = 6
+                    firstColorAnimation.setEvaluator(ArgbEvaluator())
+                    firstScaleAnimation.setAnimationListener(object : Animation.AnimationListener {
+
+                        override fun onAnimationStart(animation: Animation?) {
+                            firstColorAnimation.start()
+                        }
+
+                        override fun onAnimationRepeat(animation: Animation?) {
+                        }
+
+                        override fun onAnimationEnd(animation: Animation?) {
+                            this@hitsAnimation.startAnimation(secondScaleAnimation)
+                        }
+                    })
+                    this.startAnimation(firstScaleAnimation)
+
+                }
+                viewHolder.itemView.hitsComboChatMessageCombo.text = "HITS"
+                viewHolder.itemView.hitsComboChatMessageCombo.hitsAnimation()
+            } else if (state == 1) {
+                //
+                val gray = Color.parseColor("#999999")
+                val bright = Color.parseColor("#FFF7F9")
+                fun TextView.comboAnimation() {
+                    val comboColorAnimation =
+                        ObjectAnimator.ofInt(
+                            this,
+                            "textColor",
+                            bright,
+                            gray
+                        )
+                    comboColorAnimation.duration = 500
+                    comboColorAnimation.setEvaluator(ArgbEvaluator())
+                    val anim = AlphaAnimation(1.0f, 0.0f)
+                    anim.duration = 500
+                    anim.repeatCount = 1
+                    anim.repeatMode = Animation.REVERSE
+                    val xDelta =
+                        2f * (resources.displayMetrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT)
+                    val slideLeft = TranslateAnimation(xDelta, 0f, 0f, 0f)
+                    slideLeft.duration = 500
+                    slideLeft.fillAfter = true
+                    anim.setAnimationListener(object : Animation.AnimationListener {
+                        override fun onAnimationEnd(animation: Animation?) {}
+                        override fun onAnimationStart(animation: Animation?) {
+                            this@comboAnimation.text = "C-C-C-COMBO"
+                            //this@comboAnimation.textSize =
+                        }
+
+                        override fun onAnimationRepeat(animation: Animation?) {
+                            comboColorAnimation.start()
+                            this@comboAnimation.startAnimation(slideLeft)
+
+
+                        }
+                    })
+                    this.startAnimation(anim)
+                }
+                viewHolder.itemView.hitsComboChatMessageCombo.comboAnimation()
+                state = 2
+            } else if (state == 2) {
+                //static ?
+            }
+            viewHolder.itemView.setOnClickListener {
+                count++
+                notifyChanged()
+            }
+            // 600 ms total
+            // 0-1 % change to 200% text size : colour #B91010 // 6ms
+            // 1-2 % change to 190% text size : colour #FFF7F9 // 6ms
+            // 2-3 % change to 200% text size : colour #B91010 // 6ms
+            // 3-4 % change to 190% text size : colour #FFF7F9 // 6ms
+            // 4-5 % change to 200% text size : colour #B91010 // 6ms
+            //5-100% change to 120% text size : colour #FFF7F9 // 570ms
+        }
+
+        fun increaseCombo() {
+            count++
+        }
+
+        fun isCombo(message: Message): Boolean {
+            if (messageData.data.trim().contains(' ') || message.data.trim().contains(' ')) {
+                return false
+            }
+            if (message.entities.emotes == null || message.entities.emotes!!.size != 1) {
+                return false
+            }
+            if (messageData.entities.emotes == null || messageData.entities.emotes!!.size != 1) {
+                return false
+            }
+            if (messageData.entities.emotes!![0].name == message.entities.emotes!![0].name) {
+
+                if (messageData.entities.emotes!![0].modifiers.size != message.entities.emotes!![0].modifiers.size) {
+                    return false
+                }
+                for (i in messageData.entities.emotes!![0].modifiers.indices) {
+                    if (messageData.entities.emotes!![0].modifiers[i] != message.entities.emotes!![0].modifiers[i]) {
+                        return false
+                    }
+                }
+                Log.d(
+                    "test",
+                    "${messageData.entities.emotes!![0].bounds[0]} | ${messageData.entities.emotes!![0].bounds[1]} | ${messageData.data.length}"
+                )
+                if (messageData.entities.emotes!![0].bounds[0] != 0 || messageData.entities.emotes!![0].bounds[1] != messageData.data.length) {
+                    return false
+                }
+                return true
+            }
+            return false
+        }
+    }
+
     inner class ChatMessage(
         private val messageData: Message,
         private val isConsecutive: Boolean = false
@@ -1086,7 +1495,7 @@ class ChatActivity : AppCompatActivity() {
                                 adapterItem?.itemView?.alpha = 0.5f
                             }
                         }
-                    } else if (adapter.getItem(i).layout == R.layout.error_chat_message_item) {
+                    } else {
                         val adapterItem =
                             recyclerViewChat.findViewHolderForAdapterPosition(i)
                         adapterItem?.itemView?.alpha = 0.5f
@@ -1150,7 +1559,7 @@ class ChatActivity : AppCompatActivity() {
                             recyclerViewChat.findViewHolderForAdapterPosition(i)
                         adapterItem?.itemView?.alpha = 1f
 
-                    } else if (adapter.getItem(i).layout == R.layout.error_chat_message_item) {
+                    } else {
                         val adapterItem =
                             recyclerViewChat.findViewHolderForAdapterPosition(i)
                         adapterItem?.itemView?.alpha = 1f
@@ -1166,6 +1575,35 @@ class ChatActivity : AppCompatActivity() {
 
         fun isNickSame(nick: String): Boolean {
             return messageData.nick == nick
+        }
+
+        fun isCombo(message: Message): Boolean {
+            if (messageData.data.trim().contains(' ') || message.data.trim().contains(' ')) {
+                return false
+            }
+            if (message.entities.emotes == null || message.entities.emotes!!.size != 1) {
+                return false
+            }
+            if (messageData.entities.emotes == null || messageData.entities.emotes!!.size != 1) {
+                return false
+            }
+            if (messageData.entities.emotes!![0].name == message.entities.emotes!![0].name) {
+
+                if (messageData.entities.emotes!![0].modifiers.size != message.entities.emotes!![0].modifiers.size) {
+                    return false
+                }
+                for (i in messageData.entities.emotes!![0].modifiers.indices) {
+                    if (messageData.entities.emotes!![0].modifiers[i] != message.entities.emotes!![0].modifiers[i]) {
+                        return false
+                    }
+                }
+
+                if (messageData.entities.emotes!![0].bounds[0] != 0 || messageData.entities.emotes!![0].bounds[1] != messageData.data.length) {
+                    return false
+                }
+                return true
+            }
+            return false
         }
 
         fun isFeaturesEmpty(): Boolean {
@@ -1298,7 +1736,7 @@ class ChatActivity : AppCompatActivity() {
                                 adapterItem?.itemView?.alpha = 0.5f
                             }
                         }
-                    } else if (adapter.getItem(i).layout == R.layout.error_chat_message_item) {
+                    } else {
                         val adapterItem =
                             recyclerViewChat.findViewHolderForAdapterPosition(i)
                         adapterItem?.itemView?.alpha = 0.5f
@@ -1362,7 +1800,7 @@ class ChatActivity : AppCompatActivity() {
                             recyclerViewChat.findViewHolderForAdapterPosition(i)
                         adapterItem?.itemView?.alpha = 1f
 
-                    } else if (adapter.getItem(i).layout == R.layout.error_chat_message_item) {
+                    } else {
                         val item = adapter.getItem(i) as ErrorChatMessage
                         val adapterItem =
                             recyclerViewChat.findViewHolderForAdapterPosition(i)
@@ -1425,13 +1863,46 @@ class ChatActivity : AppCompatActivity() {
                     val msg = parseMessage(it)
                     if (msg != null) {
                         var consecutiveMessage = false
+                        var comboMessage = false
+                        var increaseCombo = false
                         if (adapter.itemCount > 0) {
-                            val lastMessage = adapter.getItem(adapter.itemCount - 1) as ChatMessage
-                            consecutiveMessage = lastMessage.isNickSame(msg.nick)
+                            if (adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item || adapter.getItem(
+                                    adapter.itemCount - 1
+                                ).layout == R.layout.chat_message_item_consecutive_nick
+                            ) {
+                                val lastMessage =
+                                    adapter.getItem(adapter.itemCount - 1) as ChatMessage
+                                consecutiveMessage = lastMessage.isNickSame(msg.nick)
+                                comboMessage = lastMessage.isCombo(msg)
+                            } else {
+                                val lastMessage =
+                                    adapter.getItem(adapter.itemCount - 1) as ChatMessageCombo
+                                comboMessage = lastMessage.isCombo(msg)
+                                if (comboMessage) {
+                                    lastMessage.increaseCombo()
+                                    increaseCombo = true
+                                    adapter.notifyItemChanged(adapter.itemCount - 1)
+                                }
+                            }
+
                         }
-                        adapter.add(
-                            ChatMessage(msg, consecutiveMessage)
-                        )
+                        if (comboMessage) {
+                            if (!increaseCombo) {
+                                adapter.removeGroupAtAdapterPosition(adapter.itemCount - 1)
+                                adapter.add(ChatMessageCombo(msg))
+                            }
+
+                        } else {
+                            if (adapter.itemCount > 0 && adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item_emote_combo) {
+                                val lastMessage =
+                                    adapter.getItem(adapter.itemCount - 1) as ChatMessageCombo
+                                lastMessage.state = 1
+                                adapter.notifyItemChanged(adapter.itemCount - 1)
+                            }
+                            adapter.add(
+                                ChatMessage(msg, consecutiveMessage)
+                            )
+                        }
                     }
                 }
             }
@@ -1518,7 +1989,8 @@ class ChatActivity : AppCompatActivity() {
         }
 
         suspend fun onConnect() = client.wss(
-            host = "chat.strims.gg",
+            //TODO: change
+            host = "chat2.strims.gg",
             path = "/ws",
             request = {
                 retrieveCookie()
@@ -1787,17 +2259,45 @@ class ChatActivity : AppCompatActivity() {
                                         }
                                     } else {
                                         var consecutiveMessage = false
-                                        if (adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item) {
+                                        var comboMessage = false
+                                        var increaseCombo = false
+                                        if (adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item || adapter.getItem(
+                                                adapter.itemCount - 1
+                                            ).layout == R.layout.chat_message_item_consecutive_nick
+                                        ) {
                                             val lastMessage =
                                                 adapter.getItem(adapter.itemCount - 1) as ChatMessage
                                             consecutiveMessage =
                                                 lastMessage.isNickSame(msg.nick)
+                                            comboMessage = lastMessage.isCombo(msg)
+                                        } else if (adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item_emote_combo) {
+                                            val lastMessage =
+                                                adapter.getItem(adapter.itemCount - 1) as ChatMessageCombo
+                                            comboMessage = lastMessage.isCombo(msg)
+                                            if (comboMessage) {
+                                                lastMessage.increaseCombo()
+                                                increaseCombo = true
+                                                adapter.notifyItemChanged(adapter.itemCount - 1)
+                                            }
                                         }
-                                        adapter.add(
-                                            ChatMessage(
-                                                msg, consecutiveMessage
+                                        if (comboMessage) {
+                                            if (!increaseCombo) {
+                                                adapter.removeGroupAtAdapterPosition(adapter.itemCount - 1)
+                                                adapter.add(ChatMessageCombo(msg))
+                                            }
+                                        } else {
+                                            if (adapter.itemCount > 0 && adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item_emote_combo) {
+                                                val lastMessage =
+                                                    adapter.getItem(adapter.itemCount - 1) as ChatMessageCombo
+                                                lastMessage.state = 1
+                                                adapter.notifyItemChanged(adapter.itemCount - 1)
+                                            }
+                                            adapter.add(
+                                                ChatMessage(
+                                                    msg, consecutiveMessage
+                                                )
                                             )
-                                        )
+                                        }
                                     }
                                     val layoutTest =
                                         recyclerViewChat.layoutManager as LinearLayoutManager
@@ -1822,6 +2322,12 @@ class ChatActivity : AppCompatActivity() {
                     CurrentUser.users = names.users.toMutableList()
                     CurrentUser.connectionCount = names.connectioncount
                     runOnUiThread {
+                        if (adapter.itemCount > 0 && adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item_emote_combo) {
+                            val lastMessage =
+                                adapter.getItem(adapter.itemCount - 1) as ChatMessageCombo
+                            lastMessage.state = 1
+                            adapter.notifyItemChanged(adapter.itemCount - 1)
+                        }
                         adapter.add(
                             ChatMessage(
                                 Message(
