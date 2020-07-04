@@ -1420,6 +1420,7 @@ class ChatActivity : AppCompatActivity() {
                 val jwt = cookies.substringAfter("jwt=").substringBefore(" ")
                 if (jwt != cookies) {
                     this.jwt = jwt
+                    CurrentUser.jwt = jwt
                 }
             }
         }
