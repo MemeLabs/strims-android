@@ -395,32 +395,37 @@ class ChatActivity : AppCompatActivity() {
                         }
                     }
                     if (!animated) {
-                        val bitmap = bitmapMemoryCache.get(it.name)
-                        if (bitmap != null) {
-                            var width = bitmap.width
-                            if (it.modifiers.contains("wide")) {
-                                width = bitmap.width * 3
-                            }
-                            val height = bitmap.height
-                            val resized =
-                                Bitmap.createScaledBitmap(bitmap, width, height, false)
-                            ssb.setSpan(
-                                CenteredImageSpan(this@ChatActivity, resized),
-                                it.bounds[0],
-                                it.bounds[1],
-                                Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                            )
+                        var bitmap: Bitmap? = null
+                        while (bitmap == null) {
+                            bitmap = bitmapMemoryCache.get(it.name)
                         }
+                        var width = bitmap.width * 0.75
+                        if (it.modifiers.contains("wide")) {
+                            width = (bitmap.width * 1.5)
+                        }
+                        val height = bitmap.height * 0.75
+                        val resized =
+                            Bitmap.createScaledBitmap(bitmap, width.toInt(), height.toInt(), false)
+                        ssb.setSpan(
+                            CenteredImageSpan(
+                                this@ChatActivity,
+                                resized
+                            ),
+                            it.bounds[0],
+                            it.bounds[1],
+                            Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                        )
                     } else {
-                        val gif = gifMemoryCache.get(it.name)
-                        if (gif != null) {
-                            ssb.setSpan(
-                                ImageSpan(gif, DynamicDrawableSpan.ALIGN_BOTTOM),
-                                it.bounds[0],
-                                it.bounds[1],
-                                Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                            )
+                        var gif: Drawable? = null
+                        while (gif == null) {
+                            gif = gifMemoryCache.get(it.name)
                         }
+                        ssb.setSpan(
+                            ImageSpan(gif, DynamicDrawableSpan.ALIGN_BOTTOM),
+                            it.bounds[0],
+                            it.bounds[1],
+                            Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                        )
                     }
                 }
             }
@@ -1851,6 +1856,4 @@ class ChatActivity : AppCompatActivity() {
             return null
         }
     }
-
-
 }
