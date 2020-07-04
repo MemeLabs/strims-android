@@ -32,6 +32,8 @@ import com.google.gson.Gson
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
+import gg.strims.android.customspans.CenteredImageSpan
+import gg.strims.android.customspans.NoUnderlineClickableSpan
 import gg.strims.android.models.*
 import io.ktor.client.HttpClient
 import io.ktor.client.features.websocket.WebSockets
@@ -379,45 +381,6 @@ class ChatActivity : AppCompatActivity() {
                 } catch (e: Exception) {
                     tp.isUnderlineText = true
                 }
-            }
-        }
-
-        abstract class NoUnderlineClickableSpan : ClickableSpan() {
-            override fun updateDrawState(ds: TextPaint) {
-                ds.isUnderlineText = false
-            }
-        }
-
-        class CenteredImageSpan(
-            context: Context,
-            private val bitmap: Bitmap
-        ) : ImageSpan(context, bitmap) {
-            private var initialDescent: Int = 0
-            private var extraSpace: Int = 0
-            override fun getSize(
-                paint: Paint,
-                text: CharSequence?,
-                start: Int,
-                end: Int,
-                fm: Paint.FontMetricsInt?
-            ): Int {
-                val rect = drawable.bounds
-                if (fm != null) {
-                    // Centers the text with the ImageSpan
-                    if (rect.bottom - (fm.descent - fm.ascent) >= 0) {
-                        // Stores the initial descent and computes the margin available
-                        initialDescent = fm.descent;
-                        extraSpace = rect.bottom - (fm.descent - fm.ascent);
-                    }
-
-                    fm.descent = extraSpace / 2 + initialDescent;
-                    fm.bottom = fm.descent;
-
-                    fm.ascent = -rect.bottom + fm.descent;
-                    fm.top = fm.ascent;
-                }
-
-                return rect.right;
             }
         }
 
