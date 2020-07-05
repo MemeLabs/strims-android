@@ -40,9 +40,9 @@ class TwitchFragment: Fragment() {
     override fun onHiddenChanged(hidden: Boolean) {
         if (CurrentUser.tempTwitchUrl != null && !hidden) {
             if (CurrentUser.tempTwitchVod!!) {
-                webViewTwitch.loadUrl("https://player.twitch.tv/?video=${CurrentUser.tempTwitchUrl}")
+                webViewTwitch.loadUrl("https://player.twitch.tv/?video=${CurrentUser.tempTwitchUrl}&parent=strims.gg")
             } else {
-                webViewTwitch.loadUrl("https://player.twitch.tv/?channel=${CurrentUser.tempTwitchUrl}")
+                webViewTwitch.loadUrl("https://player.twitch.tv/?channel=${CurrentUser.tempTwitchUrl}&parent=strims.gg")
             }
         } else {
             webViewTwitch.loadUrl("")

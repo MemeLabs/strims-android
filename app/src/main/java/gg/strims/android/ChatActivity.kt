@@ -22,6 +22,7 @@ import android.webkit.CookieManager
 import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.view.ContextThemeWrapper
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.RemoteInput
@@ -32,6 +33,10 @@ import com.google.gson.Gson
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
+import gg.strims.android.clients.StrimsClient
+import gg.strims.android.customspans.CenteredImageSpan
+import gg.strims.android.customspans.ColouredUnderlineSpan
+import gg.strims.android.customspans.NoUnderlineClickableSpan
 import gg.strims.android.models.*
 import io.ktor.client.HttpClient
 import io.ktor.client.features.websocket.WebSockets
@@ -364,63 +369,6 @@ class ChatActivity : AppCompatActivity() {
     ) {
         val ssb = SpannableStringBuilder(messageData.data)
 
-        class ColouredUnderlineSpan(mColor: Int) : CharacterStyle(), UpdateAppearance {
-
-            var color = mColor
-
-            override fun updateDrawState(tp: TextPaint) {
-                try {
-                    val method: Method = TextPaint::class.java.getMethod(
-                        "setUnderlineText",
-                        Integer.TYPE,
-                        java.lang.Float.TYPE
-                    )
-                    method.invoke(tp, color, 8.0f)
-                } catch (e: Exception) {
-                    tp.isUnderlineText = true
-                }
-            }
-        }
-
-        abstract class NoUnderlineClickableSpan : ClickableSpan() {
-            override fun updateDrawState(ds: TextPaint) {
-                ds.isUnderlineText = false
-            }
-        }
-
-        class CenteredImageSpan(
-            context: Context,
-            private val bitmap: Bitmap
-        ) : ImageSpan(context, bitmap) {
-            private var initialDescent: Int = 0
-            private var extraSpace: Int = 0
-            override fun getSize(
-                paint: Paint,
-                text: CharSequence?,
-                start: Int,
-                end: Int,
-                fm: Paint.FontMetricsInt?
-            ): Int {
-                val rect = drawable.bounds
-                if (fm != null) {
-                    // Centers the text with the ImageSpan
-                    if (rect.bottom - (fm.descent - fm.ascent) >= 0) {
-                        // Stores the initial descent and computes the margin available
-                        initialDescent = fm.descent;
-                        extraSpace = rect.bottom - (fm.descent - fm.ascent);
-                    }
-
-                    fm.descent = extraSpace / 2 + initialDescent;
-                    fm.bottom = fm.descent;
-
-                    fm.ascent = -rect.bottom + fm.descent;
-                    fm.top = fm.ascent;
-                }
-
-                return rect.right;
-            }
-        }
-
         if (CurrentUser.options!!.emotes && emotes) {
             if (messageData.entities.emotes != null && messageData.entities.emotes!!.isNotEmpty() && messageData.entities.emotes!![0].name != "") {
                 messageData.entities.emotes!!.forEach {
@@ -431,32 +379,37 @@ class ChatActivity : AppCompatActivity() {
                         }
                     }
                     if (!animated) {
-                        val bitmap = bitmapMemoryCache.get(it.name)
-                        if (bitmap != null) {
-                            var width = bitmap.width
-                            if (it.modifiers.contains("wide")) {
-                                width = bitmap.width * 3
-                            }
-                            val height = bitmap.height
-                            val resized =
-                                Bitmap.createScaledBitmap(bitmap, width, height, false)
-                            ssb.setSpan(
-                                CenteredImageSpan(this@ChatActivity, resized),
-                                it.bounds[0],
-                                it.bounds[1],
-                                Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                            )
+                        var bitmap: Bitmap? = null
+                        while (bitmap == null) {
+                            bitmap = bitmapMemoryCache.get(it.name)
                         }
+                        var width = bitmap.width * 0.75
+                        if (it.modifiers.contains("wide")) {
+                            width = (bitmap.width * 1.5)
+                        }
+                        val height = bitmap.height * 0.75
+                        val resized =
+                            Bitmap.createScaledBitmap(bitmap, width.toInt(), height.toInt(), false)
+                        ssb.setSpan(
+                            CenteredImageSpan(
+                                this@ChatActivity,
+                                resized
+                            ),
+                            it.bounds[0],
+                            it.bounds[1],
+                            Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                        )
                     } else {
-                        val gif = gifMemoryCache.get(it.name)
-                        if (gif != null) {
-                            ssb.setSpan(
-                                ImageSpan(gif, DynamicDrawableSpan.ALIGN_BOTTOM),
-                                it.bounds[0],
-                                it.bounds[1],
-                                Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                            )
+                        var gif: Drawable? = null
+                        while (gif == null) {
+                            gif = gifMemoryCache.get(it.name)
                         }
+                        ssb.setSpan(
+                            ImageSpan(gif, DynamicDrawableSpan.ALIGN_BOTTOM),
+                            it.bounds[0],
+                            it.bounds[1],
+                            Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                        )
                     }
                 }
             }
@@ -749,7 +702,7 @@ class ChatActivity : AppCompatActivity() {
                 Spannable.SPAN_INCLUSIVE_INCLUSIVE
             )
         } else {
-            messageTextView.setTypeface(Typeface.DEFAULT)
+            messageTextView.typeface = Typeface.DEFAULT
         }
         messageTextView.setText(ssb, TextView.BufferType.SPANNABLE)
     }
@@ -889,10 +842,7 @@ class ChatActivity : AppCompatActivity() {
 
             }
             Log.d("test", "SAVED MESSAGES ----------- ${CurrentUser.privateMessages!!.size}")
-
         }
-
-
     }
 
     fun retrieveOptions() {
@@ -1100,7 +1050,8 @@ class ChatActivity : AppCompatActivity() {
             }
 
             viewHolder.itemView.usernameChatMessage.setOnLongClickListener {
-                val pop = PopupMenu(it.context, it)
+                val wrapper = ContextThemeWrapper(this@ChatActivity, R.style.PopupMenu)
+                val pop = PopupMenu(wrapper, it)
                 pop.inflate(R.menu.chat_message_username_menu)
                 pop.setOnMenuItemClickListener { itMenuItem ->
                     when (itMenuItem.itemId) {
@@ -1247,7 +1198,7 @@ class ChatActivity : AppCompatActivity() {
                 viewHolder.itemView.alpha = 1f
             }
 
-            viewHolder.itemView.usernamePrivateMessage.text = "${messageData.nick}"
+            viewHolder.itemView.usernamePrivateMessage.text = messageData.nick
 
             viewHolder.itemView.messagePrivateMessage.movementMethod =
                 LinkMovementMethod.getInstance()
@@ -1312,7 +1263,8 @@ class ChatActivity : AppCompatActivity() {
             }
 
             viewHolder.itemView.usernamePrivateMessage.setOnLongClickListener {
-                val pop = PopupMenu(it.context, it)
+                val wrapper = ContextThemeWrapper(this@ChatActivity, R.style.PopupMenu)
+                val pop = PopupMenu(wrapper, it)
                 pop.inflate(R.menu.chat_message_username_menu)
                 pop.setOnMenuItemClickListener { itMenuItem ->
                     when (itMenuItem.itemId) {
@@ -1451,6 +1403,7 @@ class ChatActivity : AppCompatActivity() {
                 val jwt = cookies.substringAfter("jwt=").substringBefore(" ")
                 if (jwt != cookies) {
                     this.jwt = jwt
+                    CurrentUser.jwt = jwt
                 }
             }
         }
@@ -1852,21 +1805,20 @@ class ChatActivity : AppCompatActivity() {
                     return message
                 }
                 "MSG" -> {
-                    val message = Klaxon().parse<Message>(msg[1])
-                    if (CurrentUser.options!!.hideNsfw) {
-                        val urlRegex =
-                            "^((https?|ftp)://|(www|ftp)\\.)?[a-z0-9-]+(\\.[a-z0-9-]+)+([/?].*)?$"
-
-                        val p: Pattern = Pattern.compile(urlRegex)
-                        val m: Matcher = p.matcher(message!!.data)
-
-                        if (m.find()) {
-                            return null
+                    val message = Klaxon().parse<Message>(msg[1])!!
+                    if (CurrentUser.options!!.hideNsfw && message.entities.links!!.isNotEmpty()
+                        && message.entities.tags!!.isNotEmpty()
+                    ) {
+                        message.entities.tags!!.forEach {
+                            if (it.name == "nsfw" || it.name == "nsfl") {
+                                return null
+                            }
                         }
                     }
+
                     if (CurrentUser.options!!.ignoreList.isNotEmpty()) {
                         CurrentUser.options!!.ignoreList.forEach {
-                            if (message!!.nick == it) {
+                            if (message.nick == it) {
                                 return null
                             }
                             if (CurrentUser.options!!.harshIgnore) {
@@ -1887,53 +1839,4 @@ class ChatActivity : AppCompatActivity() {
             return null
         }
     }
-
-    inner class StrimsClient {
-
-        private val client = HttpClient {
-            install(WebSockets)
-        }
-
-        suspend fun onConnect() = client.wss(
-            host = "strims.gg",
-            path = "/ws"
-        ) {
-            while (true) {
-                when (val frame = incoming.receive()) {
-                    is Frame.Text -> {
-                        println(frame.readText())
-                        parseStream(frame.readText())
-                    }
-                    is Frame.Binary -> println(frame.readBytes())
-                }
-            }
-        }
-
-        private fun parseStream(input: String) {
-            val input2 = input.substringAfter("[\"").substringBefore("\"")
-            if (input2 == "STREAMS_SET") {
-                val msg = input.substringAfter("\",").substringBeforeLast(']')
-                val streams: List<Stream>? = Klaxon().parseArray(msg)
-                CurrentUser.streams = streams?.toMutableList()
-            } else if (input2 == "RUSTLERS_SET") {
-                val id = input.substringAfter("\"RUSTLERS_SET\",").substringBefore(",").toLong()
-                if (CurrentUser.streams != null) {
-                    CurrentUser.streams!!.forEach {
-                        if (it.id == id) {
-                            val newRustlers =
-                                input.substringAfter("$id,").substringBefore(",").toInt()
-                            val newAfk =
-                                input.substringAfter("$id,$newRustlers,").substringBefore("]")
-                                    .toInt()
-                            it.rustlers = newRustlers
-                            it.afk_rustlers = newAfk
-                            return
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-
 }
