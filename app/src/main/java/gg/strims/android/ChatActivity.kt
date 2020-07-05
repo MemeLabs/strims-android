@@ -22,6 +22,7 @@ import android.webkit.CookieManager
 import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.view.ContextThemeWrapper
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.RemoteInput
@@ -718,7 +719,7 @@ class ChatActivity : AppCompatActivity() {
                 Spannable.SPAN_INCLUSIVE_INCLUSIVE
             )
         } else {
-            messageTextView.setTypeface(Typeface.DEFAULT)
+            messageTextView.typeface = Typeface.DEFAULT
         }
         messageTextView.setText(ssb, TextView.BufferType.SPANNABLE)
     }
@@ -1069,7 +1070,8 @@ class ChatActivity : AppCompatActivity() {
             }
 
             viewHolder.itemView.usernameChatMessage.setOnLongClickListener {
-                val pop = PopupMenu(it.context, it)
+                val wrapper = ContextThemeWrapper(this@ChatActivity, R.style.PopupMenu)
+                val pop = PopupMenu(wrapper, it)
                 pop.inflate(R.menu.chat_message_username_menu)
                 pop.setOnMenuItemClickListener { itMenuItem ->
                     when (itMenuItem.itemId) {
@@ -1216,7 +1218,7 @@ class ChatActivity : AppCompatActivity() {
                 viewHolder.itemView.alpha = 1f
             }
 
-            viewHolder.itemView.usernamePrivateMessage.text = "${messageData.nick}"
+            viewHolder.itemView.usernamePrivateMessage.text = messageData.nick
 
             viewHolder.itemView.messagePrivateMessage.movementMethod =
                 LinkMovementMethod.getInstance()
@@ -1281,7 +1283,8 @@ class ChatActivity : AppCompatActivity() {
             }
 
             viewHolder.itemView.usernamePrivateMessage.setOnLongClickListener {
-                val pop = PopupMenu(it.context, it)
+                val wrapper = ContextThemeWrapper(this@ChatActivity, R.style.PopupMenu)
+                val pop = PopupMenu(wrapper, it)
                 pop.inflate(R.menu.chat_message_username_menu)
                 pop.setOnMenuItemClickListener { itMenuItem ->
                     when (itMenuItem.itemId) {
@@ -1822,21 +1825,20 @@ class ChatActivity : AppCompatActivity() {
                     return message
                 }
                 "MSG" -> {
-                    val message = Klaxon().parse<Message>(msg[1])
-                    if (CurrentUser.options!!.hideNsfw) {
-                        val urlRegex =
-                            "^((https?|ftp)://|(www|ftp)\\.)?[a-z0-9-]+(\\.[a-z0-9-]+)+([/?].*)?$"
-
-                        val p: Pattern = Pattern.compile(urlRegex)
-                        val m: Matcher = p.matcher(message!!.data)
-
-                        if (m.find()) {
-                            return null
+                    val message = Klaxon().parse<Message>(msg[1])!!
+                    if (CurrentUser.options!!.hideNsfw && message.entities.links!!.isNotEmpty()
+                        && message.entities.tags!!.isNotEmpty()
+                    ) {
+                        message.entities.tags!!.forEach {
+                            if (it.name == "nsfw" || it.name == "nsfl") {
+                                return null
+                            }
                         }
                     }
+
                     if (CurrentUser.options!!.ignoreList.isNotEmpty()) {
                         CurrentUser.options!!.ignoreList.forEach {
-                            if (message!!.nick == it) {
+                            if (message.nick == it) {
                                 return null
                             }
                             if (CurrentUser.options!!.harshIgnore) {

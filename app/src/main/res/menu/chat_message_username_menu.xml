@@ -3,11 +3,11 @@
 
     <item
         android:id="@+id/chatWhisper"
-        android:title="Whisper" />
+        android:title="@string/whisper" />
     <item
         android:id="@+id/chatMention"
-        android:title="Mention" />
+        android:title="@string/mention" />
     <item
         android:id="@+id/chatIgnore"
-        android:title="Ignore" />
+        android:title="@string/ignore" />
 </menu>
