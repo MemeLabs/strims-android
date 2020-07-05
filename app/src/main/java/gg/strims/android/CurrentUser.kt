@@ -8,7 +8,6 @@ import io.ktor.util.KtorExperimentalAPI
 import java.io.FileOutputStream
 import java.lang.Exception
 
-@KtorExperimentalAPI
 object CurrentUser {
     var user: User? = null //Current user
     var options: Options? = null //Loaded options file
