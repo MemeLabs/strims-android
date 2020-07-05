@@ -35,6 +35,7 @@ import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
 import gg.strims.android.clients.StrimsClient
 import gg.strims.android.customspans.CenteredImageSpan
+import gg.strims.android.customspans.ColouredUnderlineSpan
 import gg.strims.android.customspans.NoUnderlineClickableSpan
 import gg.strims.android.models.*
 import io.ktor.client.HttpClient
@@ -367,24 +368,6 @@ class ChatActivity : AppCompatActivity() {
         me: Boolean = true
     ) {
         val ssb = SpannableStringBuilder(messageData.data)
-
-        class ColouredUnderlineSpan(mColor: Int) : CharacterStyle(), UpdateAppearance {
-
-            var color = mColor
-
-            override fun updateDrawState(tp: TextPaint) {
-                try {
-                    val method: Method = TextPaint::class.java.getMethod(
-                        "setUnderlineText",
-                        Integer.TYPE,
-                        java.lang.Float.TYPE
-                    )
-                    method.invoke(tp, color, 8.0f)
-                } catch (e: Exception) {
-                    tp.isUnderlineText = true
-                }
-            }
-        }
 
         if (CurrentUser.options!!.emotes && emotes) {
             if (messageData.entities.emotes != null && messageData.entities.emotes!!.isNotEmpty() && messageData.entities.emotes!![0].name != "") {
@@ -859,10 +842,7 @@ class ChatActivity : AppCompatActivity() {
 
             }
             Log.d("test", "SAVED MESSAGES ----------- ${CurrentUser.privateMessages!!.size}")
-
         }
-
-
     }
 
     fun retrieveOptions() {
