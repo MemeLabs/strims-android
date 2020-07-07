@@ -445,13 +445,18 @@ class ChatActivity : AppCompatActivity() {
                     if (!animated) {
                         val bitmap = bitmapMemoryCache.get(it.name)
                         if (bitmap != null) {
-                            var width = bitmap.width
+                            var width = bitmap.width * .75
                             if (it.modifiers.contains("wide")) {
-                                width = bitmap.width * 3
+                                width = bitmap.width * 1.5
                             }
-                            val height = bitmap.height
+                            val height = bitmap.height * .75
                             val resized =
-                                Bitmap.createScaledBitmap(bitmap, width, height, false)
+                                Bitmap.createScaledBitmap(
+                                    bitmap,
+                                    width.toInt(),
+                                    height.toInt(),
+                                    false
+                                )
                             ssb.setSpan(
                                 CenteredImageSpan(this@ChatActivity, resized),
                                 it.bounds[0],
@@ -1308,7 +1313,6 @@ class ChatActivity : AppCompatActivity() {
                         override fun onAnimationEnd(animation: Animation?) {}
                         override fun onAnimationStart(animation: Animation?) {
                             this@comboAnimation.text = "C-C-C-COMBO"
-                            //this@comboAnimation.textSize =
                         }
 
                         override fun onAnimationRepeat(animation: Animation?) {
@@ -1323,7 +1327,7 @@ class ChatActivity : AppCompatActivity() {
                 viewHolder.itemView.hitsComboChatMessageCombo.comboAnimation()
                 state = 2
             } else if (state == 2) {
-                //static ?
+                //static
             }
             viewHolder.itemView.setOnClickListener {
                 count++
@@ -1989,8 +1993,7 @@ class ChatActivity : AppCompatActivity() {
         }
 
         suspend fun onConnect() = client.wss(
-            //TODO: change
-            host = "chat2.strims.gg",
+            host = "chat.strims.gg",
             path = "/ws",
             request = {
                 retrieveCookie()
