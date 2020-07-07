@@ -1777,19 +1777,20 @@ class ChatActivity : AppCompatActivity() {
                             ) {
                                 val lastMessage =
                                     adapter.getItem(adapter.itemCount - 1) as ChatMessage
-                                consecutiveMessage = lastMessage.isNickSame(msg.nick)
+                                consecutiveMessage =
+                                    lastMessage.isNickSame(msg.nick)
                             }
 
                         }
-                        if (msg.entities.emotes != null && msg.entities.emotes!!.size == 1 && msg.entities.emotes!![0].combo > 0) {
-                            if (msg.entities.emotes!![0].combo == 1) {
+                        if (msg.entities.emotes != null && msg.entities.emotes!!.isNotEmpty() && msg.entities.emotes!![0].combo > 1) {
+                            if (msg.entities.emotes!![0].combo == 2) {
                                 adapter.removeGroupAtAdapterPosition(adapter.itemCount - 1)
                                 adapter.add(ChatMessageCombo(msg))
                             } else {
                                 if (adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item_emote_combo) {
                                     val lastMessageCombo =
                                         adapter.getItem(adapter.itemCount - 1) as ChatMessageCombo
-                                    lastMessageCombo.setCombo(msg.entities.emotes!![0].combo + 1)
+                                    lastMessageCombo.setCombo(msg.entities.emotes!![0].combo)
                                     adapter.notifyItemChanged(adapter.itemCount - 1)
                                 }
                             }
@@ -2173,15 +2174,15 @@ class ChatActivity : AppCompatActivity() {
                                             }
 
                                         }
-                                        if (msg.entities.emotes != null && msg.entities.emotes!!.size == 1 && msg.entities.emotes!![0].combo > 0) {
-                                            if (msg.entities.emotes!![0].combo == 1) {
+                                        if (msg.entities.emotes != null && msg.entities.emotes!!.isNotEmpty() && msg.entities.emotes!![0].combo > 1) {
+                                            if (msg.entities.emotes!![0].combo == 2) {
                                                 adapter.removeGroupAtAdapterPosition(adapter.itemCount - 1)
                                                 adapter.add(ChatMessageCombo(msg))
                                             } else {
                                                 if (adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item_emote_combo) {
                                                     val lastMessageCombo =
                                                         adapter.getItem(adapter.itemCount - 1) as ChatMessageCombo
-                                                    lastMessageCombo.setCombo(msg.entities.emotes!![0].combo + 1)
+                                                    lastMessageCombo.setCombo(msg.entities.emotes!![0].combo)
                                                     adapter.notifyItemChanged(adapter.itemCount - 1)
                                                 }
                                             }
