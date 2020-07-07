@@ -835,11 +835,9 @@ class ChatActivity : AppCompatActivity() {
                 openFileInput("${CurrentUser.user!!.username}_private_messages.txt")
             val inputStreamReader = InputStreamReader(fileInputStream)
             val bufferedReader = BufferedReader(inputStreamReader)
-            Log.d("test", "SAVED MESSAGES -----------")
             while (bufferedReader.ready()) {
 
                 val line = bufferedReader.readLine()
-                Log.d("test", line)
                 val curPMessage: WhisperMessageItem? =
                     Gson().fromJson(line, WhisperMessageItem::class.java)
                 if (curPMessage != null) {
@@ -853,7 +851,6 @@ class ChatActivity : AppCompatActivity() {
                 }
 
             }
-            Log.d("test", "SAVED MESSAGES ----------- ${CurrentUser.privateMessages!!.size}")
         }
     }
 
@@ -1287,41 +1284,19 @@ class ChatActivity : AppCompatActivity() {
             //5-100% change to 120% text size : colour #FFF7F9 // 570ms
         }
 
-        fun increaseCombo() {
-            count++
-        }
-
-        fun isCombo(message: Message): Boolean {
-            if (messageData.data.trim().contains(' ') || message.data.trim().contains(' ')) {
-                return false
-            }
-            if (message.entities.emotes == null || message.entities.emotes!!.size != 1) {
-                return false
-            }
-            if (messageData.entities.emotes == null || messageData.entities.emotes!!.size != 1) {
-                return false
-            }
-            if (messageData.entities.emotes!![0].name == message.entities.emotes!![0].name) {
-
-                if (messageData.entities.emotes!![0].modifiers.size != message.entities.emotes!![0].modifiers.size) {
-                    return false
+        fun isCombo(): Boolean {
+            if (messageData.entities.emotes != null) {
+                if (messageData.entities.emotes!![0].combo > 0) {
+                    return true
                 }
-                for (i in messageData.entities.emotes!![0].modifiers.indices) {
-                    if (messageData.entities.emotes!![0].modifiers[i] != message.entities.emotes!![0].modifiers[i]) {
-                        return false
-                    }
-                }
-                Log.d(
-                    "test",
-                    "${messageData.entities.emotes!![0].bounds[0]} | ${messageData.entities.emotes!![0].bounds[1]} | ${messageData.data.length}"
-                )
-                if (messageData.entities.emotes!![0].bounds[0] != 0 || messageData.entities.emotes!![0].bounds[1] != messageData.data.length) {
-                    return false
-                }
-                return true
             }
             return false
         }
+
+        fun setCombo(comboCount: Int) {
+            count = comboCount
+        }
+
     }
 
     inner class ChatMessage(
@@ -1523,38 +1498,19 @@ class ChatActivity : AppCompatActivity() {
             }
         }
 
+        fun isCombo(): Boolean {
+            if (messageData.entities.emotes != null) {
+                if (messageData.entities.emotes!![0].combo > 0) {
+                    return true
+                }
+            }
+            return false
+        }
+
         fun isNickSame(nick: String): Boolean {
             return messageData.nick == nick
         }
 
-        fun isCombo(message: Message): Boolean {
-            if (messageData.data.trim().contains(' ') || message.data.trim().contains(' ')) {
-                return false
-            }
-            if (message.entities.emotes == null || message.entities.emotes!!.size != 1) {
-                return false
-            }
-            if (messageData.entities.emotes == null || messageData.entities.emotes!!.size != 1) {
-                return false
-            }
-            if (messageData.entities.emotes!![0].name == message.entities.emotes!![0].name) {
-
-                if (messageData.entities.emotes!![0].modifiers.size != message.entities.emotes!![0].modifiers.size) {
-                    return false
-                }
-                for (i in messageData.entities.emotes!![0].modifiers.indices) {
-                    if (messageData.entities.emotes!![0].modifiers[i] != message.entities.emotes!![0].modifiers[i]) {
-                        return false
-                    }
-                }
-
-                if (messageData.entities.emotes!![0].bounds[0] != 0 || messageData.entities.emotes!![0].bounds[1] != messageData.data.length) {
-                    return false
-                }
-                return true
-            }
-            return false
-        }
 
         fun isFeaturesEmpty(): Boolean {
             return messageData.features.isEmpty()
@@ -1814,8 +1770,6 @@ class ChatActivity : AppCompatActivity() {
                     val msg = parseMessage(it)
                     if (msg != null) {
                         var consecutiveMessage = false
-                        var comboMessage = false
-                        var increaseCombo = false
                         if (adapter.itemCount > 0) {
                             if (adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item || adapter.getItem(
                                     adapter.itemCount - 1
@@ -1824,23 +1778,20 @@ class ChatActivity : AppCompatActivity() {
                                 val lastMessage =
                                     adapter.getItem(adapter.itemCount - 1) as ChatMessage
                                 consecutiveMessage = lastMessage.isNickSame(msg.nick)
-                                comboMessage = lastMessage.isCombo(msg)
-                            } else {
-                                val lastMessage =
-                                    adapter.getItem(adapter.itemCount - 1) as ChatMessageCombo
-                                comboMessage = lastMessage.isCombo(msg)
-                                if (comboMessage) {
-                                    lastMessage.increaseCombo()
-                                    increaseCombo = true
-                                    adapter.notifyItemChanged(adapter.itemCount - 1)
-                                }
                             }
 
                         }
-                        if (comboMessage) {
-                            if (!increaseCombo) {
+                        if (msg.entities.emotes != null && msg.entities.emotes!!.size == 1 && msg.entities.emotes!![0].combo > 0) {
+                            if (msg.entities.emotes!![0].combo == 1) {
                                 adapter.removeGroupAtAdapterPosition(adapter.itemCount - 1)
                                 adapter.add(ChatMessageCombo(msg))
+                            } else {
+                                if (adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item_emote_combo) {
+                                    val lastMessageCombo =
+                                        adapter.getItem(adapter.itemCount - 1) as ChatMessageCombo
+                                    lastMessageCombo.setCombo(msg.entities.emotes!![0].combo + 1)
+                                    adapter.notifyItemChanged(adapter.itemCount - 1)
+                                }
                             }
 
                         } else {
@@ -2210,32 +2161,31 @@ class ChatActivity : AppCompatActivity() {
                                         }
                                     } else {
                                         var consecutiveMessage = false
-                                        var comboMessage = false
-                                        var increaseCombo = false
-                                        if (adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item || adapter.getItem(
-                                                adapter.itemCount - 1
-                                            ).layout == R.layout.chat_message_item_consecutive_nick
-                                        ) {
-                                            val lastMessage =
-                                                adapter.getItem(adapter.itemCount - 1) as ChatMessage
-                                            consecutiveMessage =
-                                                lastMessage.isNickSame(msg.nick)
-                                            comboMessage = lastMessage.isCombo(msg)
-                                        } else if (adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item_emote_combo) {
-                                            val lastMessage =
-                                                adapter.getItem(adapter.itemCount - 1) as ChatMessageCombo
-                                            comboMessage = lastMessage.isCombo(msg)
-                                            if (comboMessage) {
-                                                lastMessage.increaseCombo()
-                                                increaseCombo = true
-                                                adapter.notifyItemChanged(adapter.itemCount - 1)
+                                        if (adapter.itemCount > 0) {
+                                            if (adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item || adapter.getItem(
+                                                    adapter.itemCount - 1
+                                                ).layout == R.layout.chat_message_item_consecutive_nick
+                                            ) {
+                                                val lastMessage =
+                                                    adapter.getItem(adapter.itemCount - 1) as ChatMessage
+                                                consecutiveMessage =
+                                                    lastMessage.isNickSame(msg.nick)
                                             }
+
                                         }
-                                        if (comboMessage) {
-                                            if (!increaseCombo) {
+                                        if (msg.entities.emotes != null && msg.entities.emotes!!.size == 1 && msg.entities.emotes!![0].combo > 0) {
+                                            if (msg.entities.emotes!![0].combo == 1) {
                                                 adapter.removeGroupAtAdapterPosition(adapter.itemCount - 1)
                                                 adapter.add(ChatMessageCombo(msg))
+                                            } else {
+                                                if (adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item_emote_combo) {
+                                                    val lastMessageCombo =
+                                                        adapter.getItem(adapter.itemCount - 1) as ChatMessageCombo
+                                                    lastMessageCombo.setCombo(msg.entities.emotes!![0].combo + 1)
+                                                    adapter.notifyItemChanged(adapter.itemCount - 1)
+                                                }
                                             }
+
                                         } else {
                                             if (adapter.itemCount > 0 && adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item_emote_combo) {
                                                 val lastMessage =
@@ -2244,9 +2194,7 @@ class ChatActivity : AppCompatActivity() {
                                                 adapter.notifyItemChanged(adapter.itemCount - 1)
                                             }
                                             adapter.add(
-                                                ChatMessage(
-                                                    msg, consecutiveMessage
-                                                )
+                                                ChatMessage(msg, consecutiveMessage)
                                             )
                                         }
                                     }
