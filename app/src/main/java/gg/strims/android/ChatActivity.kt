@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.*
 import android.graphics.drawable.Drawable
+import android.media.Image
 import android.net.Uri
 import android.os.Bundle
 import android.text.*
@@ -26,6 +27,7 @@ import android.view.animation.ScaleAnimation
 import android.view.animation.TranslateAnimation
 import android.view.inputmethod.EditorInfo
 import android.webkit.CookieManager
+import android.widget.ImageView
 import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -955,8 +957,8 @@ class ChatActivity : AppCompatActivity() {
             if (CurrentUser.options!!.showTime) {
                 val dateFormat = SimpleDateFormat("HH:mm")
                 val time = dateFormat.format(messageData.timestamp)
-                viewHolder.itemView.timestampChatMessage.visibility = View.VISIBLE
-                viewHolder.itemView.timestampChatMessage.text = time
+                viewHolder.itemView.timestampChatMessageCombo.visibility = View.VISIBLE
+                viewHolder.itemView.timestampChatMessageCombo.text = time
             }
 
             if (CurrentUser.tempHighlightNick != null) {
@@ -986,23 +988,22 @@ class ChatActivity : AppCompatActivity() {
 
             viewHolder.itemView.comboCountChatMessageCombo.text = "$count"
 
-            //TODO: bold x10 and up
             var scaleValue = 1.0
             when {
                 count >= 50 -> {
-                    scaleValue = 2.5
+                    scaleValue = 1.80
                 }
                 count >= 30 -> {
-                    scaleValue = 2.0
+                    scaleValue = 1.60
                 }
                 count >= 20 -> {
-                    scaleValue = 1.75
+                    scaleValue = 1.40
                 }
                 count >= 10 -> {
-                    scaleValue = 1.50
+                    scaleValue = 1.20
                 }
                 count >= 5 -> {
-                    scaleValue = 1.25
+                    scaleValue = 1.10
                 }
             }
             viewHolder.itemView.comboCountChatMessageCombo.textSize =
@@ -1027,252 +1028,321 @@ class ChatActivity : AppCompatActivity() {
                 spoilers = false,
                 me = false
             )
-            if (state == 0) {
-                fun TextView.hitsAnimation(
-                ) {
+            when (state) {
+                0 -> {
+                    if (count >= 10) {
+                        viewHolder.itemView.redSplatChatMessageCombo.visibility = View.VISIBLE
+                        viewHolder.itemView.graySplatChatMessageCombo.visibility = View.GONE
+                    }
+                    fun TextView.hitsAnimation(
+                    ) {
+                        val bright = Color.parseColor("#FFF7F9")
+                        val red = Color.parseColor("#B91010")
+
+                        //sixth
+                        val sixthScaleAnimation = ScaleAnimation(
+                            2f, 1.0f, 2f, 1.0f, Animation.RELATIVE_TO_SELF,
+                            0f,
+                            Animation.RELATIVE_TO_SELF,
+                            0.5f
+                        )
+                        sixthScaleAnimation.fillAfter = true
+                        sixthScaleAnimation.duration = 570
+                        val sixthColorAnimation =
+                            ObjectAnimator.ofInt(
+                                this,
+                                "textColor",
+                                red,
+                                bright
+                            )
+                        sixthColorAnimation.duration = 570
+                        sixthColorAnimation.setEvaluator(ArgbEvaluator())
+                        sixthScaleAnimation.setAnimationListener(object :
+                            Animation.AnimationListener {
+
+                            override fun onAnimationStart(animation: Animation?) {
+                                sixthColorAnimation.start()
+                            }
+
+                            override fun onAnimationRepeat(animation: Animation?) {
+                            }
+
+                            override fun onAnimationEnd(animation: Animation?) {
+                            }
+                        })
+                        //fifth
+                        val fifthScaleAnimation = ScaleAnimation(
+                            1.9f, 2f, 1.9f, 2f, Animation.RELATIVE_TO_SELF,
+                            0f,
+                            Animation.RELATIVE_TO_SELF,
+                            0.5f
+                        )
+                        fifthScaleAnimation.fillAfter = true
+                        fifthScaleAnimation.duration = 6
+                        val fifthColorAnimation =
+                            ObjectAnimator.ofInt(
+                                this,
+                                "textColor",
+                                bright,
+                                red
+                            )
+                        fifthColorAnimation.duration = 6
+                        fifthColorAnimation.setEvaluator(ArgbEvaluator())
+                        fifthScaleAnimation.setAnimationListener(object :
+                            Animation.AnimationListener {
+
+                            override fun onAnimationStart(animation: Animation?) {
+                                fifthColorAnimation.start()
+                            }
+
+                            override fun onAnimationRepeat(animation: Animation?) {
+                            }
+
+                            override fun onAnimationEnd(animation: Animation?) {
+                                this@hitsAnimation.startAnimation(sixthScaleAnimation)
+                            }
+                        })
+                        //fourth
+                        val fourthScaleAnimation = ScaleAnimation(
+                            2f, 1.9f, 2f, 1.9f, Animation.RELATIVE_TO_SELF,
+                            0f,
+                            Animation.RELATIVE_TO_SELF,
+                            0.5f
+                        )
+                        fourthScaleAnimation.fillAfter = true
+                        fourthScaleAnimation.duration = 6
+                        val fourthColorAnimation =
+                            ObjectAnimator.ofInt(
+                                this,
+                                "textColor",
+                                red,
+                                bright
+                            )
+                        fourthColorAnimation.duration = 6
+                        fourthColorAnimation.setEvaluator(ArgbEvaluator())
+                        fourthScaleAnimation.setAnimationListener(object :
+                            Animation.AnimationListener {
+
+                            override fun onAnimationStart(animation: Animation?) {
+                                fourthColorAnimation.start()
+                            }
+
+                            override fun onAnimationRepeat(animation: Animation?) {
+                            }
+
+                            override fun onAnimationEnd(animation: Animation?) {
+                                this@hitsAnimation.startAnimation(fifthScaleAnimation)
+                            }
+                        })
+                        //third
+                        val thirdScaleAnimation = ScaleAnimation(
+                            1.9f, 2f, 1.9f, 2f, Animation.RELATIVE_TO_SELF,
+                            0f,
+                            Animation.RELATIVE_TO_SELF,
+                            0.5f
+                        )
+                        thirdScaleAnimation.fillAfter = true
+                        thirdScaleAnimation.duration = 6
+                        val thirdColorAnimation =
+                            ObjectAnimator.ofInt(
+                                this,
+                                "textColor",
+                                bright,
+                                red
+                            )
+                        thirdColorAnimation.duration = 6
+                        thirdColorAnimation.setEvaluator(ArgbEvaluator())
+                        thirdScaleAnimation.setAnimationListener(object :
+                            Animation.AnimationListener {
+
+                            override fun onAnimationStart(animation: Animation?) {
+                                thirdColorAnimation.start()
+                            }
+
+                            override fun onAnimationRepeat(animation: Animation?) {
+                            }
+
+                            override fun onAnimationEnd(animation: Animation?) {
+                                this@hitsAnimation.startAnimation(fourthScaleAnimation)
+                            }
+                        })
+                        //second
+                        val secondScaleAnimation = ScaleAnimation(
+                            2f, 1.9f, 2f, 1.9f, Animation.RELATIVE_TO_SELF,
+                            0f,
+                            Animation.RELATIVE_TO_SELF,
+                            0.5f
+                        )
+                        secondScaleAnimation.fillAfter = true
+                        secondScaleAnimation.duration = 6
+                        val secondColorAnimation =
+                            ObjectAnimator.ofInt(
+                                this,
+                                "textColor",
+                                red,
+                                bright
+                            )
+                        secondColorAnimation.duration = 6
+                        secondColorAnimation.setEvaluator(ArgbEvaluator())
+                        secondScaleAnimation.setAnimationListener(object :
+                            Animation.AnimationListener {
+
+                            override fun onAnimationStart(animation: Animation?) {
+                                secondColorAnimation.start()
+                            }
+
+                            override fun onAnimationRepeat(animation: Animation?) {
+                            }
+
+                            override fun onAnimationEnd(animation: Animation?) {
+                                this@hitsAnimation.startAnimation(thirdScaleAnimation)
+                            }
+                        })
+
+                        //first
+                        val firstScaleAnimation = ScaleAnimation(
+                            1f,
+                            2f,
+                            1f,
+                            2f,
+                            Animation.RELATIVE_TO_SELF,
+                            0f,
+                            Animation.RELATIVE_TO_SELF,
+                            0.5f
+                        )
+                        firstScaleAnimation.fillAfter = true
+                        firstScaleAnimation.duration = 6
+                        val firstColorAnimation =
+                            ObjectAnimator.ofInt(
+                                this,
+                                "textColor",
+                                bright,
+                                red
+                            )
+                        firstColorAnimation.duration = 6
+                        firstColorAnimation.setEvaluator(ArgbEvaluator())
+                        firstScaleAnimation.setAnimationListener(object :
+                            Animation.AnimationListener {
+
+                            override fun onAnimationStart(animation: Animation?) {
+                                firstColorAnimation.start()
+                            }
+
+                            override fun onAnimationRepeat(animation: Animation?) {
+                            }
+
+                            override fun onAnimationEnd(animation: Animation?) {
+                                this@hitsAnimation.startAnimation(secondScaleAnimation)
+                            }
+                        })
+                        this.startAnimation(firstScaleAnimation)
+
+                    }
+                    viewHolder.itemView.hitsComboChatMessageCombo.text = "HITS"
+                    viewHolder.itemView.hitsComboChatMessageCombo.hitsAnimation()
+                }
+                1 -> {
+                    //
+                    val gray = Color.parseColor("#999999")
                     val bright = Color.parseColor("#FFF7F9")
-                    val red = Color.parseColor("#B91010")
 
-                    //sixth
-                    val sixthScaleAnimation = ScaleAnimation(
-                        2f, 1.0f, 2f, 1.0f, Animation.RELATIVE_TO_SELF,
-                        0f,
-                        Animation.RELATIVE_TO_SELF,
-                        0.5f
+                    fun splatFade(red: ImageView, gray: ImageView) {
+                        val redAnim = AlphaAnimation(1.0f, 0.0f)
+                        redAnim.duration = 500
+                        //redAnim.fillAfter = true
+                        redAnim.setAnimationListener(object : Animation.AnimationListener {
+                            override fun onAnimationEnd(animation: Animation?) {
+                                red.visibility = View.GONE
+                                gray.visibility = View.VISIBLE
+                            }
+
+                            override fun onAnimationStart(animation: Animation?) {
+                            }
+
+                            override fun onAnimationRepeat(animation: Animation?) {
+                            }
+                        })
+
+                        val redStaticAnim = AlphaAnimation(1.0f, 1.0f)
+                        redStaticAnim.duration = 500
+                        redStaticAnim.setAnimationListener(object : Animation.AnimationListener {
+                            override fun onAnimationEnd(animation: Animation?) {
+                                red.startAnimation(redAnim)
+                            }
+
+                            override fun onAnimationStart(animation: Animation?) {
+                            }
+
+                            override fun onAnimationRepeat(animation: Animation?) {
+                            }
+                        })
+                        red.startAnimation(redStaticAnim)
+                    }
+                    splatFade(
+                        viewHolder.itemView.redSplatChatMessageCombo,
+                        viewHolder.itemView.graySplatChatMessageCombo
                     )
-                    sixthScaleAnimation.fillAfter = true
-                    sixthScaleAnimation.duration = 570
-                    val sixthColorAnimation =
-                        ObjectAnimator.ofInt(
-                            this,
-                            "textColor",
-                            red,
-                            bright
+                    viewHolder.itemView.hitsComboChatMessageCombo.textSize =
+                        (hitsInitialSize * 1.25).toFloat()
+                    viewHolder.itemView.xChatMessageCombo.textSize =
+                        (xInitialSize * 1.25).toFloat()
+                    fun TextView.comboAnimation() {
+                        val comboColorAnimation =
+                            ObjectAnimator.ofInt(
+                                this,
+                                "textColor",
+                                bright,
+                                gray
+                            )
+                        comboColorAnimation.duration = 500
+                        comboColorAnimation.setEvaluator(ArgbEvaluator())
+                        val anim = AlphaAnimation(1.0f, 0.0f)
+                        anim.duration = 500
+                        anim.repeatCount = 1
+                        anim.repeatMode = Animation.REVERSE
+
+                        val xDelta =
+                            2f * (resources.displayMetrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT)
+                        val slideLeft = TranslateAnimation(xDelta, 0f, 0f, 0f)
+                        slideLeft.duration = 500
+                        slideLeft.fillAfter = true
+                        anim.setAnimationListener(object : Animation.AnimationListener {
+                            override fun onAnimationEnd(animation: Animation?) {}
+                            override fun onAnimationStart(animation: Animation?) {
+                                this@comboAnimation.text = "C-C-C-COMBO"
+                            }
+
+                            override fun onAnimationRepeat(animation: Animation?) {
+                                comboColorAnimation.start()
+                                this@comboAnimation.startAnimation(slideLeft)
+
+
+                            }
+                        })
+                        this.startAnimation(anim)
+                    }
+                    viewHolder.itemView.hitsComboChatMessageCombo.comboAnimation()
+                    if (count >= 10) {
+                        splatFade(
+                            viewHolder.itemView.redSplatChatMessageCombo,
+                            viewHolder.itemView.graySplatChatMessageCombo
                         )
-                    sixthColorAnimation.duration = 570
-                    sixthColorAnimation.setEvaluator(ArgbEvaluator())
-                    sixthScaleAnimation.setAnimationListener(object : Animation.AnimationListener {
-
-                        override fun onAnimationStart(animation: Animation?) {
-                            sixthColorAnimation.start()
-                        }
-
-                        override fun onAnimationRepeat(animation: Animation?) {
-                        }
-
-                        override fun onAnimationEnd(animation: Animation?) {
-                        }
-                    })
-                    //fifth
-                    val fifthScaleAnimation = ScaleAnimation(
-                        1.9f, 2f, 1.9f, 2f, Animation.RELATIVE_TO_SELF,
-                        0f,
-                        Animation.RELATIVE_TO_SELF,
-                        0.5f
-                    )
-                    fifthScaleAnimation.fillAfter = true
-                    fifthScaleAnimation.duration = 6
-                    val fifthColorAnimation =
-                        ObjectAnimator.ofInt(
-                            this,
-                            "textColor",
-                            bright,
-                            red
-                        )
-                    fifthColorAnimation.duration = 6
-                    fifthColorAnimation.setEvaluator(ArgbEvaluator())
-                    fifthScaleAnimation.setAnimationListener(object : Animation.AnimationListener {
-
-                        override fun onAnimationStart(animation: Animation?) {
-                            fifthColorAnimation.start()
-                        }
-
-                        override fun onAnimationRepeat(animation: Animation?) {
-                        }
-
-                        override fun onAnimationEnd(animation: Animation?) {
-                            this@hitsAnimation.startAnimation(sixthScaleAnimation)
-                        }
-                    })
-                    //fourth
-                    val fourthScaleAnimation = ScaleAnimation(
-                        2f, 1.9f, 2f, 1.9f, Animation.RELATIVE_TO_SELF,
-                        0f,
-                        Animation.RELATIVE_TO_SELF,
-                        0.5f
-                    )
-                    fourthScaleAnimation.fillAfter = true
-                    fourthScaleAnimation.duration = 6
-                    val fourthColorAnimation =
-                        ObjectAnimator.ofInt(
-                            this,
-                            "textColor",
-                            red,
-                            bright
-                        )
-                    fourthColorAnimation.duration = 6
-                    fourthColorAnimation.setEvaluator(ArgbEvaluator())
-                    fourthScaleAnimation.setAnimationListener(object : Animation.AnimationListener {
-
-                        override fun onAnimationStart(animation: Animation?) {
-                            fourthColorAnimation.start()
-                        }
-
-                        override fun onAnimationRepeat(animation: Animation?) {
-                        }
-
-                        override fun onAnimationEnd(animation: Animation?) {
-                            this@hitsAnimation.startAnimation(fifthScaleAnimation)
-                        }
-                    })
-                    //third
-                    val thirdScaleAnimation = ScaleAnimation(
-                        1.9f, 2f, 1.9f, 2f, Animation.RELATIVE_TO_SELF,
-                        0f,
-                        Animation.RELATIVE_TO_SELF,
-                        0.5f
-                    )
-                    thirdScaleAnimation.fillAfter = true
-                    thirdScaleAnimation.duration = 6
-                    val thirdColorAnimation =
-                        ObjectAnimator.ofInt(
-                            this,
-                            "textColor",
-                            bright,
-                            red
-                        )
-                    thirdColorAnimation.duration = 6
-                    thirdColorAnimation.setEvaluator(ArgbEvaluator())
-                    thirdScaleAnimation.setAnimationListener(object : Animation.AnimationListener {
-
-                        override fun onAnimationStart(animation: Animation?) {
-                            thirdColorAnimation.start()
-                        }
-
-                        override fun onAnimationRepeat(animation: Animation?) {
-                        }
-
-                        override fun onAnimationEnd(animation: Animation?) {
-                            this@hitsAnimation.startAnimation(fourthScaleAnimation)
-                        }
-                    })
-                    //second
-                    val secondScaleAnimation = ScaleAnimation(
-                        2f, 1.9f, 2f, 1.9f, Animation.RELATIVE_TO_SELF,
-                        0f,
-                        Animation.RELATIVE_TO_SELF,
-                        0.5f
-                    )
-                    secondScaleAnimation.fillAfter = true
-                    secondScaleAnimation.duration = 6
-                    val secondColorAnimation =
-                        ObjectAnimator.ofInt(
-                            this,
-                            "textColor",
-                            red,
-                            bright
-                        )
-                    secondColorAnimation.duration = 6
-                    secondColorAnimation.setEvaluator(ArgbEvaluator())
-                    secondScaleAnimation.setAnimationListener(object : Animation.AnimationListener {
-
-                        override fun onAnimationStart(animation: Animation?) {
-                            secondColorAnimation.start()
-                        }
-
-                        override fun onAnimationRepeat(animation: Animation?) {
-                        }
-
-                        override fun onAnimationEnd(animation: Animation?) {
-                            this@hitsAnimation.startAnimation(thirdScaleAnimation)
-                        }
-                    })
-
-                    //first
-                    val firstScaleAnimation = ScaleAnimation(
-                        1f,
-                        2f,
-                        1f,
-                        2f,
-                        Animation.RELATIVE_TO_SELF,
-                        0f,
-                        Animation.RELATIVE_TO_SELF,
-                        0.5f
-                    )
-                    firstScaleAnimation.fillAfter = true
-                    firstScaleAnimation.duration = 6
-                    val firstColorAnimation =
-                        ObjectAnimator.ofInt(
-                            this,
-                            "textColor",
-                            bright,
-                            red
-                        )
-                    firstColorAnimation.duration = 6
-                    firstColorAnimation.setEvaluator(ArgbEvaluator())
-                    firstScaleAnimation.setAnimationListener(object : Animation.AnimationListener {
-
-                        override fun onAnimationStart(animation: Animation?) {
-                            firstColorAnimation.start()
-                        }
-
-                        override fun onAnimationRepeat(animation: Animation?) {
-                        }
-
-                        override fun onAnimationEnd(animation: Animation?) {
-                            this@hitsAnimation.startAnimation(secondScaleAnimation)
-                        }
-                    })
-                    this.startAnimation(firstScaleAnimation)
-
+                    }
+                    state = 2
                 }
-                viewHolder.itemView.hitsComboChatMessageCombo.text = "HITS"
-                viewHolder.itemView.hitsComboChatMessageCombo.hitsAnimation()
-            } else if (state == 1) {
-                //
-                val gray = Color.parseColor("#999999")
-                val bright = Color.parseColor("#FFF7F9")
-                fun TextView.comboAnimation() {
-                    val comboColorAnimation =
-                        ObjectAnimator.ofInt(
-                            this,
-                            "textColor",
-                            bright,
-                            gray
-                        )
-                    comboColorAnimation.duration = 500
-                    comboColorAnimation.setEvaluator(ArgbEvaluator())
-                    val anim = AlphaAnimation(1.0f, 0.0f)
-                    anim.duration = 500
-                    anim.repeatCount = 1
-                    anim.repeatMode = Animation.REVERSE
-                    val xDelta =
-                        2f * (resources.displayMetrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT)
-                    val slideLeft = TranslateAnimation(xDelta, 0f, 0f, 0f)
-                    slideLeft.duration = 500
-                    slideLeft.fillAfter = true
-                    anim.setAnimationListener(object : Animation.AnimationListener {
-                        override fun onAnimationEnd(animation: Animation?) {}
-                        override fun onAnimationStart(animation: Animation?) {
-                            this@comboAnimation.text = "C-C-C-COMBO"
-                        }
-
-                        override fun onAnimationRepeat(animation: Animation?) {
-                            comboColorAnimation.start()
-                            this@comboAnimation.startAnimation(slideLeft)
-
-
-                        }
-                    })
-                    this.startAnimation(anim)
+                2 -> {
+                    //static
                 }
-                viewHolder.itemView.hitsComboChatMessageCombo.comboAnimation()
-                state = 2
-            } else if (state == 2) {
-                //static
+                // 600 ms total
+                // 0-1 % change to 200% text size : colour #B91010 // 6ms
+                // 1-2 % change to 190% text size : colour #FFF7F9 // 6ms
+                // 2-3 % change to 200% text size : colour #B91010 // 6ms
+                // 3-4 % change to 190% text size : colour #FFF7F9 // 6ms
+                // 4-5 % change to 200% text size : colour #B91010 // 6ms
+                //5-100% change to 120% text size : colour #FFF7F9 // 570ms
             }
             viewHolder.itemView.setOnClickListener {
-                count++
+                count = 50
                 notifyChanged()
             }
             // 600 ms total
