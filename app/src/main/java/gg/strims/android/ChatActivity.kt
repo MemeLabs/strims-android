@@ -1333,17 +1333,6 @@ class ChatActivity : AppCompatActivity() {
                 2 -> {
                     //static
                 }
-                // 600 ms total
-                // 0-1 % change to 200% text size : colour #B91010 // 6ms
-                // 1-2 % change to 190% text size : colour #FFF7F9 // 6ms
-                // 2-3 % change to 200% text size : colour #B91010 // 6ms
-                // 3-4 % change to 190% text size : colour #FFF7F9 // 6ms
-                // 4-5 % change to 200% text size : colour #B91010 // 6ms
-                //5-100% change to 120% text size : colour #FFF7F9 // 570ms
-            }
-            viewHolder.itemView.setOnClickListener {
-                count = 50
-                notifyChanged()
             }
             // 600 ms total
             // 0-1 % change to 200% text size : colour #B91010 // 6ms
