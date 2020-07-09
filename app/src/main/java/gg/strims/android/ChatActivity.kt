@@ -988,30 +988,7 @@ class ChatActivity : AppCompatActivity() {
 
             viewHolder.itemView.comboCountChatMessageCombo.text = "$count"
 
-            var scaleValue = 1.0
-            when {
-                count >= 50 -> {
-                    scaleValue = 1.80
-                }
-                count >= 30 -> {
-                    scaleValue = 1.60
-                }
-                count >= 20 -> {
-                    scaleValue = 1.40
-                }
-                count >= 10 -> {
-                    scaleValue = 1.20
-                }
-                count >= 5 -> {
-                    scaleValue = 1.10
-                }
-            }
-            viewHolder.itemView.comboCountChatMessageCombo.textSize =
-                (comboCountInitialSize * scaleValue).toFloat()
-            viewHolder.itemView.xChatMessageCombo.textSize =
-                (xInitialSize * scaleValue).toFloat()
-            viewHolder.itemView.hitsComboChatMessageCombo.textSize =
-                (hitsInitialSize * scaleValue).toFloat()
+
             if (count >= 10) {
                 viewHolder.itemView.hitsComboChatMessageCombo.setTypeface(
                     viewHolder.itemView.hitsComboChatMessageCombo.typeface,
@@ -1030,9 +1007,33 @@ class ChatActivity : AppCompatActivity() {
             )
             when (state) {
                 0 -> {
+                    var scaleValue = 1.0
+                    when {
+                        count >= 50 -> {
+                            scaleValue = 1.80
+                        }
+                        count >= 30 -> {
+                            scaleValue = 1.60
+                        }
+                        count >= 20 -> {
+                            scaleValue = 1.40
+                        }
+                        count >= 10 -> {
+                            scaleValue = 1.20
+                        }
+                        count >= 5 -> {
+                            scaleValue = 1.10
+                        }
+                    }
+                    viewHolder.itemView.comboCountChatMessageCombo.textSize =
+                        (comboCountInitialSize * scaleValue).toFloat()
+                    viewHolder.itemView.xChatMessageCombo.textSize =
+                        (xInitialSize * scaleValue).toFloat()
+                    viewHolder.itemView.hitsComboChatMessageCombo.textSize =
+                        (hitsInitialSize * scaleValue).toFloat()
                     if (count >= 10) {
                         viewHolder.itemView.redSplatChatMessageCombo.visibility = View.VISIBLE
-                        viewHolder.itemView.graySplatChatMessageCombo.visibility = View.GONE
+                        viewHolder.itemView.graySplatChatMessageCombo.visibility = View.VISIBLE
                     }
                     fun TextView.hitsAnimation(
                     ) {
@@ -1242,18 +1243,19 @@ class ChatActivity : AppCompatActivity() {
                     viewHolder.itemView.hitsComboChatMessageCombo.hitsAnimation()
                 }
                 1 -> {
-                    //
+
                     val gray = Color.parseColor("#999999")
                     val bright = Color.parseColor("#FFF7F9")
 
                     fun splatFade(red: ImageView, gray: ImageView) {
+                        val grayAnim = AlphaAnimation(0.0f, 1.0f)
+                        grayAnim.duration = 750
+
                         val redAnim = AlphaAnimation(1.0f, 0.0f)
                         redAnim.duration = 500
-                        //redAnim.fillAfter = true
                         redAnim.setAnimationListener(object : Animation.AnimationListener {
                             override fun onAnimationEnd(animation: Animation?) {
                                 red.visibility = View.GONE
-                                gray.visibility = View.VISIBLE
                             }
 
                             override fun onAnimationStart(animation: Animation?) {
@@ -1262,12 +1264,13 @@ class ChatActivity : AppCompatActivity() {
                             override fun onAnimationRepeat(animation: Animation?) {
                             }
                         })
-
                         val redStaticAnim = AlphaAnimation(1.0f, 1.0f)
                         redStaticAnim.duration = 500
                         redStaticAnim.setAnimationListener(object : Animation.AnimationListener {
                             override fun onAnimationEnd(animation: Animation?) {
+
                                 red.startAnimation(redAnim)
+                                gray.startAnimation(grayAnim)
                             }
 
                             override fun onAnimationStart(animation: Animation?) {
@@ -1278,10 +1281,6 @@ class ChatActivity : AppCompatActivity() {
                         })
                         red.startAnimation(redStaticAnim)
                     }
-                    splatFade(
-                        viewHolder.itemView.redSplatChatMessageCombo,
-                        viewHolder.itemView.graySplatChatMessageCombo
-                    )
                     viewHolder.itemView.hitsComboChatMessageCombo.textSize =
                         (hitsInitialSize * 1.25).toFloat()
                     viewHolder.itemView.xChatMessageCombo.textSize =

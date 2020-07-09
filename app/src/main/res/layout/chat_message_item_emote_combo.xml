@@ -20,7 +20,6 @@
         app:layout_constraintTop_toTopOf="@+id/comboCountChatMessageCombo"
         app:srcCompat="@drawable/ic_emote_splat_grayscale"
         tools:visibility="gone" />
-
     <ImageView
         android:id="@+id/redSplatChatMessageCombo"
         android:layout_width="0dp"
@@ -34,6 +33,8 @@
         app:layout_constraintTop_toTopOf="@+id/comboCountChatMessageCombo"
         app:srcCompat="@drawable/ic_emote_splat"
         tools:visibility="gone" />
+
+
 
     <TextView
         android:id="@+id/messageChatMessageCombo"
