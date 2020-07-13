@@ -10,7 +10,6 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.*
 import android.graphics.drawable.Drawable
-import android.media.Image
 import android.net.Uri
 import android.os.Bundle
 import android.text.*
@@ -20,6 +19,8 @@ import android.util.DisplayMetrics
 import android.util.Log
 import android.util.LruCache
 import android.view.KeyEvent
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
@@ -32,12 +33,20 @@ import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ContextThemeWrapper
+import androidx.appcompat.widget.Toolbar
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.RemoteInput
 import androidx.core.app.TaskStackBuilder
+import androidx.drawerlayout.widget.DrawerLayout
+import androidx.navigation.findNavController
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.navigateUp
+import androidx.navigation.ui.setupActionBarWithNavController
+import androidx.navigation.ui.setupWithNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.beust.klaxon.Klaxon
+import com.google.android.material.navigation.NavigationView
 import com.google.gson.Gson
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
@@ -63,6 +72,7 @@ import kotlinx.android.synthetic.main.chat_message_item.view.*
 import kotlinx.android.synthetic.main.chat_message_item_emote_combo.view.*
 import kotlinx.android.synthetic.main.chat_message_item_emote_combo.view.comboCountChatMessageCombo
 import kotlinx.android.synthetic.main.error_chat_message_item.view.*
+import kotlinx.android.synthetic.main.nav_header_main.*
 import kotlinx.android.synthetic.main.private_chat_message_item.view.*
 import kotlinx.android.synthetic.main.whisper_message_item_right.view.*
 import kotlinx.coroutines.GlobalScope
@@ -71,7 +81,6 @@ import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStream
 import java.io.InputStreamReader
-import java.lang.reflect.Method
 import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
@@ -80,7 +89,7 @@ import java.util.regex.Pattern
 
 @KtorExperimentalAPI
 @SuppressLint("SetTextI18n", "SimpleDateFormat", "WrongViewCast")
-class ChatActivity : AppCompatActivity() {
+class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
     companion object {
         var channelId = "chat_notifications"
@@ -88,6 +97,8 @@ class ChatActivity : AppCompatActivity() {
         var NOT_USER_KEY = "NOT_USER_KEY"
         var NOTIFICATION_REPLY_KEY = "Text"
     }
+
+    private lateinit var appBarConfiguration: AppBarConfiguration
 
     val adapter = GroupAdapter<GroupieViewHolder>()
 
@@ -102,7 +113,23 @@ class ChatActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_chat)
+        setContentView(R.layout.activity_navigation_drawer)
+        val toolbar: Toolbar = findViewById(R.id.toolbar)
+        setSupportActionBar(toolbar)
+
+        val drawerLayout: DrawerLayout = findViewById(R.id.drawer_layout)
+        val navView: NavigationView = findViewById(R.id.nav_view)
+        val navController = findNavController(R.id.nav_host_fragment)
+        appBarConfiguration = AppBarConfiguration(
+            setOf(
+                R.id.nav_Streams, R.id.nav_Profile, R.id.nav_Settings
+            ), drawerLayout
+        )
+        setupActionBarWithNavController(navController, appBarConfiguration)
+        navView.setupWithNavController(navController)
+        navView.setNavigationItemSelectedListener(this)
+
+        navView.menu.getItem(0).isChecked = false
 
         GlobalScope.launch {
             ChatClient().onConnect()
@@ -120,8 +147,6 @@ class ChatActivity : AppCompatActivity() {
             }
         }
         gifMemoryCache = object : LruCache<String, Drawable>(cacheSize) {}
-
-        supportActionBar!!.hide()
 
         chatBottomNavigationView.selectedItemId =
             chatBottomNavigationView.menu.findItem(R.id.chatChat).itemId
@@ -369,6 +394,52 @@ class ChatActivity : AppCompatActivity() {
                 supportFragmentManager.findFragmentById(R.id.user_list_fragment)!!
             )
         }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.navigation_drawer, menu)
+        return true
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        menu!!.findItem(R.id.optionsLogIn).isVisible = CurrentUser.user == null
+        return super.onPrepareOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.optionsLogIn -> {
+                showFragment(this, supportFragmentManager.findFragmentById(R.id.login_fragment)!!)
+            }
+            android.R.id.home -> {
+
+            }
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        val navController = findNavController(R.id.nav_host_fragment)
+        return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
+    }
+
+    override fun onNavigationItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.nav_Streams -> {
+                showFragment(this, supportFragmentManager.findFragmentById(R.id.streams_fragment)!!)
+            }
+
+            R.id.nav_Profile -> {
+                showFragment(this, supportFragmentManager.findFragmentById(R.id.profile_fragment)!!)
+            }
+
+            R.id.nav_Settings -> {
+                showFragment(this, supportFragmentManager.findFragmentById(R.id.options_fragment)!!)
+            }
+        }
+        val drawerLayout: DrawerLayout = findViewById(R.id.drawer_layout)
+        drawerLayout.closeDrawers()
+        return true
     }
 
     fun createMessageTextView(
@@ -1943,6 +2014,8 @@ class ChatActivity : AppCompatActivity() {
                 runOnUiThread {
                     CurrentUser.user = Klaxon().parse(text)
                     sendMessageText.hint = "Write something ${CurrentUser.user!!.username} ..."
+                    navHeaderUsername.text = CurrentUser.user!!.username
+                    invalidateOptionsMenu()
                     chatBottomNavigationView.menu.findItem(R.id.chatProfile).isVisible = true
                     chatBottomNavigationView.menu.findItem(R.id.chatLogin).isVisible = false
                     chatBottomNavigationView.menu.findItem(R.id.chatWhispers).isVisible = true
