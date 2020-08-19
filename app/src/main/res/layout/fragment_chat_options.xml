@@ -4,7 +4,7 @@
     android:id="@+id/constraintLayoutChatOptions"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/rounded_text_enter_message">
+    android:background="#000000">
 
     <CheckBox
         android:id="@+id/checkBoxTimestamp"

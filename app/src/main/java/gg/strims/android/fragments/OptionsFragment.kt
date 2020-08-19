@@ -47,7 +47,7 @@ class OptionsFragment : Fragment() {
         view.setOnTouchListener { view, motionEvent -> return@setOnTouchListener true }
         closeMenuButton.setOnClickListener {
             fragmentManager!!.beginTransaction()
-                .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+                .setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
                 .hide(this)
                 .commit()
         }
@@ -57,7 +57,7 @@ class OptionsFragment : Fragment() {
             val recycler = activity!!.findViewById<RecyclerView>(R.id.recyclerViewChat)
             recycler.adapter!!.notifyDataSetChanged()
             fragmentManager!!.beginTransaction()
-                .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+                .setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
                 .hide(this)
                 .commit()
         }

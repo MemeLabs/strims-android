@@ -8,11 +8,17 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.graphics.*
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
-import android.text.*
+import android.text.Editable
+import android.text.Spannable
+import android.text.SpannableStringBuilder
+import android.text.TextWatcher
 import android.text.method.LinkMovementMethod
 import android.text.style.*
 import android.util.DisplayMetrics
@@ -46,8 +52,12 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.beust.klaxon.Klaxon
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.transition.Transition
 import com.google.android.material.navigation.NavigationView
 import com.google.gson.Gson
+import com.squareup.picasso.Picasso
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
@@ -70,17 +80,14 @@ import kotlinx.android.synthetic.main.activity_chat.*
 import kotlinx.android.synthetic.main.autofill_item.view.*
 import kotlinx.android.synthetic.main.chat_message_item.view.*
 import kotlinx.android.synthetic.main.chat_message_item_emote_combo.view.*
-import kotlinx.android.synthetic.main.chat_message_item_emote_combo.view.comboCountChatMessageCombo
 import kotlinx.android.synthetic.main.error_chat_message_item.view.*
 import kotlinx.android.synthetic.main.nav_header_main.*
 import kotlinx.android.synthetic.main.private_chat_message_item.view.*
 import kotlinx.android.synthetic.main.whisper_message_item_right.view.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import java.io.BufferedReader
-import java.io.IOException
-import java.io.InputStream
-import java.io.InputStreamReader
+import pl.droidsonroids.gif.GifDrawable
+import java.io.*
 import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
@@ -104,7 +111,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     private lateinit var bitmapMemoryCache: LruCache<String, Bitmap>
 
-    private lateinit var gifMemoryCache: LruCache<String, Drawable>
+    private lateinit var gifMemoryCache: LruCache<String, GifDrawable>
 
     private var privateMessageArray = arrayOf("w", "whisper", "msg", "tell", "t", "notify")
 
@@ -146,7 +153,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 return bitmap.byteCount / 1024
             }
         }
-        gifMemoryCache = object : LruCache<String, Drawable>(cacheSize) {}
+        gifMemoryCache = object : LruCache<String, GifDrawable>(cacheSize) {}
 
         chatBottomNavigationView.selectedItemId =
             chatBottomNavigationView.menu.findItem(R.id.chatChat).itemId
@@ -485,16 +492,20 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             Spannable.SPAN_INCLUSIVE_INCLUSIVE
                         )
                     } else {
-                        var gif: Drawable? = null
+                        var gif: GifDrawable? = null
                         while (gif == null) {
                             gif = gifMemoryCache.get(it.name)
                         }
+                        gif.loopCount = 1
+                        val cock = ImageSpan(gif)
+                        cock.drawable.setBounds(0, 0, gif.minimumWidth, gif.minimumHeight)
                         ssb.setSpan(
-                            ImageSpan(gif, DynamicDrawableSpan.ALIGN_BOTTOM),
+                            cock,
                             it.bounds[0],
                             it.bounds[1],
                             Spannable.SPAN_INCLUSIVE_INCLUSIVE
                         )
+                        gif.start()
                     }
                 }
             }
@@ -1972,14 +1983,16 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
         }
 
-        private fun getGifFromURL(src: String?): Drawable? {
+        private fun getGifFromURL(src: String?): GifDrawable? {
             return try {
                 val url = URL(src)
                 val connection: HttpURLConnection = url.openConnection() as HttpURLConnection
                 connection.doInput = true
                 connection.connect()
                 val input: InputStream = connection.inputStream
-                Drawable.createFromStream(input, src)
+                val bis = BufferedInputStream(input)
+                GifDrawable(bis)
+//                GifDrawable.createFromStream(input, src)
             } catch (e: IOException) {
                 null
             }
