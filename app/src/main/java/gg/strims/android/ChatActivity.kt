@@ -496,7 +496,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         while (gif == null) {
                             gif = gifMemoryCache.get(it.name)
                         }
-                        gif.loopCount = 1
+                        gif.callback = Drawable.Callback
                         val cock = ImageSpan(gif)
                         cock.drawable.setBounds(0, 0, gif.minimumWidth, gif.minimumHeight)
                         ssb.setSpan(
@@ -505,7 +505,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             it.bounds[1],
                             Spannable.SPAN_INCLUSIVE_INCLUSIVE
                         )
-                        gif.start()
                     }
                 }
             }
