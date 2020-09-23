@@ -12,7 +12,6 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.Typeface
-import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
@@ -52,12 +51,8 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.beust.klaxon.Klaxon
-import com.bumptech.glide.Glide
-import com.bumptech.glide.request.target.CustomTarget
-import com.bumptech.glide.request.transition.Transition
 import com.google.android.material.navigation.NavigationView
 import com.google.gson.Gson
-import com.squareup.picasso.Picasso
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
@@ -496,11 +491,10 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         while (gif == null) {
                             gif = gifMemoryCache.get(it.name)
                         }
-                        gif.callback = Drawable.Callback
-                        val cock = ImageSpan(gif)
-                        cock.drawable.setBounds(0, 0, gif.minimumWidth, gif.minimumHeight)
+                        val animatedEmote = ImageSpan(gif)
+                        animatedEmote.drawable.setBounds(0, 0, gif.minimumWidth, gif.minimumHeight)
                         ssb.setSpan(
-                            cock,
+                            animatedEmote,
                             it.bounds[0],
                             it.bounds[1],
                             Spannable.SPAN_INCLUSIVE_INCLUSIVE
