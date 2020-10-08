@@ -924,9 +924,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             curPMessage.isReceived
                         )
                     )
-
                 }
-
             }
         }
     }
