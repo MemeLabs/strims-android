@@ -23,7 +23,7 @@ class TwitchFragment: Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        hideFragment(activity!!, this)
+        hideFragment(requireActivity(), this)
         view.setOnTouchListener { view, motionEvent -> return@setOnTouchListener true }
         webViewTwitch.settings.domStorageEnabled = true
         webViewTwitch.settings.javaScriptEnabled = true
@@ -31,7 +31,7 @@ class TwitchFragment: Fragment() {
             webViewTwitch.loadUrl("")
             CurrentUser.tempTwitchVod = null
             CurrentUser.tempYouTubeId = null
-            fragmentManager!!.beginTransaction()
+            requireFragmentManager().beginTransaction()
                 .hide(this)
                 .commit()
         }

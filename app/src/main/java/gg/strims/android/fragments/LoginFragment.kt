@@ -27,7 +27,7 @@ class LoginFragment: Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        hideFragment(activity!!, this)
+        hideFragment(requireActivity(), this)
     }
 
     override fun onHiddenChanged(hidden: Boolean) {

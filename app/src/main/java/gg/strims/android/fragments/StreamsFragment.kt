@@ -34,16 +34,17 @@ class StreamsFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        hideFragment(activity!!, this)
         view.setOnTouchListener { _, _ -> return@setOnTouchListener true }
         val layoutManager = LinearLayoutManager(view.context)
         layoutManager.stackFromEnd = true
         recyclerViewStreams.layoutManager = layoutManager
         recyclerViewStreams.adapter = streamsAdapter
+
+        refreshStreams()
     }
 
-    override fun onHiddenChanged(hidden: Boolean) {
-        if (CurrentUser.streams != null && !hidden) {
+    private fun refreshStreams() {
+        if (CurrentUser.streams != null) {
             streamsAdapter.clear()
             CurrentUser.streams!!.sortByDescending {
                 it.live
@@ -85,8 +86,6 @@ class StreamsFragment : Fragment() {
                 hideFragment(activity!!, fragmentManager!!.findFragmentById(R.id.angelthump_fragment)!!)
                 hideFragment(activity!!, fragmentManager!!.findFragmentById(R.id.twitch_fragment)!!)
                 hideFragment(activity!!, fragmentManager!!.findFragmentById(R.id.youtube_fragment)!!)
-                val bottomNavigationView = activity!!.findViewById<BottomNavigationView>(R.id.chatBottomNavigationView)
-                bottomNavigationView.selectedItemId = bottomNavigationView.menu.findItem(R.id.chatChat).itemId
                 when (stream.service) {
                     "angelthump", "m3u8" -> {
                         CurrentUser.tempStream = stream

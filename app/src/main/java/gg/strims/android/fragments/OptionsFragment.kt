@@ -8,7 +8,6 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import gg.strims.android.CurrentUser
 import gg.strims.android.R
-import gg.strims.android.hideFragment
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.android.synthetic.main.fragment_chat_options.*
 
@@ -43,23 +42,22 @@ class OptionsFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        hideFragment(activity!!, this)
         view.setOnTouchListener { view, motionEvent -> return@setOnTouchListener true }
-        closeMenuButton.setOnClickListener {
-            fragmentManager!!.beginTransaction()
-                .setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
-                .hide(this)
-                .commit()
-        }
+//        closeMenuButton.setOnClickListener {
+//            fragmentManager!!.beginTransaction()
+//                .setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
+//                .hide(this)
+//                .commit()
+//        }
 
         saveOptionsButton.setOnClickListener {
-            CurrentUser.saveOptions(context!!)
-            val recycler = activity!!.findViewById<RecyclerView>(R.id.recyclerViewChat)
+            CurrentUser.saveOptions(requireContext())
+            val recycler = requireActivity().findViewById<RecyclerView>(R.id.recyclerViewChat)
             recycler.adapter!!.notifyDataSetChanged()
-            fragmentManager!!.beginTransaction()
-                .setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
-                .hide(this)
-                .commit()
+//            fragmentManager!!.beginTransaction()
+//                .setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
+//                .hide(this)
+//                .commit()
         }
 
         checkBoxTimestamp.setOnCheckedChangeListener { buttonView, isChecked ->

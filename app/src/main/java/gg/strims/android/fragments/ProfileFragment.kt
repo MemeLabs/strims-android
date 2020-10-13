@@ -38,7 +38,7 @@ class ProfileFragment: Fragment() {
         return inflater.inflate(R.layout.fragment_profile, container,false)
     }
 
-    override fun onHiddenChanged(hidden: Boolean) {
+    private fun fetchProfile() {
         if (CurrentUser.user != null) {
             usernameEditTextProfile.text = CurrentUser.user!!.username
             streamPathEditTextProfile.setText(CurrentUser.user!!.stream_path)
@@ -54,14 +54,14 @@ class ProfileFragment: Fragment() {
         }
     }
 
-    private fun closeProfile() {
-        val bottomNavigationView = activity!!.findViewById<BottomNavigationView>(R.id.chatBottomNavigationView)
-        bottomNavigationView.selectedItemId = bottomNavigationView.menu.findItem(R.id.chatChat).itemId
-        fragmentManager!!.beginTransaction()
-            .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
-            .hide(this)
-            .commit()
-    }
+//    private fun closeProfile() {
+//        val bottomNavigationView = requireActivity().findViewById<BottomNavigationView>(R.id.chatBottomNavigationView)
+//        bottomNavigationView.selectedItemId = bottomNavigationView.menu.findItem(R.id.chatChat).itemId
+//        requireFragmentManager().beginTransaction()
+//            .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+//            .hide(this)
+//            .commit()
+//    }
 
     private fun deleteCookie() {
         val cookieManager = CookieManager.getInstance()
@@ -69,7 +69,6 @@ class ProfileFragment: Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        hideFragment(activity!!, this)
         view.setOnTouchListener { _, _ -> return@setOnTouchListener true }
         streamingServiceSpinnerProfile.onItemSelectedListener = object : OnItemSelectedListener {
             override fun onItemSelected(
@@ -84,8 +83,9 @@ class ProfileFragment: Fragment() {
 
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
+
         closeProfile.setOnClickListener {
-            closeProfile()
+//            closeProfile()
         }
 
         saveProfile.setOnClickListener {
@@ -106,12 +106,14 @@ class ProfileFragment: Fragment() {
                 }
             }
 
-            closeProfile()
+//            closeProfile()
         }
 
         logOutProfile.setOnClickListener {
             deleteCookie()
             startActivity(Intent(context, ChatActivity::class.java))
         }
+
+        fetchProfile()
     }
 }

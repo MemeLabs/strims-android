@@ -22,12 +22,12 @@ class AngelThumpFragment: Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        hideFragment(activity!!, this)
+        hideFragment(requireActivity(), this)
         view.setOnTouchListener { view, motionEvent -> return@setOnTouchListener true }
         angelThumpClose.setOnClickListener {
             angelThumpVideoView.stopPlayback()
             CurrentUser.tempStream = null
-            fragmentManager!!.beginTransaction()
+            requireFragmentManager().beginTransaction()
                 .hide(this)
                 .commit()
         }
@@ -40,6 +40,7 @@ class AngelThumpFragment: Fragment() {
                 angelThumpVideoView.start()
             } else {
                 angelThumpVideoView.setVideoURI("https://video-cdn.angelthump.com/hls/${CurrentUser.tempStream!!.channel}/index.m3u8".toUri())
+                print("")
                 angelThumpVideoView.start()
                 angelThumpStreamTitle.text = CurrentUser.tempStream!!.title
             }

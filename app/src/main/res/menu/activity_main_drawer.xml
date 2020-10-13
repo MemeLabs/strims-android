@@ -11,6 +11,10 @@
             android:icon="@drawable/ic_videocam_orange_24dp"
             android:title="@string/streams" />
         <item
+            android:id="@+id/nav_Chat"
+            android:icon="@drawable/ic_chat_orange_24dp"
+            android:title="@string/chat" />
+        <item
             android:id="@+id/nav_Profile"
             android:icon="@drawable/ic_person_orange_24dp"
             android:title="@string/profile" />
