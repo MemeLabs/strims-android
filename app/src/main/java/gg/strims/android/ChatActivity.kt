@@ -12,7 +12,6 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.Typeface
-import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
@@ -37,6 +36,7 @@ import android.webkit.CookieManager
 import android.widget.ImageView
 import android.widget.PopupMenu
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.appcompat.widget.Toolbar
@@ -60,6 +60,7 @@ import com.xwray.groupie.Item
 import gg.strims.android.clients.StrimsClient
 import gg.strims.android.customspans.CenteredImageSpan
 import gg.strims.android.customspans.ColouredUnderlineSpan
+import gg.strims.android.customspans.DrawableCallback
 import gg.strims.android.customspans.NoUnderlineClickableSpan
 import gg.strims.android.fragments.LoginFragment
 import gg.strims.android.fragments.OptionsFragment
@@ -72,6 +73,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.http.cio.websocket.*
 import io.ktor.util.*
+import io.ktor.utils.io.errors.IOException
 import kotlinx.android.synthetic.main.activity_chat.*
 import kotlinx.android.synthetic.main.activity_navigation_drawer.*
 import kotlinx.android.synthetic.main.app_bar_main.*
@@ -83,10 +85,10 @@ import kotlinx.android.synthetic.main.nav_header_main.*
 import kotlinx.android.synthetic.main.private_chat_message_item.view.*
 import kotlinx.android.synthetic.main.whisper_message_item_right.view.*
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.launch
 import pl.droidsonroids.gif.GifDrawable
 import java.io.*
-import java.lang.ref.WeakReference
 import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
@@ -136,14 +138,34 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         toolbar.title = "Chat"
 
+//        startService(Intent(this, ChatService::class.java))
+
         navView.setCheckedItem(R.id.nav_Chat)
 
         GlobalScope.launch {
-            ChatClient().onConnect()
+            try {
+                ChatClient().onConnect()
+            } catch (e: ClosedReceiveChannelException) {
+                Log.d("TAG", "onClose ${e.localizedMessage}")
+                runOnUiThread {
+                    Toast.makeText(this@ChatActivity, "Disconnected, reconnecting...", Toast.LENGTH_LONG).show()
+                }
+                startActivity(Intent(this@ChatActivity, ChatActivity::class.java))
+                this@ChatActivity.finish()
+            }
         }
 
         GlobalScope.launch {
-            StrimsClient().onConnect()
+            try {
+                StrimsClient().onConnect()
+            } catch (e: ClosedReceiveChannelException) {
+                Log.d("TAG", "onClose ${e.localizedMessage}")
+                runOnUiThread {
+                    Toast.makeText(this@ChatActivity, "Disconnected, reconnecting...", Toast.LENGTH_LONG).show()
+                }
+                startActivity(Intent(this@ChatActivity, ChatActivity::class.java))
+                this@ChatActivity.finish()
+            }
         }
 
         val maxMemory = (Runtime.getRuntime().maxMemory() / 1024).toInt()
@@ -292,6 +314,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 supportFragmentManager.fragments.forEach {
                     supportFragmentManager.beginTransaction().remove(it).commit()
                 }
+                toolbar.title = "Chat"
             }
 
             R.id.nav_Profile -> {
@@ -353,6 +376,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     ) {
         val ssb = SpannableStringBuilder(messageData.data)
 
+        /** Emotes **/
         if (CurrentUser.options!!.emotes && emotes) {
             if (messageData.entities.emotes != null && messageData.entities.emotes!!.isNotEmpty() && messageData.entities.emotes!![0].name != "") {
                 messageData.entities.emotes!!.forEach {
@@ -384,39 +408,15 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             Spannable.SPAN_INCLUSIVE_INCLUSIVE
                         )
                     } else {
-                        class DrawableCallback(textView: TextView?) :
-                            Drawable.Callback {
-                            private val mViewWeakReference: WeakReference<TextView> = WeakReference(textView!!)
-                            override fun invalidateDrawable(who: Drawable) {
-                                if (mViewWeakReference.get() != null) {
-                                    mViewWeakReference.get()!!.invalidate()
-                                }
-                            }
-
-                            override fun scheduleDrawable(
-                                who: Drawable,
-                                what: Runnable,
-                                `when`: Long
-                            ) {
-                                if (mViewWeakReference.get() != null) {
-                                    mViewWeakReference.get()!!.postDelayed(what, `when`)
-                                }
-                            }
-
-                            override fun unscheduleDrawable(who: Drawable, what: Runnable) {
-                                if (mViewWeakReference.get() != null) {
-                                    mViewWeakReference.get()!!.removeCallbacks(what)
-                                }
-                            }
-                        }
 
                         var gif: GifDrawable? = null
                         while (gif == null) {
                             gif = gifMemoryCache.get(it.name)
                         }
                         gif.callback = DrawableCallback(messageTextView)
+                        gif.setBounds(0, 0, gif.minimumWidth, gif.minimumHeight)
+                        gif.start()
                         val animatedEmote = ImageSpan(gif)
-                        animatedEmote.drawable.setBounds(0, 0, gif.minimumWidth, gif.minimumHeight)
 
                         ssb.setSpan(
                             animatedEmote,
@@ -428,6 +428,8 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 }
             }
         }
+
+        /** Greentext **/
         if (messageData.entities.greentext!!.bounds.isNotEmpty() && greentext) {
             ssb.setSpan(
                 ForegroundColorSpan(Color.parseColor("#789922")),
@@ -437,6 +439,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             )
         }
 
+        /** Links **/
         if (messageData.entities.links!!.isNotEmpty() && links) {
             messageData.entities.links!!.forEach {
                 val clickSpan: ClickableSpan = object : ClickableSpan() {
@@ -532,6 +535,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
         }
 
+        /** Codes **/
         if (messageData.entities.codes!!.isNotEmpty() && codes) {
             messageData.entities.codes!!.forEach {
                 ssb.setSpan(
@@ -581,6 +585,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
         }
 
+        /** Spoilers **/
         if (messageData.entities.spoilers!!.isNotEmpty() && spoilers) {
             messageData.entities.spoilers!!.forEach {
                 val span1: NoUnderlineClickableSpan = object : NoUnderlineClickableSpan() {
@@ -704,6 +709,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 )
             }
         }
+        /** /me **/
         if (messageData.entities.me!!.bounds.isNotEmpty() && me) {
             messageTextView.setTypeface(
                 Typeface.DEFAULT,
@@ -1372,7 +1378,11 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             if (CurrentUser.options!!.showTime) {
                 val dateFormat = SimpleDateFormat("HH:mm")
                 val time = dateFormat.format(messageData.timestamp)
-                viewHolder.itemView.timestampChatMessage.visibility = View.VISIBLE
+                if (CurrentUser.options!!.showTime) {
+                    viewHolder.itemView.timestampChatMessage.visibility = View.VISIBLE
+                } else {
+                    viewHolder.itemView.timestampChatMessage.visibility = View.GONE
+                }
                 viewHolder.itemView.timestampChatMessage.text = time
             }
 
@@ -1908,7 +1918,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 val input: InputStream = connection.inputStream
                 val bis = BufferedInputStream(input)
                 GifDrawable(bis)
-//                GifDrawable.createFromStream(input, src)
             } catch (e: IOException) {
                 null
             }
@@ -1944,6 +1953,9 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     CurrentUser.user = Klaxon().parse(text)
                     sendMessageText.hint = "Write something ${CurrentUser.user!!.username} ..."
                     navHeaderUsername.text = CurrentUser.user!!.username
+                    nav_view.menu.findItem(R.id.nav_Profile).isVisible = true
+                    nav_view.menu.findItem(R.id.nav_Whispers).isVisible = true
+                    nav_view.setCheckedItem(R.id.nav_Chat)
                     invalidateOptionsMenu()
                 }
             }
@@ -2200,92 +2212,78 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     nm.cancel(NOTIFICATION_ID)
                 }
             }
-                try {
-                    while (true) {
-                        when (val frame = incoming.receive()) {
-                            is Frame.Text -> {
-                                println(frame.readText())
-                                val msg: Message? = parseMessage(frame.readText())
-                                if (msg != null) {
-                                    if (!CurrentUser.options!!.ignoreList.contains(msg.nick)) {
-                                        runOnUiThread {
-                                            if (msg.privMsg) {
-                                                adapter.add(
-                                                    PrivateChatMessage(
-                                                        msg, true
-                                                    )
-                                                )
-                                                if (CurrentUser.options!!.notifications) {
-                                                    displayNotification(msg)
-                                                }
-                                            } else {
-                                                var consecutiveMessage = false
-                                                if (adapter.itemCount > 0) {
-                                                    if (adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item || adapter.getItem(
-                                                            adapter.itemCount - 1
-                                                        ).layout == R.layout.chat_message_item_consecutive_nick
-                                                    ) {
-                                                        val lastMessage =
-                                                            adapter.getItem(adapter.itemCount - 1) as ChatMessage
-                                                        consecutiveMessage =
-                                                            lastMessage.isNickSame(msg.nick)
-                                                    }
-
-                                                }
-                                                if (msg.entities.emotes != null && msg.entities.emotes!!.isNotEmpty() && msg.entities.emotes!![0].combo > 1) {
-                                                    if (msg.entities.emotes!![0].combo == 2) {
-                                                        adapter.removeGroupAtAdapterPosition(adapter.itemCount - 1)
-                                                        adapter.add(ChatMessageCombo(msg))
-                                                    } else {
-                                                        if (adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item_emote_combo) {
-                                                            val lastMessageCombo =
-                                                                adapter.getItem(adapter.itemCount - 1) as ChatMessageCombo
-                                                            lastMessageCombo.setCombo(msg.entities.emotes!![0].combo)
-                                                            adapter.notifyItemChanged(adapter.itemCount - 1)
-                                                        }
-                                                    }
-
-                                                } else {
-                                                    if (adapter.itemCount > 0 && adapter.getItem(
-                                                            adapter.itemCount - 1
-                                                        ).layout == R.layout.chat_message_item_emote_combo
-                                                    ) {
-                                                        val lastMessage =
-                                                            adapter.getItem(adapter.itemCount - 1) as ChatMessageCombo
-                                                        lastMessage.state = 1
-                                                        adapter.notifyItemChanged(adapter.itemCount - 1)
-                                                    }
-                                                    adapter.add(
-                                                        ChatMessage(msg, consecutiveMessage)
-                                                    )
-                                                }
-                                            }
-                                            val layoutTest =
-                                                recyclerViewChat.layoutManager as LinearLayoutManager
-                                            val lastItem = layoutTest.findLastVisibleItemPosition()
-                                            if (lastItem >= recyclerViewChat.adapter!!.itemCount - 3) {
-                                                recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
-                                            }
+            while (true) {
+                when (val frame = incoming.receive()) {
+                    is Frame.Text -> {
+                        println(frame.readText())
+                        val msg: Message? = parseMessage(frame.readText())
+                        if (msg != null) {
+                            if (!CurrentUser.options!!.ignoreList.contains(msg.nick)) {
+                                runOnUiThread {
+                                    if (msg.privMsg) {
+                                        adapter.add(
+                                            PrivateChatMessage(
+                                                msg, true
+                                            )
+                                        )
+                                        if (CurrentUser.options!!.notifications) {
+                                            displayNotification(msg)
                                         }
+                                    } else {
+                                        var consecutiveMessage = false
+                                        if (adapter.itemCount > 0) {
+                                            if (adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item || adapter.getItem(
+                                                    adapter.itemCount - 1
+                                                ).layout == R.layout.chat_message_item_consecutive_nick
+                                            ) {
+                                                val lastMessage =
+                                                    adapter.getItem(adapter.itemCount - 1) as ChatMessage
+                                                consecutiveMessage =
+                                                    lastMessage.isNickSame(msg.nick)
+                                            }
+
+                                        }
+                                        if (msg.entities.emotes != null && msg.entities.emotes!!.isNotEmpty() && msg.entities.emotes!![0].combo > 1) {
+                                            if (msg.entities.emotes!![0].combo == 2) {
+                                                adapter.removeGroupAtAdapterPosition(adapter.itemCount - 1)
+                                                adapter.add(ChatMessageCombo(msg))
+                                            } else {
+                                                if (adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item_emote_combo) {
+                                                    val lastMessageCombo =
+                                                        adapter.getItem(adapter.itemCount - 1) as ChatMessageCombo
+                                                    lastMessageCombo.setCombo(msg.entities.emotes!![0].combo)
+                                                    adapter.notifyItemChanged(adapter.itemCount - 1)
+                                                }
+                                            }
+
+                                        } else {
+                                            if (adapter.itemCount > 0 && adapter.getItem(
+                                                    adapter.itemCount - 1
+                                                ).layout == R.layout.chat_message_item_emote_combo
+                                            ) {
+                                                val lastMessage =
+                                                    adapter.getItem(adapter.itemCount - 1) as ChatMessageCombo
+                                                lastMessage.state = 1
+                                                adapter.notifyItemChanged(adapter.itemCount - 1)
+                                            }
+                                            adapter.add(
+                                                ChatMessage(msg, consecutiveMessage)
+                                            )
+                                        }
+                                    }
+                                    val layoutTest =
+                                        recyclerViewChat.layoutManager as LinearLayoutManager
+                                    val lastItem = layoutTest.findLastVisibleItemPosition()
+                                    if (lastItem >= recyclerViewChat.adapter!!.itemCount - 3) {
+                                        recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
                                     }
                                 }
                             }
-                            is Frame.Binary -> println(frame.readBytes())
                         }
                     }
-                } catch (cause: Throwable) {
-                    Log.d("TAG", "onClose ${closeReason.await()}")
-
-                    /** Reconnect **/
-
-                    val intent = Intent(this@ChatActivity, ChatActivity()::class.java)
-                    startActivity(intent)
-                    this@ChatActivity.finish()
-
-                } catch (e: Throwable) {
-                    Log.d("TAG", "onError ${closeReason.await()}")
-                    e.printStackTrace()
+                    is Frame.Binary -> println(frame.readBytes())
                 }
+            }
         }
 
         private fun parseMessage(input: String): Message? {

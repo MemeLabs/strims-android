@@ -75,20 +75,22 @@ class ProfileFragment: Fragment() {
         }
 
         saveProfile.setOnClickListener {
-            val client = HttpClient {
-                install(WebSockets)
-            }
+            if (CurrentUser.user != null) {
+                val client = HttpClient {
+                    install(WebSockets)
+                }
 
-            GlobalScope.launch {
-                CurrentUser.user!!.stream_path = streamPathEditTextProfile.text.toString()
-                CurrentUser.user!!.channel = channelEditTextProfile.text.toString()
-                CurrentUser.user!!.enable_public_state = checkBoxViewerState.isChecked
-                val id = resources.getStringArray(R.array.streaming_service_spinner_names)[streamingServiceSpinnerProfile.selectedItemPosition]
-                CurrentUser.user!!.service = id
+                GlobalScope.launch {
+                    CurrentUser.user!!.stream_path = streamPathEditTextProfile.text.toString()
+                    CurrentUser.user!!.channel = channelEditTextProfile.text.toString()
+                    CurrentUser.user!!.enable_public_state = checkBoxViewerState.isChecked
+                    val id = resources.getStringArray(R.array.streaming_service_spinner_names)[streamingServiceSpinnerProfile.selectedItemPosition]
+                    CurrentUser.user!!.service = id
 
-                client.post("https://strims.gg/api/profile") {
-                    header("Cookie", "jwt=${CurrentUser.jwt}")
-                    body = Gson().toJson(CurrentUser.user)
+                    client.post("https://strims.gg/api/profile") {
+                        header("Cookie", "jwt=${CurrentUser.jwt}")
+                        body = Gson().toJson(CurrentUser.user)
+                    }
                 }
             }
         }
