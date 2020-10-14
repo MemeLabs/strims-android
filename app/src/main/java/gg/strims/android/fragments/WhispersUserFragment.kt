@@ -49,18 +49,18 @@ class WhispersUserFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        hideFragment(activity!!, this)
+        hideFragment(requireActivity(), this)
         view.setOnTouchListener { _, _ -> return@setOnTouchListener true }
         view.backWhispersUser.setOnClickListener {
-            hideKeyboardFrom(context!!, activity!!.sendMessageText)
+            hideKeyboardFrom(requireContext(), requireActivity().sendMessageText)
             showHideFragment(
-                activity!!,
-                activity!!.supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!
+                requireActivity(),
+                requireActivity().supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!
 
             )
             showHideFragment(
-                activity!!,
-                activity!!.supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!
+                requireActivity(),
+                requireActivity().supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!
             )
 
         }

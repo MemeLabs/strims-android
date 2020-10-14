@@ -85,7 +85,7 @@ class UserListFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        hideFragment(activity!!, this)
+        hideFragment(requireActivity(), this)
         view.setOnTouchListener { view, motionEvent -> return@setOnTouchListener true }
         val layoutManager =
             LinearLayoutManager(view.context)
@@ -94,7 +94,7 @@ class UserListFragment : Fragment() {
         recyclerViewUserList.adapter = userListAdapter
 
         closeUserListButton.setOnClickListener {
-            fragmentManager!!.beginTransaction()
+            requireFragmentManager().beginTransaction()
                 .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
                 .hide(this)
                 .commit()

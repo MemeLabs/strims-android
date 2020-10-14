@@ -41,7 +41,7 @@ class WhispersFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        hideFragment(activity!!, this)
+        hideFragment(requireActivity(), this)
         view.setOnTouchListener { _, _ -> return@setOnTouchListener true }
         val layoutManager = LinearLayoutManager(view.context)
         layoutManager.stackFromEnd = true

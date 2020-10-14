@@ -8,18 +8,24 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.graphics.*
-import android.graphics.drawable.Drawable
-import android.media.Image
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.graphics.Typeface
 import android.net.Uri
 import android.os.Bundle
-import android.text.*
+import android.text.Editable
+import android.text.Spannable
+import android.text.SpannableStringBuilder
+import android.text.TextWatcher
 import android.text.method.LinkMovementMethod
 import android.text.style.*
 import android.util.DisplayMetrics
 import android.util.Log
 import android.util.LruCache
 import android.view.KeyEvent
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
@@ -30,14 +36,23 @@ import android.webkit.CookieManager
 import android.widget.ImageView
 import android.widget.PopupMenu
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ContextThemeWrapper
+import androidx.appcompat.widget.Toolbar
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.RemoteInput
 import androidx.core.app.TaskStackBuilder
+import androidx.drawerlayout.widget.DrawerLayout
+import androidx.navigation.findNavController
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.navigateUp
+import androidx.navigation.ui.setupActionBarWithNavController
+import androidx.navigation.ui.setupWithNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.beust.klaxon.Klaxon
+import com.google.android.material.navigation.NavigationView
 import com.google.gson.Gson
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
@@ -45,33 +60,35 @@ import com.xwray.groupie.Item
 import gg.strims.android.clients.StrimsClient
 import gg.strims.android.customspans.CenteredImageSpan
 import gg.strims.android.customspans.ColouredUnderlineSpan
+import gg.strims.android.customspans.DrawableCallback
 import gg.strims.android.customspans.NoUnderlineClickableSpan
+import gg.strims.android.fragments.LoginFragment
+import gg.strims.android.fragments.OptionsFragment
+import gg.strims.android.fragments.ProfileFragment
+import gg.strims.android.fragments.StreamsFragment
 import gg.strims.android.models.*
-import io.ktor.client.HttpClient
-import io.ktor.client.features.websocket.WebSockets
-import io.ktor.client.features.websocket.wss
+import io.ktor.client.*
+import io.ktor.client.features.websocket.*
 import io.ktor.client.request.get
 import io.ktor.client.request.header
-import io.ktor.http.cio.websocket.Frame
-import io.ktor.http.cio.websocket.readBytes
-import io.ktor.http.cio.websocket.readText
-import io.ktor.http.cio.websocket.send
-import io.ktor.util.KtorExperimentalAPI
+import io.ktor.http.cio.websocket.*
+import io.ktor.util.*
+import io.ktor.utils.io.errors.IOException
 import kotlinx.android.synthetic.main.activity_chat.*
+import kotlinx.android.synthetic.main.activity_navigation_drawer.*
+import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.autofill_item.view.*
 import kotlinx.android.synthetic.main.chat_message_item.view.*
 import kotlinx.android.synthetic.main.chat_message_item_emote_combo.view.*
-import kotlinx.android.synthetic.main.chat_message_item_emote_combo.view.comboCountChatMessageCombo
 import kotlinx.android.synthetic.main.error_chat_message_item.view.*
+import kotlinx.android.synthetic.main.nav_header_main.*
 import kotlinx.android.synthetic.main.private_chat_message_item.view.*
 import kotlinx.android.synthetic.main.whisper_message_item_right.view.*
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.launch
-import java.io.BufferedReader
-import java.io.IOException
-import java.io.InputStream
-import java.io.InputStreamReader
-import java.lang.reflect.Method
+import pl.droidsonroids.gif.GifDrawable
+import java.io.*
 import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
@@ -80,7 +97,7 @@ import java.util.regex.Pattern
 
 @KtorExperimentalAPI
 @SuppressLint("SetTextI18n", "SimpleDateFormat", "WrongViewCast")
-class ChatActivity : AppCompatActivity() {
+class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
     companion object {
         var channelId = "chat_notifications"
@@ -89,27 +106,66 @@ class ChatActivity : AppCompatActivity() {
         var NOTIFICATION_REPLY_KEY = "Text"
     }
 
+    private lateinit var appBarConfiguration: AppBarConfiguration
+
     val adapter = GroupAdapter<GroupieViewHolder>()
 
     private lateinit var bitmapMemoryCache: LruCache<String, Bitmap>
 
-    private lateinit var gifMemoryCache: LruCache<String, Drawable>
+    private lateinit var gifMemoryCache: LruCache<String, GifDrawable>
 
     private var privateMessageArray = arrayOf("w", "whisper", "msg", "tell", "t", "notify")
 
     private val autofillAdapter = GroupAdapter<GroupieViewHolder>()
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_chat)
+        setContentView(R.layout.activity_navigation_drawer)
+        val toolbar: Toolbar = findViewById(R.id.toolbar)
+        setSupportActionBar(toolbar)
+
+        val drawerLayout: DrawerLayout = findViewById(R.id.drawer_layout)
+        val navView: NavigationView = findViewById(R.id.nav_view)
+        val navController = findNavController(R.id.nav_host_fragment)
+        appBarConfiguration = AppBarConfiguration(
+            setOf(
+                R.id.nav_Streams, R.id.nav_Profile, R.id.nav_Settings
+            ), drawerLayout
+        )
+        setupActionBarWithNavController(navController, appBarConfiguration)
+        navView.setupWithNavController(navController)
+        navView.setNavigationItemSelectedListener(this)
+
+        toolbar.title = "Chat"
+
+//        startService(Intent(this, ChatService::class.java))
+
+        navView.setCheckedItem(R.id.nav_Chat)
 
         GlobalScope.launch {
-            ChatClient().onConnect()
+            try {
+                ChatClient().onConnect()
+            } catch (e: ClosedReceiveChannelException) {
+                Log.d("TAG", "onClose ${e.localizedMessage}")
+                runOnUiThread {
+                    Toast.makeText(this@ChatActivity, "Disconnected, reconnecting...", Toast.LENGTH_LONG).show()
+                }
+                startActivity(Intent(this@ChatActivity, ChatActivity::class.java))
+                this@ChatActivity.finish()
+            }
         }
 
         GlobalScope.launch {
-            StrimsClient().onConnect()
+            try {
+                StrimsClient().onConnect()
+            } catch (e: ClosedReceiveChannelException) {
+                Log.d("TAG", "onClose ${e.localizedMessage}")
+                runOnUiThread {
+                    Toast.makeText(this@ChatActivity, "Disconnected, reconnecting...", Toast.LENGTH_LONG).show()
+                }
+                startActivity(Intent(this@ChatActivity, ChatActivity::class.java))
+                this@ChatActivity.finish()
+            }
         }
 
         val maxMemory = (Runtime.getRuntime().maxMemory() / 1024).toInt()
@@ -119,138 +175,7 @@ class ChatActivity : AppCompatActivity() {
                 return bitmap.byteCount / 1024
             }
         }
-        gifMemoryCache = object : LruCache<String, Drawable>(cacheSize) {}
-
-        supportActionBar!!.hide()
-
-        chatBottomNavigationView.selectedItemId =
-            chatBottomNavigationView.menu.findItem(R.id.chatChat).itemId
-
-        chatBottomNavigationView.setOnNavigationItemSelectedListener {
-            hideKeyboardFrom(this, sendMessageText)
-            when (it.itemId) {
-                R.id.chatChat -> {
-                    hideFragment(
-                        this,
-                        supportFragmentManager.findFragmentById(R.id.profile_fragment)!!
-                    )
-                    hideFragment(
-                        this,
-                        supportFragmentManager.findFragmentById(R.id.streams_fragment)!!
-                    )
-                    hideFragment(
-                        this,
-                        supportFragmentManager.findFragmentById(R.id.login_fragment)!!
-                    )
-                    hideFragment(
-                        this,
-                        supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!
-                    )
-                    hideFragment(
-                        this,
-                        supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!
-                    )
-                }
-
-                R.id.chatLogin -> {
-                    goToBottom.visibility = View.GONE
-                    showFragment(
-                        this,
-                        supportFragmentManager.findFragmentById(R.id.login_fragment)!!
-                    )
-                }
-                R.id.chatProfile -> {
-                    goToBottom.visibility = View.GONE
-                    if (supportFragmentManager.findFragmentById(R.id.streams_fragment)!!.isVisible) {
-                        hideFragment(
-                            this,
-                            supportFragmentManager.findFragmentById(R.id.streams_fragment)!!
-                        )
-                    }
-                    if (supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!.isVisible) {
-                        hideFragment(
-                            this,
-                            supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!
-                        )
-                    }
-                    if (supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!.isVisible) {
-                        hideFragment(
-                            this,
-                            supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!
-                        )
-                    }
-                    showFragment(
-                        this,
-                        supportFragmentManager.findFragmentById(R.id.profile_fragment)!!
-                    )
-                }
-                R.id.chatStreams -> {
-                    goToBottom.visibility = View.GONE
-                    if (supportFragmentManager.findFragmentById(R.id.profile_fragment)!!.isVisible) {
-                        hideFragment(
-                            this,
-                            supportFragmentManager.findFragmentById(R.id.profile_fragment)!!
-                        )
-                    }
-                    if (supportFragmentManager.findFragmentById(R.id.login_fragment)!!.isVisible) {
-                        hideFragment(
-                            this,
-                            supportFragmentManager.findFragmentById(R.id.login_fragment)!!
-                        )
-                    }
-                    if (supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!.isVisible) {
-                        hideFragment(
-                            this,
-                            supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!
-                        )
-                    }
-                    if (supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!.isVisible) {
-                        hideFragment(
-                            this,
-                            supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!
-                        )
-                    }
-                    showFragment(
-                        this,
-                        supportFragmentManager.findFragmentById(R.id.streams_fragment)!!
-                    )
-
-                }
-
-                R.id.chatWhispers -> {
-                    goToBottom.visibility = View.GONE
-                    if (supportFragmentManager.findFragmentById(R.id.profile_fragment)!!.isVisible) {
-                        hideFragment(
-                            this,
-                            supportFragmentManager.findFragmentById(R.id.profile_fragment)!!
-                        )
-                    }
-                    if (supportFragmentManager.findFragmentById(R.id.login_fragment)!!.isVisible) {
-                        hideFragment(
-                            this,
-                            supportFragmentManager.findFragmentById(R.id.login_fragment)!!
-                        )
-                    }
-                    if (supportFragmentManager.findFragmentById(R.id.streams_fragment)!!.isVisible) {
-                        hideFragment(
-                            this,
-                            supportFragmentManager.findFragmentById(R.id.streams_fragment)!!
-                        )
-                    }
-                    if (supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!.isVisible) {
-                        hideFragment(
-                            this,
-                            supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!
-                        )
-                    }
-                    showFragment(
-                        this,
-                        supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!
-                    )
-                }
-            }
-            true
-        }
+        gifMemoryCache = object : LruCache<String, GifDrawable>(cacheSize) {}
 
         sendMessageText.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
@@ -266,6 +191,7 @@ class ChatActivity : AppCompatActivity() {
                 autofillAdapter.clear()
                 if (sendMessageText.text.isNotEmpty()) {
                     recyclerViewAutofill.visibility = View.VISIBLE
+                    goToBottomLayout.visibility = View.GONE
                     if (sendMessageText.text.first() == '/' && !sendMessageText.text.contains(' ')) {
                         val currentWord = sendMessageText.text.toString().substringAfter('/')
 
@@ -319,20 +245,11 @@ class ChatActivity : AppCompatActivity() {
         recyclerViewChat.setOnScrollChangeListener { _, _, _, _, _ ->
             val layoutTest = recyclerViewChat.layoutManager as LinearLayoutManager
             val lastItem = layoutTest.findLastVisibleItemPosition()
-            if (lastItem < recyclerViewChat.adapter!!.itemCount - 1
-                && (supportFragmentManager.findFragmentById(R.id.profile_fragment)!!.isHidden
-                        && supportFragmentManager.findFragmentById(R.id.streams_fragment)!!.isHidden
-                        && supportFragmentManager.findFragmentById(R.id.options_fragment)!!.isHidden
-                        && supportFragmentManager.findFragmentById(R.id.user_list_fragment)!!.isHidden
-                        && supportFragmentManager.findFragmentById(R.id.login_fragment)!!.isHidden
-                        && supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!.isHidden
-                        && supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!.isHidden)
-
-            ) {
-                goToBottom.visibility = View.VISIBLE
+            if (lastItem < recyclerViewChat.adapter!!.itemCount - 1) {
+                goToBottomLayout.visibility = View.VISIBLE
                 goToBottom.isEnabled = true
             } else {
-                goToBottom.visibility = View.GONE
+                goToBottomLayout.visibility = View.GONE
                 goToBottom.isEnabled = false
             }
         }
@@ -347,29 +264,108 @@ class ChatActivity : AppCompatActivity() {
             recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
         }
 
-        optionsButton.setOnClickListener {
-            goToBottom.visibility = View.GONE
-            hideKeyboardFrom(this, sendMessageText)
-            val fragment = supportFragmentManager.findFragmentById(R.id.user_list_fragment)
-            if (!fragment!!.isHidden) {
-                showHideFragment(this, fragment)
-            }
-            showHideFragment(this, supportFragmentManager.findFragmentById(R.id.options_fragment)!!)
-        }
-
         userListButton.setOnClickListener {
-            goToBottom.visibility = View.GONE
             hideKeyboardFrom(this, sendMessageText)
-            val fragment = supportFragmentManager.findFragmentById(R.id.options_fragment)
-            if (!fragment!!.isHidden) {
-                showHideFragment(this, fragment)
-            }
             showHideFragment(
                 this,
                 supportFragmentManager.findFragmentById(R.id.user_list_fragment)!!
             )
         }
     }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.navigation_drawer, menu)
+        return true
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        menu!!.findItem(R.id.optionsLogIn).isVisible = CurrentUser.user == null
+        return super.onPrepareOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.optionsLogIn -> {
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.nav_host_fragment, LoginFragment(), "LoginFragment")
+                    .addToBackStack("LoginFragment").commit()
+            }
+            android.R.id.home -> {
+
+            }
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        val navController = findNavController(R.id.nav_host_fragment)
+        return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
+    }
+
+    override fun onNavigationItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.nav_Streams -> {
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.nav_host_fragment, StreamsFragment(), "StreamsFragment")
+                    .addToBackStack("StreamsFragment").commit()
+            }
+
+            R.id.nav_Chat -> {
+                supportFragmentManager.fragments.forEach {
+                    if (it.tag == "StreamsFragment" || it.tag == "ProfileFragment" || it.tag == "OptionsFragment") {
+                        supportFragmentManager.beginTransaction().remove(it).commit()
+                    }
+                }
+                toolbar.title = "Chat"
+            }
+
+            R.id.nav_Profile -> {
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.nav_host_fragment, ProfileFragment(), "ProfileFragment")
+                    .addToBackStack("ProfileFragment").commit()
+            }
+
+            R.id.nav_Settings -> {
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.nav_host_fragment, OptionsFragment(), "OptionsFragment")
+                    .addToBackStack("OptionsFragment").commit()
+            }
+        }
+        drawer_layout.closeDrawers()
+        return true
+    }
+
+    //TODO: Fix back button to ignore streaming fragments
+//    override fun onBackPressed() {
+//        if (supportFragmentManager.fragments.size > 1) {
+//            supportFragmentManager.popBackStack()
+//            supportFragmentManager.beginTransaction()
+//                .remove(supportFragmentManager.fragments[1])
+//                .commit()
+//            if (supportFragmentManager.backStackEntryCount > 1) {
+//                val fragment =
+//                    supportFragmentManager.getBackStackEntryAt(supportFragmentManager.backStackEntryCount - 2)
+//                when (fragment.name) {
+//                    "ProfileFragment" -> {
+//                        nav_view.setCheckedItem(R.id.nav_Profile)
+//                    }
+//
+//                    "StreamsFragment" -> {
+//                        nav_view.setCheckedItem(R.id.nav_Streams)
+//                    }
+//
+//                    "OptionsFragment" -> {
+//                        nav_view.setCheckedItem(R.id.nav_Settings)
+//                    }
+//                }
+//            } else {
+//                nav_view.setCheckedItem(R.id.nav_Chat)
+//                toolbar.title = "Chat"
+//            }
+//        } else {
+//            super.onBackPressed()
+//        }
+//    }
 
     fun createMessageTextView(
         messageData: Message,
@@ -383,6 +379,7 @@ class ChatActivity : AppCompatActivity() {
     ) {
         val ssb = SpannableStringBuilder(messageData.data)
 
+        /** Emotes **/
         if (CurrentUser.options!!.emotes && emotes) {
             if (messageData.entities.emotes != null && messageData.entities.emotes!!.isNotEmpty() && messageData.entities.emotes!![0].name != "") {
                 messageData.entities.emotes!!.forEach {
@@ -414,12 +411,18 @@ class ChatActivity : AppCompatActivity() {
                             Spannable.SPAN_INCLUSIVE_INCLUSIVE
                         )
                     } else {
-                        var gif: Drawable? = null
+
+                        var gif: GifDrawable? = null
                         while (gif == null) {
                             gif = gifMemoryCache.get(it.name)
                         }
+                        gif.callback = DrawableCallback(messageTextView)
+                        gif.setBounds(0, 0, gif.minimumWidth, gif.minimumHeight)
+                        gif.start()
+                        val animatedEmote = ImageSpan(gif)
+
                         ssb.setSpan(
-                            ImageSpan(gif, DynamicDrawableSpan.ALIGN_BOTTOM),
+                            animatedEmote,
                             it.bounds[0],
                             it.bounds[1],
                             Spannable.SPAN_INCLUSIVE_INCLUSIVE
@@ -428,6 +431,8 @@ class ChatActivity : AppCompatActivity() {
                 }
             }
         }
+
+        /** Greentext **/
         if (messageData.entities.greentext!!.bounds.isNotEmpty() && greentext) {
             ssb.setSpan(
                 ForegroundColorSpan(Color.parseColor("#789922")),
@@ -437,6 +442,7 @@ class ChatActivity : AppCompatActivity() {
             )
         }
 
+        /** Links **/
         if (messageData.entities.links!!.isNotEmpty() && links) {
             messageData.entities.links!!.forEach {
                 val clickSpan: ClickableSpan = object : ClickableSpan() {
@@ -532,6 +538,7 @@ class ChatActivity : AppCompatActivity() {
             }
         }
 
+        /** Codes **/
         if (messageData.entities.codes!!.isNotEmpty() && codes) {
             messageData.entities.codes!!.forEach {
                 ssb.setSpan(
@@ -581,6 +588,7 @@ class ChatActivity : AppCompatActivity() {
             }
         }
 
+        /** Spoilers **/
         if (messageData.entities.spoilers!!.isNotEmpty() && spoilers) {
             messageData.entities.spoilers!!.forEach {
                 val span1: NoUnderlineClickableSpan = object : NoUnderlineClickableSpan() {
@@ -704,6 +712,7 @@ class ChatActivity : AppCompatActivity() {
                 )
             }
         }
+        /** /me **/
         if (messageData.entities.me!!.bounds.isNotEmpty() && me) {
             messageTextView.setTypeface(
                 Typeface.DEFAULT,
@@ -849,9 +858,7 @@ class ChatActivity : AppCompatActivity() {
                             curPMessage.isReceived
                         )
                     )
-
                 }
-
             }
         }
     }
@@ -1374,7 +1381,11 @@ class ChatActivity : AppCompatActivity() {
             if (CurrentUser.options!!.showTime) {
                 val dateFormat = SimpleDateFormat("HH:mm")
                 val time = dateFormat.format(messageData.timestamp)
-                viewHolder.itemView.timestampChatMessage.visibility = View.VISIBLE
+                if (CurrentUser.options!!.showTime) {
+                    viewHolder.itemView.timestampChatMessage.visibility = View.VISIBLE
+                } else {
+                    viewHolder.itemView.timestampChatMessage.visibility = View.GONE
+                }
                 viewHolder.itemView.timestampChatMessage.text = time
             }
 
@@ -1901,14 +1912,15 @@ class ChatActivity : AppCompatActivity() {
             }
         }
 
-        private fun getGifFromURL(src: String?): Drawable? {
+        private fun getGifFromURL(src: String?): GifDrawable? {
             return try {
                 val url = URL(src)
                 val connection: HttpURLConnection = url.openConnection() as HttpURLConnection
                 connection.doInput = true
                 connection.connect()
                 val input: InputStream = connection.inputStream
-                Drawable.createFromStream(input, src)
+                val bis = BufferedInputStream(input)
+                GifDrawable(bis)
             } catch (e: IOException) {
                 null
             }
@@ -1943,9 +1955,11 @@ class ChatActivity : AppCompatActivity() {
                 runOnUiThread {
                     CurrentUser.user = Klaxon().parse(text)
                     sendMessageText.hint = "Write something ${CurrentUser.user!!.username} ..."
-                    chatBottomNavigationView.menu.findItem(R.id.chatProfile).isVisible = true
-                    chatBottomNavigationView.menu.findItem(R.id.chatLogin).isVisible = false
-                    chatBottomNavigationView.menu.findItem(R.id.chatWhispers).isVisible = true
+                    navHeaderUsername.text = CurrentUser.user!!.username
+                    nav_view.menu.findItem(R.id.nav_Profile).isVisible = true
+                    nav_view.menu.findItem(R.id.nav_Whispers).isVisible = true
+                    nav_view.setCheckedItem(R.id.nav_Chat)
+                    invalidateOptionsMenu()
                 }
             }
         }
@@ -1976,32 +1990,33 @@ class ChatActivity : AppCompatActivity() {
                         return@launch
                     }
                     val first = messageText.first()
-                    if (supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!.isVisible) {
-                        when {
-                            messageText.trim() == "" -> {
-                                //TODO: empty message notify in chat ?
-                                return@launch
-                            }
-                            CurrentUser.tempWhisperUser == null -> {
-                                // TODO: error
-                            }
-                            else -> {
-                                val nick = CurrentUser.tempWhisperUser!!
-                                send("PRIVMSG {\"nick\":\"$nick\", \"data\":\"$messageText\"}")
-                                runOnUiThread {
-                                    adapter.add(
-                                        PrivateChatMessage(
-                                            Message(
-                                                true,
-                                                nick,
-                                                messageText
-                                            )
-                                        )
-                                    )
-                                }
-                            }
-                        }
-                    } else if (first == '/' && messageText.substringBefore(' ') != "/me") {
+//                    if (supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!.isVisible) {
+//                        when {
+//                            messageText.trim() == "" -> {
+//                                //TODO: empty message notify in chat ?
+//                                return@launch
+//                            }
+//                            CurrentUser.tempWhisperUser == null -> {
+//                                // TODO: error
+//                            }
+//                            else -> {
+//                                val nick = CurrentUser.tempWhisperUser!!
+//                                send("PRIVMSG {\"nick\":\"$nick\", \"data\":\"$messageText\"}")
+//                                runOnUiThread {
+//                                    adapter.add(
+//                                        PrivateChatMessage(
+//                                            Message(
+//                                                true,
+//                                                nick,
+//                                                messageText
+//                                            )
+//                                        )
+//                                    )
+//                                }
+//                            }
+//                        }
+//                    } else
+                    if (first == '/' && messageText.substringBefore(' ') != "/me") {
                         var privateMessageCommand = ""
                         for (privateMessageItem in privateMessageArray) {
                             if (privateMessageItem.contains(
@@ -2246,7 +2261,10 @@ class ChatActivity : AppCompatActivity() {
                                             }
 
                                         } else {
-                                            if (adapter.itemCount > 0 && adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item_emote_combo) {
+                                            if (adapter.itemCount > 0 && adapter.getItem(
+                                                    adapter.itemCount - 1
+                                                ).layout == R.layout.chat_message_item_emote_combo
+                                            ) {
                                                 val lastMessage =
                                                     adapter.getItem(adapter.itemCount - 1) as ChatMessageCombo
                                                 lastMessage.state = 1

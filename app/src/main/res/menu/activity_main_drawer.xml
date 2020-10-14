@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group
+        android:id="@+id/group"
+        android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_Streams"
+            android:icon="@drawable/ic_videocam_orange_24dp"
+            android:title="@string/streams" />
+        <item
+            android:id="@+id/nav_Chat"
+            android:icon="@drawable/ic_chat_orange_24dp"
+            android:title="@string/chat" />
+        <item
+            android:id="@+id/nav_Profile"
+            android:icon="@drawable/ic_person_orange_24dp"
+            android:title="@string/profile"
+            android:visible="false" />
+        <item
+            android:id="@+id/nav_Whispers"
+            android:icon="@drawable/ic_mail_orange_24dp"
+            android:title="@string/whispers"
+            android:visible="false" />
+        <item
+            android:id="@+id/nav_Settings"
+            android:icon="@drawable/ic_settings_orange_24dp"
+            android:title="@string/settings" />
+    </group>
+</menu>

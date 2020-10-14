@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#515151"
-    tools:context=".ChatActivity">
+    app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewChat"
@@ -40,7 +40,7 @@
         android:textColorHighlight="#40FF5722"
         android:textCursorDrawable="@drawable/orange_cursor"
         android:textSize="14sp"
-        app:layout_constraintBottom_toTopOf="@id/chatBottomNavigationView"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/userListButton" />
 
@@ -56,23 +56,13 @@
         app:layout_constraintTop_toTopOf="@+id/sendMessageText" />
 
     <ImageView
-        android:id="@+id/optionsButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="4dp"
-        app:layout_constraintBottom_toBottomOf="@id/sendMessageText"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/sendMessageText"
-        app:srcCompat="@drawable/ic_settings_orange_24dp" />
-
-    <ImageView
         android:id="@+id/userListButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="4dp"
-        app:layout_constraintBottom_toBottomOf="@+id/optionsButton"
-        app:layout_constraintStart_toEndOf="@+id/optionsButton"
-        app:layout_constraintTop_toTopOf="@+id/optionsButton"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/sendMessageText"
         app:srcCompat="@drawable/ic_person_orange_24dp" />
 
     <ImageView
@@ -85,22 +75,33 @@
         app:layout_constraintTop_toTopOf="@+id/sendMessageText"
         app:srcCompat="@drawable/ic_sentiment_satisfied_orange_24dp" />
 
-    <Button
-        android:id="@+id/goToBottom"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/goToBottomLayout"
         android:layout_width="0dp"
         android:layout_height="25dp"
         android:layout_marginStart="4dp"
         android:layout_marginEnd="4dp"
         android:layout_marginBottom="2dp"
-        android:animateLayoutChanges="true"
-        android:background="@drawable/rounded_recyclerview_autofill"
-        android:text="@string/more_messages_below"
-        android:textColor="#959595"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@+id/recyclerViewChat"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        tools:visibility="visible" />
+        tools:visibility="visible">
+
+        <Button
+            android:id="@+id/goToBottom"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:animateLayoutChanges="true"
+            android:background="@drawable/rounded_recyclerview_autofill"
+            android:text="@string/more_messages_below"
+            android:textColor="#959595"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:visibility="visible" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewAutofill"
@@ -112,7 +113,7 @@
         android:background="@drawable/rounded_recyclerview_autofill"
         android:scrollbars="horizontal"
         android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@+id/goToBottom"
+        app:layout_constraintBottom_toTopOf="@+id/goToBottomLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         tools:listitem="@layout/autofill_item" />
@@ -151,24 +152,6 @@
         tools:visibility="gone" />
 
     <fragment
-        android:id="@+id/options_fragment"
-        android:name="gg.strims.android.fragments.OptionsFragment"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="24dp"
-        android:layout_marginBottom="60dp"
-        android:layout_weight="2"
-        android:visibility="invisible"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:layout="@layout/fragment_chat_options"
-        tools:visibility="gone" />
-
-    <fragment
         android:id="@+id/user_list_fragment"
         android:name="gg.strims.android.fragments.UserListFragment"
         android:layout_width="0dp"
@@ -186,36 +169,10 @@
         tools:visibility="gone" />
 
     <fragment
-        android:id="@+id/profile_fragment"
-        android:name="gg.strims.android.fragments.ProfileFragment"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_weight="2"
-        app:layout_constraintBottom_toTopOf="@id/chatBottomNavigationView"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:layout="@layout/fragment_profile"
-        tools:visibility="gone" />
-
-    <fragment
-        android:id="@+id/streams_fragment"
-        android:name="gg.strims.android.fragments.StreamsFragment"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/chatBottomNavigationView"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:layout="@layout/fragment_streams"
-        tools:visibility="gone" />
-
-    <fragment
         android:id="@+id/whispers_fragment"
         android:name="gg.strims.android.fragments.WhispersFragment"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/chatBottomNavigationView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -235,28 +192,16 @@
         tools:visibility="gone" />
 
     <fragment
-        android:id="@+id/login_fragment"
-        android:name="gg.strims.android.fragments.LoginFragment"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:layout="@layout/fragment_login"
-        tools:visibility="gone" />
-
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/chatBottomNavigationView"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        app:itemBackground="@color/colorPrimary"
-        app:itemIconTint="@drawable/nav_item_icon_colour"
-        app:itemTextColor="@color/nav_item_text_colour"
-        app:labelVisibilityMode="labeled"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:id="@+id/nav_host_fragment"
+        android:name="androidx.navigation.fragment.NavHostFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:elevation="10dp"
+        android:visibility="gone"
+        app:defaultNavHost="true"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:menu="@menu/chat_navigation" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:navGraph="@navigation/mobile_navigation" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

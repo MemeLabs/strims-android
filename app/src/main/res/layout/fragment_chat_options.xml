@@ -4,7 +4,7 @@
     android:id="@+id/constraintLayoutChatOptions"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/rounded_text_enter_message">
+    android:background="#000000">
 
     <CheckBox
         android:id="@+id/checkBoxTimestamp"
@@ -123,16 +123,6 @@
         app:layout_constraintEnd_toEndOf="@+id/ignoredUsersTextViewOptions"
         app:layout_constraintStart_toStartOf="@+id/customHighlights"
         app:layout_constraintTop_toBottomOf="@+id/customHighlights" />
-
-    <Button
-        android:id="@+id/closeMenuButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:backgroundTint="#FF5722"
-        android:text="@string/close"
-        app:layout_constraintStart_toStartOf="@+id/customHighlightsTextViewOptions"
-        app:layout_constraintTop_toBottomOf="@+id/customHighlightsTextViewOptions" />
 
     <Button
         android:id="@+id/saveOptionsButton"

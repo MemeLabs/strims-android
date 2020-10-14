@@ -8,8 +8,8 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import gg.strims.android.CurrentUser
 import gg.strims.android.R
-import gg.strims.android.hideFragment
 import io.ktor.util.KtorExperimentalAPI
+import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.fragment_chat_options.*
 
 @KtorExperimentalAPI
@@ -23,7 +23,7 @@ class OptionsFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_chat_options, container, false)
     }
 
-    override fun onHiddenChanged(hidden: Boolean) {
+    private fun retrieveOptions() {
         if (CurrentUser.options != null) {
             checkBoxTimestamp.isChecked = CurrentUser.options!!.showTime
             checkBoxGreentext.isChecked = CurrentUser.options!!.greentext
@@ -43,23 +43,14 @@ class OptionsFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        hideFragment(activity!!, this)
-        view.setOnTouchListener { view, motionEvent -> return@setOnTouchListener true }
-        closeMenuButton.setOnClickListener {
-            fragmentManager!!.beginTransaction()
-                .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
-                .hide(this)
-                .commit()
-        }
+        requireActivity().toolbar.title = "Settings"
+
+        retrieveOptions()
 
         saveOptionsButton.setOnClickListener {
-            CurrentUser.saveOptions(context!!)
-            val recycler = activity!!.findViewById<RecyclerView>(R.id.recyclerViewChat)
+            CurrentUser.saveOptions(requireContext())
+            val recycler = requireActivity().findViewById<RecyclerView>(R.id.recyclerViewChat)
             recycler.adapter!!.notifyDataSetChanged()
-            fragmentManager!!.beginTransaction()
-                .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
-                .hide(this)
-                .commit()
         }
 
         checkBoxTimestamp.setOnCheckedChangeListener { buttonView, isChecked ->
