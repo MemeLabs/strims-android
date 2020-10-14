@@ -16,6 +16,7 @@ import com.xwray.groupie.Item
 import gg.strims.android.*
 import gg.strims.android.models.Stream
 import io.ktor.util.KtorExperimentalAPI
+import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.fragment_streams.*
 import kotlinx.android.synthetic.main.stream_item.view.*
 
@@ -34,11 +35,12 @@ class StreamsFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        view.setOnTouchListener { _, _ -> return@setOnTouchListener true }
         val layoutManager = LinearLayoutManager(view.context)
         layoutManager.stackFromEnd = true
         recyclerViewStreams.layoutManager = layoutManager
         recyclerViewStreams.adapter = streamsAdapter
+
+        requireActivity().toolbar.title = "Streams"
 
         refreshStreams()
     }

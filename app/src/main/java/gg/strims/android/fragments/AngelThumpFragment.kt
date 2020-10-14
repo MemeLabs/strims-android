@@ -40,7 +40,6 @@ class AngelThumpFragment: Fragment() {
                 angelThumpVideoView.start()
             } else {
                 angelThumpVideoView.setVideoURI("https://video-cdn.angelthump.com/hls/${CurrentUser.tempStream!!.channel}/index.m3u8".toUri())
-                print("")
                 angelThumpVideoView.start()
                 angelThumpStreamTitle.text = CurrentUser.tempStream!!.title
             }

@@ -75,22 +75,33 @@
         app:layout_constraintTop_toTopOf="@+id/sendMessageText"
         app:srcCompat="@drawable/ic_sentiment_satisfied_orange_24dp" />
 
-    <Button
-        android:id="@+id/goToBottom"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/goToBottomLayout"
         android:layout_width="0dp"
         android:layout_height="25dp"
         android:layout_marginStart="4dp"
         android:layout_marginEnd="4dp"
         android:layout_marginBottom="2dp"
-        android:animateLayoutChanges="true"
-        android:background="@drawable/rounded_recyclerview_autofill"
-        android:text="@string/more_messages_below"
-        android:textColor="#959595"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@+id/recyclerViewChat"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        tools:visibility="visible" />
+        tools:visibility="visible">
+
+        <Button
+            android:id="@+id/goToBottom"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:animateLayoutChanges="true"
+            android:background="@drawable/rounded_recyclerview_autofill"
+            android:text="@string/more_messages_below"
+            android:textColor="#959595"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:visibility="visible" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewAutofill"
@@ -102,7 +113,7 @@
         android:background="@drawable/rounded_recyclerview_autofill"
         android:scrollbars="horizontal"
         android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@+id/goToBottom"
+        app:layout_constraintBottom_toTopOf="@+id/goToBottomLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         tools:listitem="@layout/autofill_item" />
@@ -181,22 +192,12 @@
         tools:visibility="gone" />
 
     <fragment
-        android:id="@+id/login_fragment"
-        android:name="gg.strims.android.fragments.LoginFragment"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:layout="@layout/fragment_login"
-        tools:visibility="gone" />
-
-    <fragment
         android:id="@+id/nav_host_fragment"
         android:name="androidx.navigation.fragment.NavHostFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:elevation="10dp"
+        android:visibility="gone"
         app:defaultNavHost="true"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"

@@ -12,6 +12,7 @@ import android.webkit.WebViewClient
 import androidx.fragment.app.Fragment
 import gg.strims.android.*
 import io.ktor.util.KtorExperimentalAPI
+import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.fragment_login.*
 
 @SuppressLint("SetJavaScriptEnabled")
@@ -27,20 +28,16 @@ class LoginFragment: Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        hideFragment(requireActivity(), this)
-    }
+        requireActivity().toolbar.title = "Login"
 
-    override fun onHiddenChanged(hidden: Boolean) {
-        if (!hidden) {
-            loginWebView.settings.javaScriptEnabled = true
-            loginWebView.settings.domStorageEnabled = true
-            loginWebView.loadUrl("https://strims.gg/login")
-            loginWebView.webViewClient = object: WebViewClient() {
-                override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-                    if (url == "https://strims.gg/" || url == "https://chat.strims.gg/") {
-                        startActivity(Intent(context, ChatActivity::class.java))
-                        activity!!.finish()
-                    }
+        loginWebView.settings.javaScriptEnabled = true
+        loginWebView.settings.domStorageEnabled = true
+        loginWebView.loadUrl("https://strims.gg/login")
+        loginWebView.webViewClient = object: WebViewClient() {
+            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                if (url == "https://strims.gg/" || url == "https://chat.strims.gg/") {
+                    startActivity(Intent(context, ChatActivity::class.java))
+                    activity!!.finish()
                 }
             }
         }
