@@ -12,6 +12,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
@@ -65,16 +66,12 @@ import gg.strims.android.fragments.OptionsFragment
 import gg.strims.android.fragments.ProfileFragment
 import gg.strims.android.fragments.StreamsFragment
 import gg.strims.android.models.*
-import io.ktor.client.HttpClient
-import io.ktor.client.features.websocket.WebSockets
-import io.ktor.client.features.websocket.wss
+import io.ktor.client.*
+import io.ktor.client.features.websocket.*
 import io.ktor.client.request.get
 import io.ktor.client.request.header
-import io.ktor.http.cio.websocket.Frame
-import io.ktor.http.cio.websocket.readBytes
-import io.ktor.http.cio.websocket.readText
-import io.ktor.http.cio.websocket.send
-import io.ktor.util.KtorExperimentalAPI
+import io.ktor.http.cio.websocket.*
+import io.ktor.util.*
 import kotlinx.android.synthetic.main.activity_chat.*
 import kotlinx.android.synthetic.main.activity_navigation_drawer.*
 import kotlinx.android.synthetic.main.app_bar_main.*
@@ -86,10 +83,10 @@ import kotlinx.android.synthetic.main.nav_header_main.*
 import kotlinx.android.synthetic.main.private_chat_message_item.view.*
 import kotlinx.android.synthetic.main.whisper_message_item_right.view.*
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.launch
 import pl.droidsonroids.gif.GifDrawable
 import java.io.*
+import java.lang.ref.WeakReference
 import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
@@ -387,12 +384,40 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             Spannable.SPAN_INCLUSIVE_INCLUSIVE
                         )
                     } else {
+                        class DrawableCallback(textView: TextView?) :
+                            Drawable.Callback {
+                            private val mViewWeakReference: WeakReference<TextView> = WeakReference(textView!!)
+                            override fun invalidateDrawable(who: Drawable) {
+                                if (mViewWeakReference.get() != null) {
+                                    mViewWeakReference.get()!!.invalidate()
+                                }
+                            }
+
+                            override fun scheduleDrawable(
+                                who: Drawable,
+                                what: Runnable,
+                                `when`: Long
+                            ) {
+                                if (mViewWeakReference.get() != null) {
+                                    mViewWeakReference.get()!!.postDelayed(what, `when`)
+                                }
+                            }
+
+                            override fun unscheduleDrawable(who: Drawable, what: Runnable) {
+                                if (mViewWeakReference.get() != null) {
+                                    mViewWeakReference.get()!!.removeCallbacks(what)
+                                }
+                            }
+                        }
+
                         var gif: GifDrawable? = null
                         while (gif == null) {
                             gif = gifMemoryCache.get(it.name)
                         }
+                        gif.callback = DrawableCallback(messageTextView)
                         val animatedEmote = ImageSpan(gif)
                         animatedEmote.drawable.setBounds(0, 0, gif.minimumWidth, gif.minimumHeight)
+
                         ssb.setSpan(
                             animatedEmote,
                             it.bounds[0],
@@ -2221,7 +2246,10 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                                                     }
 
                                                 } else {
-                                                    if (adapter.itemCount > 0 && adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item_emote_combo) {
+                                                    if (adapter.itemCount > 0 && adapter.getItem(
+                                                            adapter.itemCount - 1
+                                                        ).layout == R.layout.chat_message_item_emote_combo
+                                                    ) {
                                                         val lastMessage =
                                                             adapter.getItem(adapter.itemCount - 1) as ChatMessageCombo
                                                         lastMessage.state = 1
