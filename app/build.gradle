@@ -1,10 +1,14 @@
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    id 'kotlin-android-extensions'
+    id 'com.github.triplet.play' version '2.4.0'
+}
 
 
 def keystorePropertiesFile = rootProject.file("keystore.properties")
 def keystoreProperties = new Properties()
+def serviceAccountKeyFile = rootProject.file("serviceAccountKey.json")
 keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 
 
@@ -16,7 +20,7 @@ android {
         applicationId "gg.strims.android"
         minSdkVersion 26
         targetSdkVersion 29
-        versionCode 3
+        versionCode 4
         versionName "0.2.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -30,14 +34,22 @@ android {
         }
     }
 
-
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
+
+            play {
+                track = 'internal' //'alpha','beta' or 'production'
+                serviceAccountCredentials = file(serviceAccountKeyFile)
+                resolutionStrategy = "auto"
+            }
         }
     }
+
+  
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8

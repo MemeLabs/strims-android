@@ -21,13 +21,15 @@ jobs:
         env:
           KEY_STORE_PASSPHRASE: ${{ secrets.KEY_STORE_PASSPHRASE }}
           APP_SIGN_KEY_FILE_PASSPHRASE: ${{ secrets.APP_SIGN_KEY_FILE_PASSPHRASE }}
+          GOOGLE_PLAY_SA_KEY_FILE_PASSPHRASE: ${{ secrets.GOOGLE_PLAY_SA_KEY_FILE_PASSPHRASE }}
 
       - name: Unit tests
         run: bash ./gradlew test --stacktrace
 
       - name: Build Debug APK
         run: bash ./gradlew assembleDebug --stacktrace
-      - name: Upload Debug APK
+        
+      - name: Save Artifact
         uses: actions/upload-artifact@v1
         with:
           name: debug-app
