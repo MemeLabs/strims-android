@@ -312,7 +312,9 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
             R.id.nav_Chat -> {
                 supportFragmentManager.fragments.forEach {
-                    supportFragmentManager.beginTransaction().remove(it).commit()
+                    if (it.tag == "StreamsFragment" || it.tag == "ProfileFragment" || it.tag == "OptionsFragment") {
+                        supportFragmentManager.beginTransaction().remove(it).commit()
+                    }
                 }
                 toolbar.title = "Chat"
             }
@@ -333,36 +335,37 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         return true
     }
 
-    override fun onBackPressed() {
-        if (supportFragmentManager.fragments.size > 1) {
-            supportFragmentManager.popBackStack()
-            supportFragmentManager.beginTransaction()
-                .remove(supportFragmentManager.fragments[1])
-                .commit()
-            if (supportFragmentManager.backStackEntryCount > 1) {
-                val fragment =
-                    supportFragmentManager.getBackStackEntryAt(supportFragmentManager.backStackEntryCount - 2)
-                when (fragment.name) {
-                    "ProfileFragment" -> {
-                        nav_view.setCheckedItem(R.id.nav_Profile)
-                    }
-
-                    "StreamsFragment" -> {
-                        nav_view.setCheckedItem(R.id.nav_Streams)
-                    }
-
-                    "OptionsFragment" -> {
-                        nav_view.setCheckedItem(R.id.nav_Settings)
-                    }
-                }
-            } else {
-                nav_view.setCheckedItem(R.id.nav_Chat)
-                toolbar.title = "Chat"
-            }
-        } else {
-            super.onBackPressed()
-        }
-    }
+    //TODO: Fix back button to ignore streaming fragments
+//    override fun onBackPressed() {
+//        if (supportFragmentManager.fragments.size > 1) {
+//            supportFragmentManager.popBackStack()
+//            supportFragmentManager.beginTransaction()
+//                .remove(supportFragmentManager.fragments[1])
+//                .commit()
+//            if (supportFragmentManager.backStackEntryCount > 1) {
+//                val fragment =
+//                    supportFragmentManager.getBackStackEntryAt(supportFragmentManager.backStackEntryCount - 2)
+//                when (fragment.name) {
+//                    "ProfileFragment" -> {
+//                        nav_view.setCheckedItem(R.id.nav_Profile)
+//                    }
+//
+//                    "StreamsFragment" -> {
+//                        nav_view.setCheckedItem(R.id.nav_Streams)
+//                    }
+//
+//                    "OptionsFragment" -> {
+//                        nav_view.setCheckedItem(R.id.nav_Settings)
+//                    }
+//                }
+//            } else {
+//                nav_view.setCheckedItem(R.id.nav_Chat)
+//                toolbar.title = "Chat"
+//            }
+//        } else {
+//            super.onBackPressed()
+//        }
+//    }
 
     fun createMessageTextView(
         messageData: Message,
@@ -1987,32 +1990,33 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         return@launch
                     }
                     val first = messageText.first()
-                    if (supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!.isVisible) {
-                        when {
-                            messageText.trim() == "" -> {
-                                //TODO: empty message notify in chat ?
-                                return@launch
-                            }
-                            CurrentUser.tempWhisperUser == null -> {
-                                // TODO: error
-                            }
-                            else -> {
-                                val nick = CurrentUser.tempWhisperUser!!
-                                send("PRIVMSG {\"nick\":\"$nick\", \"data\":\"$messageText\"}")
-                                runOnUiThread {
-                                    adapter.add(
-                                        PrivateChatMessage(
-                                            Message(
-                                                true,
-                                                nick,
-                                                messageText
-                                            )
-                                        )
-                                    )
-                                }
-                            }
-                        }
-                    } else if (first == '/' && messageText.substringBefore(' ') != "/me") {
+//                    if (supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!.isVisible) {
+//                        when {
+//                            messageText.trim() == "" -> {
+//                                //TODO: empty message notify in chat ?
+//                                return@launch
+//                            }
+//                            CurrentUser.tempWhisperUser == null -> {
+//                                // TODO: error
+//                            }
+//                            else -> {
+//                                val nick = CurrentUser.tempWhisperUser!!
+//                                send("PRIVMSG {\"nick\":\"$nick\", \"data\":\"$messageText\"}")
+//                                runOnUiThread {
+//                                    adapter.add(
+//                                        PrivateChatMessage(
+//                                            Message(
+//                                                true,
+//                                                nick,
+//                                                messageText
+//                                            )
+//                                        )
+//                                    )
+//                                }
+//                            }
+//                        }
+//                    } else
+                    if (first == '/' && messageText.substringBefore(' ') != "/me") {
                         var privateMessageCommand = ""
                         for (privateMessageItem in privateMessageArray) {
                             if (privateMessageItem.contains(

@@ -97,6 +97,7 @@ class ProfileFragment: Fragment() {
 
         logOutProfile.setOnClickListener {
             deleteCookie()
+            requireActivity().invalidateOptionsMenu()
             startActivity(Intent(context, ChatActivity::class.java))
         }
 

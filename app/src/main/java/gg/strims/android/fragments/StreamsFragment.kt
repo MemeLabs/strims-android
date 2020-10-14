@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.navigation.NavigationView
 import com.squareup.picasso.Picasso
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
@@ -16,6 +17,7 @@ import com.xwray.groupie.Item
 import gg.strims.android.*
 import gg.strims.android.models.Stream
 import io.ktor.util.KtorExperimentalAPI
+import kotlinx.android.synthetic.main.activity_navigation_drawer.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.fragment_streams.*
 import kotlinx.android.synthetic.main.stream_item.view.*
@@ -84,10 +86,17 @@ class StreamsFragment : Fragment() {
             }
 
             viewHolder.itemView.setOnClickListener {
-                hideFragment(activity!!, this@StreamsFragment)
+                requireFragmentManager().fragments.forEach {
+                    if (it.tag == "StreamsFragment" || it.tag == "ProfileFragment" || it.tag == "OptionsFragment") {
+                        requireFragmentManager().beginTransaction().remove(it).commit()
+                    }
+                }
                 hideFragment(activity!!, fragmentManager!!.findFragmentById(R.id.angelthump_fragment)!!)
                 hideFragment(activity!!, fragmentManager!!.findFragmentById(R.id.twitch_fragment)!!)
                 hideFragment(activity!!, fragmentManager!!.findFragmentById(R.id.youtube_fragment)!!)
+                val navView = requireActivity().findViewById<NavigationView>(R.id.nav_view)
+                navView.setCheckedItem(R.id.nav_Chat)
+                requireActivity().toolbar.title = "Chat"
                 when (stream.service) {
                     "angelthump", "m3u8" -> {
                         CurrentUser.tempStream = stream
