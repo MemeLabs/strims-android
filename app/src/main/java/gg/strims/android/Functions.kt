@@ -27,21 +27,21 @@ fun hideKeyboardFrom(context: Context, view: View) {
 
 fun hideFragment(activity: FragmentActivity, fragment: Fragment) {
     activity.supportFragmentManager.beginTransaction()
-        .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+        .setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
         .hide(fragment)
         .commit()
 }
 
 fun showFragment(activity: FragmentActivity, fragment: Fragment) {
     activity.supportFragmentManager.beginTransaction()
-        .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+        .setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
         .show(fragment)
         .commit()
 }
 
 fun showHideFragment(activity: FragmentActivity, fragment: Fragment) {
     val fragmentTransaction = activity.supportFragmentManager.beginTransaction()
-    fragmentTransaction.setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+    fragmentTransaction.setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
 
     if (fragment.isHidden) {
         fragmentTransaction.show(fragment)

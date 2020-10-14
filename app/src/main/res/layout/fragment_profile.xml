@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/constraintLayoutProfile"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/rounded_text_enter_message">
+    android:background="#000000">
 
     <TextView
         android:id="@+id/usernameTextViewProfile"
@@ -16,7 +17,7 @@
         app:layout_constraintStart_toStartOf="@+id/usernameEditTextProfile"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <EditText
+    <TextView
         android:id="@+id/usernameEditTextProfile"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -25,8 +26,9 @@
         android:layout_marginEnd="24dp"
         android:background="@drawable/rounded_text_profile"
         android:ems="10"
-        android:inputType="textPersonName"
         android:textColor="#FFFFFF"
+        android:textColorHighlight="#40FF5722"
+        android:textCursorDrawable="@drawable/orange_cursor"
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -53,6 +55,8 @@
         android:ems="10"
         android:inputType="textPersonName"
         android:textColor="#FFFFFF"
+        android:textColorHighlight="#40FF5722"
+        android:textCursorDrawable="@drawable/orange_cursor"
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -65,20 +69,21 @@
         android:layout_marginTop="8dp"
         android:text="@string/streaming_service"
         android:textColor="#BBBBBB"
-        app:layout_constraintStart_toStartOf="@+id/streamingServiceEditTextProfile"
+        app:layout_constraintStart_toStartOf="@+id/streamingServiceSpinnerProfile"
         app:layout_constraintTop_toBottomOf="@+id/streamPathEditTextProfile" />
 
-    <EditText
-        android:id="@+id/streamingServiceEditTextProfile"
+    <Spinner
+        android:id="@+id/streamingServiceSpinnerProfile"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
         android:layout_marginTop="4dp"
         android:layout_marginEnd="24dp"
-        android:background="@drawable/rounded_text_profile"
+        android:background="@drawable/streaming_service_spinner"
+        android:drawSelectorOnTop="true"
         android:ems="10"
-        android:inputType="textPersonName"
-        android:textColor="#FFFFFF"
+        android:entries="@array/streaming_service_spinner"
+        android:spinnerMode="dialog"
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -92,7 +97,7 @@
         android:text="@string/channel_video_id"
         android:textColor="#BBBBBB"
         app:layout_constraintStart_toStartOf="@+id/channelEditTextProfile"
-        app:layout_constraintTop_toBottomOf="@+id/streamingServiceEditTextProfile" />
+        app:layout_constraintTop_toBottomOf="@+id/streamingServiceSpinnerProfile" />
 
     <EditText
         android:id="@+id/channelEditTextProfile"
@@ -105,29 +110,43 @@
         android:ems="10"
         android:inputType="textPersonName"
         android:textColor="#FFFFFF"
+        android:textColorHighlight="#40FF5722"
+        android:textCursorDrawable="@drawable/orange_cursor"
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/channelTextViewProfile" />
 
+    <CheckBox
+        android:id="@+id/checkBoxViewerState"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:buttonTint="#FF5722"
+        android:text="@string/show_what_i_m_watching_in_chat"
+        android:textColor="#BBBBBB"
+        app:layout_constraintStart_toStartOf="@+id/channelEditTextProfile"
+        app:layout_constraintTop_toBottomOf="@+id/channelEditTextProfile" />
+
     <Button
         android:id="@+id/saveProfile"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         android:backgroundTint="#FF5722"
         android:text="@string/save"
         android:textColor="#000000"
         app:layout_constraintEnd_toEndOf="@+id/channelEditTextProfile"
-        app:layout_constraintTop_toBottomOf="@+id/channelEditTextProfile" />
+        app:layout_constraintTop_toBottomOf="@+id/checkBoxViewerState" />
 
     <Button
-        android:id="@+id/closeProfile"
+        android:id="@+id/logOutProfile"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
         android:backgroundTint="#FF5722"
-        android:text="@string/close"
-        app:layout_constraintStart_toStartOf="@+id/channelEditTextProfile"
-        app:layout_constraintTop_toBottomOf="@+id/channelEditTextProfile" />
+        android:text="@string/log_out"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/saveProfile" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

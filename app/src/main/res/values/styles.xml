@@ -7,7 +7,31 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
 
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+
+        <item name="android:popupMenuStyle">@style/PopupMenu</item>
+
         <item name="android:textColorHint">#B1B1B1</item>
+
+        <item name="colorControlActivated">@color/orange</item>
     </style>
 
+    <style name="PopupMenu" parent="Widget.AppCompat.PopupMenu">
+        <item name="android:textColor">@color/orange</item>
+        <item name="android:popupBackground">@drawable/rounded_popup_menu</item>
+    </style>
+
+    <style name="StreamingServiceSpinner" parent="@android:style/Widget.Holo.DropDownItem.Spinner">
+        <item name="android:color">#FFFFFF</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 </resources>

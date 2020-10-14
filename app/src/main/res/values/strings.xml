@@ -23,4 +23,57 @@
     <string name="username_search">Username search …</string>
     <string name="timestamp">Timestamp</string>
     <string name="streamer">Streamer</string>
+    <string name="whisper">Whisper</string>
+    <string name="mention">Mention</string>
+    <string name="ignore">Ignore</string>
+    <string name="streams">Streams</string>
+    <string name="chat">Chat</string>
+    <string name="profile">Profile</string>
+    <string name="login">Log In</string>
+    <string name="log_out">Log Out</string>
+    <string name="show_what_i_m_watching_in_chat">Show what I\'m watching in chat</string>
+    <string name="whispers">Whispers</string>
+
+    <string-array name="streaming_service_spinner">
+        <item name="angelthump">AngelThump</item>
+        <item name="facebook">Facebook</item>
+        <item name="m3u8">m3u8</item>
+        <item name="mixer">Mixer</item>
+        <item name="smashcast">Smashcast</item>
+        <item name="twitch">Twitch</item>
+        <item name="twitch-vod">Twitch (VOD)</item>
+        <item name="ustream">Ustream</item>
+        <item name="vaughn">Vaughn</item>
+        <item name="youtube">YouTube</item>
+        <item name="youtube-playlist">YouTube (Playlist)</item>
+        <item name="advanced">Advanced</item>
+    </string-array>
+
+    <string-array name="streaming_service_spinner_names">
+        <item>angelthump</item>
+        <item>facebook</item>
+        <item>m3u8</item>
+        <item>mixer</item>
+        <item>smashcast</item>
+        <item>twitch</item>
+        <item>twitch-vod</item>
+        <item>ustream</item>
+        <item>vaughn</item>
+        <item>youtube</item>
+        <item>youtube-playlist</item>
+        <item>advanced</item>
+    </string-array>
+    <string name="title_activity_navigation_drawer">NavigationDrawerActivity</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_header_title">Android Studio</string>
+    <string name="nav_header_subtitle">android.studio@android.com</string>
+    <string name="nav_header_desc">Navigation header</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="menu_home">Home</string>
+    <string name="menu_gallery">Gallery</string>
+    <string name="menu_slideshow">Slideshow</string>
+    <string name="settings">Settings</string>
+    <string name="anonymous">Anonymous</string>
 </resources>

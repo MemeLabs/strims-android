@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/constraintLayoutPrivateMessageItem"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -15,8 +16,37 @@
         android:text="@string/username"
         android:textColor="#FFFFFF"
         android:textStyle="bold"
-        app:layout_constraintStart_toEndOf="@+id/timestampPrivateMessage"
+        app:layout_constraintStart_toEndOf="@id/toPrivateMessage"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/whisperedPrivateMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:text="whispered:"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/usernamePrivateMessage"
+        app:layout_constraintStart_toEndOf="@id/usernamePrivateMessage"
+        app:layout_constraintTop_toTopOf="@id/usernamePrivateMessage"
+        tools:visibility="gone" />
+
+    <TextView
+        android:id="@+id/toPrivateMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="2dp"
+        android:text="To"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/usernamePrivateMessage"
+        app:layout_constraintStart_toEndOf="@id/timestampPrivateMessage"
+        app:layout_constraintTop_toTopOf="@id/usernamePrivateMessage"
+        app:layout_constraintVertical_bias="0.0"
+        tools:visibility="gone" />
 
     <TextView
         android:id="@+id/messagePrivateMessage"
@@ -41,6 +71,7 @@
         android:text="@string/timestamp"
         android:textColor="#737373"
         android:textSize="12sp"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@+id/usernamePrivateMessage"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/usernamePrivateMessage" />

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/constraintLayoutChatMessageItem"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#000000">
+
+    <ImageView
+        android:id="@+id/graySplatChatMessageCombo"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:scaleType="fitXY"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/comboCountChatMessageCombo"
+        app:layout_constraintEnd_toEndOf="@id/hitsComboChatMessageCombo"
+        app:layout_constraintStart_toEndOf="@+id/messageChatMessageCombo"
+        app:layout_constraintStart_toStartOf="@+id/comboCountChatMessageCombo"
+        app:layout_constraintTop_toTopOf="@+id/comboCountChatMessageCombo"
+        app:srcCompat="@drawable/ic_emote_splat_grayscale"
+        tools:visibility="gone" />
+    <ImageView
+        android:id="@+id/redSplatChatMessageCombo"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:scaleType="fitXY"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/comboCountChatMessageCombo"
+        app:layout_constraintEnd_toEndOf="@id/hitsComboChatMessageCombo"
+        app:layout_constraintStart_toEndOf="@+id/messageChatMessageCombo"
+        app:layout_constraintStart_toStartOf="@+id/comboCountChatMessageCombo"
+        app:layout_constraintTop_toTopOf="@+id/comboCountChatMessageCombo"
+        app:srcCompat="@drawable/ic_emote_splat"
+        tools:visibility="gone" />
+
+
+
+    <TextView
+        android:id="@+id/messageChatMessageCombo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:maxWidth="200dp"
+        android:text="@string/emotes"
+        android:textColor="#D8D8D8"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/timestampChatMessageCombo"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/timestampChatMessageCombo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="2dp"
+        android:textColor="#737373"
+        android:textSize="12sp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/messageChatMessageCombo"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/messageChatMessageCombo"
+        tools:visibility="visible" />
+
+    <TextView
+        android:id="@+id/comboCountChatMessageCombo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="2dp"
+        android:text="2"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/messageChatMessageCombo"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/xChatMessageCombo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="2dp"
+        android:text="X"
+        android:textColor="#FFFFFF"
+        android:textSize="11sp"
+        app:layout_constraintBottom_toBottomOf="@+id/comboCountChatMessageCombo"
+        app:layout_constraintStart_toEndOf="@+id/comboCountChatMessageCombo"
+        app:layout_constraintTop_toTopOf="@+id/comboCountChatMessageCombo" />
+
+    <TextView
+        android:id="@+id/hitsComboChatMessageCombo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="HITS"
+        android:textColor="#FFFFFF"
+        android:textSize="10sp"
+        android:textStyle="italic"
+        app:layout_constraintBottom_toBottomOf="@+id/xChatMessageCombo"
+        app:layout_constraintStart_toEndOf="@+id/xChatMessageCombo"
+        app:layout_constraintTop_toTopOf="@+id/xChatMessageCombo" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
