@@ -683,23 +683,19 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                                                     Spannable.SPAN_INCLUSIVE_INCLUSIVE
                                                 )
                                             } else if (it3.name == "weeb") {
-                                                messageData.entities.links!!.forEach {
-                                                    ssb.setSpan(
-                                                        ColouredUnderlineSpan(Color.parseColor("#FF00EE")),
-                                                        it.bounds[0],
-                                                        it.bounds[1],
-                                                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                                                    )
-                                                }
+                                                ssb.setSpan(
+                                                    ColouredUnderlineSpan(Color.parseColor("#FF00EE")),
+                                                    it2.bounds[0],
+                                                    it2.bounds[1],
+                                                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                                                )
                                             } else if (it3.name == "loud") {
-                                                messageData.entities.links!!.forEach {
-                                                    ssb.setSpan(
-                                                        ColouredUnderlineSpan(Color.parseColor("#0022FF")),
-                                                        it.bounds[0],
-                                                        it.bounds[1],
-                                                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                                                    )
-                                                }
+                                                ssb.setSpan(
+                                                    ColouredUnderlineSpan(Color.parseColor("#0022FF")),
+                                                    it2.bounds[0],
+                                                    it2.bounds[1],
+                                                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                                                )
                                             }
                                         }
                                     }
