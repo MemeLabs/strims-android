@@ -73,7 +73,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.http.cio.websocket.*
 import io.ktor.util.*
-import io.ktor.utils.io.errors.IOException
+import io.ktor.utils.io.errors.*
 import kotlinx.android.synthetic.main.activity_chat.*
 import kotlinx.android.synthetic.main.activity_navigation_drawer.*
 import kotlinx.android.synthetic.main.app_bar_main.*
@@ -88,7 +88,10 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.launch
 import pl.droidsonroids.gif.GifDrawable
-import java.io.*
+import java.io.BufferedInputStream
+import java.io.BufferedReader
+import java.io.InputStream
+import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
@@ -148,7 +151,11 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             } catch (e: ClosedReceiveChannelException) {
                 Log.d("TAG", "onClose ${e.localizedMessage}")
                 runOnUiThread {
-                    Toast.makeText(this@ChatActivity, "Disconnected, reconnecting...", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        this@ChatActivity,
+                        "Disconnected, reconnecting...",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
                 startActivity(Intent(this@ChatActivity, ChatActivity::class.java))
                 this@ChatActivity.finish()
@@ -161,7 +168,11 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             } catch (e: ClosedReceiveChannelException) {
                 Log.d("TAG", "onClose ${e.localizedMessage}")
                 runOnUiThread {
-                    Toast.makeText(this@ChatActivity, "Disconnected, reconnecting...", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        this@ChatActivity,
+                        "Disconnected, reconnecting...",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
                 startActivity(Intent(this@ChatActivity, ChatActivity::class.java))
                 this@ChatActivity.finish()
@@ -336,7 +347,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     //TODO: Fix back button to ignore streaming fragments
-//    override fun onBackPressed() {
+    override fun onBackPressed() {
 //        if (supportFragmentManager.fragments.size > 1) {
 //            supportFragmentManager.popBackStack()
 //            supportFragmentManager.beginTransaction()
@@ -365,7 +376,34 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 //        } else {
 //            super.onBackPressed()
 //        }
-//    }
+
+        if (supportFragmentManager.backStackEntryCount == 0) {
+            super.onBackPressed()
+        } else {
+            supportFragmentManager.popBackStack()
+
+            if (supportFragmentManager.backStackEntryCount > 1) {
+                val fragment =
+                    supportFragmentManager.getBackStackEntryAt(supportFragmentManager.backStackEntryCount - 2)
+                when (fragment.name) {
+                    "ProfileFragment" -> {
+                        nav_view.setCheckedItem(R.id.nav_Profile)
+                    }
+
+                    "StreamsFragment" -> {
+                        nav_view.setCheckedItem(R.id.nav_Streams)
+                    }
+
+                    "OptionsFragment" -> {
+                        nav_view.setCheckedItem(R.id.nav_Settings)
+                    }
+                }
+            } else {
+                nav_view.setCheckedItem(R.id.nav_Chat)
+                toolbar.title = "Chat"
+            }
+        }
+    }
 
     fun createMessageTextView(
         messageData: Message,

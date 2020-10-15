@@ -82,7 +82,6 @@
         android:background="@drawable/streaming_service_spinner"
         android:drawSelectorOnTop="true"
         android:ems="10"
-        android:entries="@array/streaming_service_spinner"
         android:spinnerMode="dialog"
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"

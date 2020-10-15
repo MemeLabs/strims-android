@@ -1,15 +1,12 @@
 package gg.strims.android.fragments
 
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.CookieManager
-import android.widget.AdapterView
-import android.widget.AdapterView.OnItemSelectedListener
-import android.widget.TextView
+import android.widget.ArrayAdapter
 import androidx.fragment.app.Fragment
 import com.google.gson.Gson
 import gg.strims.android.ChatActivity
@@ -60,19 +57,12 @@ class ProfileFragment: Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         requireActivity().toolbar.title = "Profile"
 
-        streamingServiceSpinnerProfile.onItemSelectedListener = object : OnItemSelectedListener {
-            override fun onItemSelected(
-                parent: AdapterView<*>?,
-                view: View,
-                position: Int,
-                id: Long
-            ) {
-                (view as TextView).setTextColor(Color.WHITE)
-                view.textSize = 14f
-            }
+        val spinnerArray = resources.getStringArray(R.array.streaming_service_spinner)
 
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
-        }
+        val arrayAdapter = ArrayAdapter(requireContext(), R.layout.spinner_item, spinnerArray)
+        arrayAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
+
+        streamingServiceSpinnerProfile.adapter = arrayAdapter
 
         saveProfile.setOnClickListener {
             if (CurrentUser.user != null) {
