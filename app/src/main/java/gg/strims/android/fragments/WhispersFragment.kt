@@ -1,10 +1,8 @@
 package gg.strims.android.fragments
 
 import android.annotation.SuppressLint
-import android.graphics.Color
 import android.graphics.Rect
 import android.os.Bundle
-import android.os.Message
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
@@ -12,18 +10,12 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.squareup.picasso.Picasso
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
 import gg.strims.android.*
-import gg.strims.android.models.Stream
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.android.synthetic.main.fragment_whispers.*
-import kotlinx.android.synthetic.main.fragment_whispers.view.*
-import kotlinx.android.synthetic.main.private_chat_message_item.view.*
-import kotlinx.android.synthetic.main.whisper_message_item_right.*
 import kotlinx.android.synthetic.main.whisper_user_item.view.*
 import java.io.Serializable
 

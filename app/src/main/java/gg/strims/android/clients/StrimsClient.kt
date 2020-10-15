@@ -1,6 +1,7 @@
 package gg.strims.android.clients
 
-import com.beust.klaxon.Klaxon
+import com.google.gson.Gson
+import com.google.gson.JsonElement
 import gg.strims.android.CurrentUser
 import gg.strims.android.models.Stream
 import io.ktor.client.HttpClient
@@ -34,27 +35,21 @@ class StrimsClient {
     }
 
     private fun parseStream(input: String) {
-        val input2 = input.substringAfter("[\"").substringBefore("\"")
-        if (input2 == "STREAMS_SET") {
-            val msg = input.substringAfter("\",").substringBeforeLast(']')
-            val streams: List<Stream>? = Klaxon()
-                .parseArray(msg)
-            CurrentUser.streams = streams?.toMutableList()
-        } else if (input2 == "RUSTLERS_SET") {
-            val id = input.substringAfter("\"RUSTLERS_SET\",").substringBefore(",").toLong()
-            if (CurrentUser.streams != null) {
-                CurrentUser.streams!!.forEach {
-                    if (it.id == id) {
-                        val newRustlers =
-                            input.substringAfter("$id,").substringBefore(",").toInt()
-                        val newAfk =
-                            input.substringAfter("$id,$newRustlers,").substringBefore("]")
-                                .toInt()
-                        it.rustlers = newRustlers
-                        it.afk_rustlers = newAfk
-                        return
+        val test = Gson().fromJson(input, JsonElement::class.java)
+        when (test.asJsonArray[0].asString) {
+            "RUSTLERS_SET" -> {
+                if (CurrentUser.streams != null) {
+                    CurrentUser.streams!!.forEach {
+                        if (it.id == test.asJsonArray[1].asLong) {
+                            it.rustlers = test.asJsonArray[2].asInt
+                            it.afk_rustlers = test.asJsonArray[3].asInt
+                        }
                     }
                 }
+            }
+            "STREAMS_SET" -> {
+                val streams2 = Gson().fromJson(test.asJsonArray[1], Array<Stream>::class.java)
+                CurrentUser.streams = streams2.toMutableList()
             }
         }
     }

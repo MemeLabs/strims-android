@@ -8,7 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.navigation.NavigationView
 import com.squareup.picasso.Picasso
 import com.xwray.groupie.GroupAdapter
@@ -17,7 +16,6 @@ import com.xwray.groupie.Item
 import gg.strims.android.*
 import gg.strims.android.models.Stream
 import io.ktor.util.KtorExperimentalAPI
-import kotlinx.android.synthetic.main.activity_navigation_drawer.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.fragment_streams.*
 import kotlinx.android.synthetic.main.stream_item.view.*

@@ -4,7 +4,6 @@ import android.content.Context
 import android.util.Log
 import com.google.gson.Gson
 import gg.strims.android.models.*
-import io.ktor.util.KtorExperimentalAPI
 import java.io.FileOutputStream
 import java.lang.Exception
 
