@@ -346,37 +346,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         return true
     }
 
-    //TODO: Fix back button to ignore streaming fragments
     override fun onBackPressed() {
-//        if (supportFragmentManager.fragments.size > 1) {
-//            supportFragmentManager.popBackStack()
-//            supportFragmentManager.beginTransaction()
-//                .remove(supportFragmentManager.fragments[1])
-//                .commit()
-//            if (supportFragmentManager.backStackEntryCount > 1) {
-//                val fragment =
-//                    supportFragmentManager.getBackStackEntryAt(supportFragmentManager.backStackEntryCount - 2)
-//                when (fragment.name) {
-//                    "ProfileFragment" -> {
-//                        nav_view.setCheckedItem(R.id.nav_Profile)
-//                    }
-//
-//                    "StreamsFragment" -> {
-//                        nav_view.setCheckedItem(R.id.nav_Streams)
-//                    }
-//
-//                    "OptionsFragment" -> {
-//                        nav_view.setCheckedItem(R.id.nav_Settings)
-//                    }
-//                }
-//            } else {
-//                nav_view.setCheckedItem(R.id.nav_Chat)
-//                toolbar.title = "Chat"
-//            }
-//        } else {
-//            super.onBackPressed()
-//        }
-
         if (supportFragmentManager.backStackEntryCount == 0) {
             super.onBackPressed()
         } else {
@@ -573,6 +543,24 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         Spannable.SPAN_INCLUSIVE_INCLUSIVE
                     )
                 }
+            } else if (messageData.data.contains("weeb")) {
+                messageData.entities.links!!.forEach {
+                    ssb.setSpan(
+                        ColouredUnderlineSpan(Color.parseColor("#FF00EE")),
+                        it.bounds[0],
+                        it.bounds[1],
+                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                    )
+                }
+            } else if (messageData.data.contains("loud")) {
+                messageData.entities.links!!.forEach {
+                    ssb.setSpan(
+                        ColouredUnderlineSpan(Color.parseColor("#0022FF")),
+                        it.bounds[0],
+                        it.bounds[1],
+                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                    )
+                }
             }
         }
 
@@ -629,8 +617,36 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         /** Spoilers **/
         if (messageData.entities.spoilers!!.isNotEmpty() && spoilers) {
             messageData.entities.spoilers!!.forEach {
+
+                if (messageData.entities.emotes!!.isNotEmpty()) {
+                    messageData.entities.emotes!!.forEach { emote ->
+                        if (emote.bounds[0] >= it.bounds[0] && emote.bounds[1] <= it.bounds[1]) {
+                            val emoteSpan = ssb.getSpans(
+                                emote.bounds[0], emote.bounds[1],
+                                ImageSpan::class.java
+                            )
+
+                            emoteSpan[0].drawable.alpha = 0
+                        }
+                    }
+                }
+
                 val span1: NoUnderlineClickableSpan = object : NoUnderlineClickableSpan() {
                     override fun onClick(widget: View) {
+
+                        if (messageData.entities.emotes!!.isNotEmpty()) {
+                            messageData.entities.emotes!!.forEach { emote ->
+                                if (emote.bounds[0] >= it.bounds[0] && emote.bounds[1] <= it.bounds[1]) {
+                                    val emoteSpan = ssb.getSpans(
+                                        emote.bounds[0], emote.bounds[1],
+                                        ImageSpan::class.java
+                                    )
+
+                                    emoteSpan[0].drawable.alpha = 255
+                                }
+                            }
+                        }
+
                         val span = ssb.getSpans(
                             it.bounds[0], it.bounds[1],
                             ForegroundColorSpan::class.java
@@ -666,6 +682,24 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                                                     it2.bounds[1],
                                                     Spannable.SPAN_INCLUSIVE_INCLUSIVE
                                                 )
+                                            } else if (it3.name == "weeb") {
+                                                messageData.entities.links!!.forEach {
+                                                    ssb.setSpan(
+                                                        ColouredUnderlineSpan(Color.parseColor("#FF00EE")),
+                                                        it.bounds[0],
+                                                        it.bounds[1],
+                                                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                                                    )
+                                                }
+                                            } else if (it3.name == "loud") {
+                                                messageData.entities.links!!.forEach {
+                                                    ssb.setSpan(
+                                                        ColouredUnderlineSpan(Color.parseColor("#0022FF")),
+                                                        it.bounds[0],
+                                                        it.bounds[1],
+                                                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                                                    )
+                                                }
                                             }
                                         }
                                     }
@@ -680,6 +714,20 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                                 it.bounds[1] - 2,
                                 Spannable.SPAN_INCLUSIVE_INCLUSIVE
                             )
+
+                            if (messageData.entities.emotes!!.isNotEmpty()) {
+                                messageData.entities.emotes!!.forEach { emote ->
+                                    if (emote.bounds[0] >= it.bounds[0] && emote.bounds[1] <= it.bounds[1]) {
+                                        val emoteSpan = ssb.getSpans(
+                                            emote.bounds[0], emote.bounds[1],
+                                            ImageSpan::class.java
+                                        )
+
+                                        emoteSpan[0].drawable.alpha = 0
+                                    }
+                                }
+                            }
+
                             if (messageData.entities.links!!.isNotEmpty()) {
                                 messageData.entities.links!!.forEach { it2 ->
                                     if (it2.bounds[0] >= it.bounds[0] && it2.bounds[1] <= it.bounds[1]) {
@@ -1871,7 +1919,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         private fun retrieveHistory() {
             val messageHistory =
-                Klaxon().parseArray<String>(URL("https://chat.strims.gg/api/chat/history").readText())
+                Klaxon().parseArray<String>(URL("https://chat2.strims.gg/api/chat/history").readText())
             runOnUiThread {
                 messageHistory?.forEach {
                     val msg = parseMessage(it)
@@ -2003,7 +2051,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
 
         suspend fun onConnect() = client.wss(
-            host = "chat.strims.gg",
+            host = "chat2.strims.gg",
             path = "/ws",
             request = {
                 retrieveCookie()
