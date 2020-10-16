@@ -3,13 +3,16 @@ package gg.strims.android.fragments
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.CookieManager
 import android.widget.ArrayAdapter
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.google.gson.Gson
 import gg.strims.android.ChatActivity
+import gg.strims.android.ChatService
 import gg.strims.android.CurrentUser
 import gg.strims.android.R
 import io.ktor.client.HttpClient
@@ -17,8 +20,11 @@ import io.ktor.client.features.websocket.WebSockets
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.util.KtorExperimentalAPI
+import kotlinx.android.synthetic.main.activity_chat.*
+import kotlinx.android.synthetic.main.activity_navigation_drawer.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.fragment_profile.*
+import kotlinx.android.synthetic.main.nav_header_main.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
@@ -86,9 +92,19 @@ class ProfileFragment: Fragment() {
         }
 
         logOutProfile.setOnClickListener {
+            CurrentUser.user = null
             deleteCookie()
-            requireActivity().invalidateOptionsMenu()
-            startActivity(Intent(context, ChatActivity::class.java))
+            val activity = requireActivity() as ChatActivity
+            requireActivity().stopService(activity.socketIntent)
+            requireActivity().startService(activity.socketIntent)
+            activity.onBackPressed()
+            activity.invalidateOptionsMenu()
+            activity.navHeaderUsername.text = "Anonymous"
+            activity.nav_view.menu.findItem(R.id.nav_Profile).isVisible = false
+            activity.nav_view.menu.findItem(R.id.nav_Whispers).isVisible = false
+            activity.nav_view.setCheckedItem(R.id.nav_Chat)
+            activity.toolbar.title = "Chat"
+            activity.sendMessageText.hint = "Log in to send messages"
         }
 
         fetchProfile()
