@@ -56,7 +56,7 @@
         android:layout_marginBottom="4dp"
         android:maxWidth="200dp"
         android:text="@string/message"
-        android:textColor="#D8D8D8"
+        android:textColor="#AAAAAA"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

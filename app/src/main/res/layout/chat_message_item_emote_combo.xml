@@ -35,14 +35,13 @@
         tools:visibility="gone" />
 
 
-
     <TextView
         android:id="@+id/messageChatMessageCombo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:maxWidth="200dp"
         android:text="@string/emotes"
-        android:textColor="#D8D8D8"
+        android:textColor="#AAAAAA"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@+id/timestampChatMessageCombo"
         app:layout_constraintTop_toTopOf="parent" />

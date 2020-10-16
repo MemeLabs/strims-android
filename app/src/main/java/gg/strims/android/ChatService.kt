@@ -1,16 +1,21 @@
 package gg.strims.android
 
-import android.app.IntentService
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import android.webkit.CookieManager
+import androidx.annotation.RequiresApi
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationCompat.PRIORITY_MIN
 import com.beust.klaxon.Klaxon
 import gg.strims.android.models.EmotesParsed
 import gg.strims.android.models.Options
@@ -20,12 +25,14 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.http.cio.websocket.*
 import io.ktor.util.*
-import kotlinx.android.synthetic.main.activity_chat.*
-import kotlinx.coroutines.*
-import pl.droidsonroids.gif.GifDrawable
-import java.io.*
-import java.net.HttpURLConnection
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.ClosedReceiveChannelException
+import kotlinx.coroutines.launch
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import java.net.URL
+
 
 @KtorExperimentalAPI
 class ChatService: Service() {
@@ -37,15 +44,23 @@ class ChatService: Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+
+        startForeground()
+
         try {
             job = GlobalScope.launch {
-                Log.d("TAG", "Launching socket...")
-                ChatClient().onConnect()
+                try {
+                    ChatClient().onConnect()
+                } catch (e: ClosedReceiveChannelException) {
+                    Log.d("TAG", "onClose ${e.localizedMessage}")
+                    sendBroadcast(Intent("gg.strims.android.SOCKET_CLOSE"))
+                }
             }
         } catch (e: InterruptedException) {
             Thread.currentThread().interrupt()
+            sendBroadcast(Intent("gg.strims.android.SOCKET_CLOSE"))
         }
-        return START_NOT_STICKY
+        return START_STICKY
     }
 
     companion object {
@@ -59,7 +74,7 @@ class ChatService: Service() {
 
     override fun onDestroy() {
         Log.d("TAG", "Destroying...")
-        job!!.cancel()
+        job?.cancel()
         super.onDestroy()
     }
 
@@ -75,6 +90,36 @@ class ChatService: Service() {
 //            Thread.currentThread().interrupt()
 //        }
 //    }
+
+    private fun startForeground() {
+        val channelId =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                createNotificationChannel("my_service", "My Background Service")
+            } else {
+                // If earlier version channel ID is not used
+                // https://developer.android.com/reference/android/support/v4/app/NotificationCompat.Builder.html#NotificationCompat.Builder(android.content.Context)
+                ""
+            }
+
+        val notificationBuilder = NotificationCompat.Builder(this, channelId )
+        val notification = notificationBuilder.setOngoing(true)
+            .setSmallIcon(gg.strims.android.R.drawable.ic_launcher_foreground)
+            .setPriority(PRIORITY_MIN)
+            .setCategory(Notification.CATEGORY_SERVICE)
+            .build()
+        startForeground(101, notification)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun createNotificationChannel(channelId: String, channelName: String): String{
+        val chan = NotificationChannel(channelId,
+            channelName, NotificationManager.IMPORTANCE_NONE)
+        chan.lightColor = Color.BLUE
+        chan.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+        val service = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        service.createNotificationChannel(chan)
+        return channelId
+    }
 
     inner class ChatClient {
 
@@ -92,7 +137,11 @@ class ChatService: Service() {
             if (messageHistory != null) {
                 arrayList.addAll(messageHistory)
             }
-            intent.putStringArrayListExtra("gg.strims.android.MESSAGE_HISTORY_TEXT", ArrayList(arrayList))
+            intent.putStringArrayListExtra(
+                "gg.strims.android.MESSAGE_HISTORY_TEXT", ArrayList(
+                    arrayList
+                )
+            )
             sendBroadcast(intent)
         }
 

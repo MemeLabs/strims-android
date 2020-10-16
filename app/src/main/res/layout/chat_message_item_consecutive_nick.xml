@@ -40,7 +40,7 @@
         android:layout_marginStart="2dp"
         android:maxWidth="200dp"
         android:text="@string/message"
-        android:textColor="#D8D8D8"
+        android:textColor="#AAAAAA"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/chevronChatMessage"
         app:layout_constraintTop_toTopOf="parent" />
