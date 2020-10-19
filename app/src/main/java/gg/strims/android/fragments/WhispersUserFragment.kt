@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Rect
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
@@ -15,10 +17,12 @@ import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
 import gg.strims.android.*
+import gg.strims.android.models.ChatUser
 import gg.strims.android.models.Message
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.android.synthetic.main.activity_chat.*
 import kotlinx.android.synthetic.main.app_bar_main.*
+import kotlinx.android.synthetic.main.fragment_user_list.*
 import kotlinx.android.synthetic.main.fragment_user_whispers.*
 import kotlinx.android.synthetic.main.whisper_message_item_left.view.*
 import kotlinx.android.synthetic.main.whisper_message_item_right.view.*
@@ -71,7 +75,7 @@ class WhispersUserFragment : Fragment() {
             )
         )
 
-        sendMessageTextWhisper.hint = "Write something ${CurrentUser.user?.username}"
+        sendMessageTextWhisper.hint = "Write something ${CurrentUser.user?.username} ..."
 
         sendMessageButtonWhisper.setOnClickListener {
             val intent = Intent("gg.strims.android.SEND_MESSAGE")
@@ -80,7 +84,29 @@ class WhispersUserFragment : Fragment() {
             sendMessageTextWhisper.text.clear()
         }
 
+        sendMessageTextWhisper.addTextChangedListener(object :
+            TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                sendMessageButtonWhisper.isEnabled = sendMessageTextWhisper.text.isNotEmpty()
+            }
+
+            override fun beforeTextChanged(
+                s: CharSequence?,
+                start: Int,
+                count: Int,
+                after: Int
+            ) {
+                sendMessageButtonWhisper.isEnabled = sendMessageTextWhisper.text.isNotEmpty()
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                sendMessageButtonWhisper.isEnabled = sendMessageTextWhisper.text.isNotEmpty()
+            }
+        })
+
         fetchPrivateMessages()
+
+        recyclerViewWhispersUser.scrollToPosition(whispersUserAdapter.itemCount - 1)
     }
 
     private fun fetchPrivateMessages() {
@@ -98,7 +124,6 @@ class WhispersUserFragment : Fragment() {
             return R.layout.whisper_message_item_right
         }
 
-        @SuppressLint("SimpleDateFormat")
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
             val parentActivity = requireActivity() as ChatActivity
             parentActivity.createMessageTextView(message, viewHolder.itemView.messageWhisperMessageItemLeft)

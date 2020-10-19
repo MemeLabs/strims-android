@@ -53,6 +53,7 @@ import androidx.navigation.ui.setupWithNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.beust.klaxon.Klaxon
 import com.google.android.material.navigation.NavigationView
+import com.google.gson.Gson
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
@@ -77,7 +78,9 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import pl.droidsonroids.gif.GifDrawable
 import java.io.BufferedInputStream
+import java.io.BufferedReader
 import java.io.InputStream
+import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
@@ -165,9 +168,10 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         Log.d("TAG", "FROM SERVICE: ${message.nick} + ${message.data}")
                         if (!CurrentUser.options!!.ignoreList.contains(message.nick)) {
                             if (message.privMsg) {
+                                val isReceived = message.nick != CurrentUser.user?.username
                                 adapter.add(
                                     PrivateChatMessage(
-                                        message, true
+                                        message, isReceived
                                     )
                                 )
                                 if (CurrentUser.options!!.notifications) {
@@ -514,15 +518,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                                 val intent = Intent("gg.strims.android.SEND_MESSAGE")
                                 intent.putExtra("gg.strims.android.SEND_MESSAGE_TEXT", "PRIVMSG {\"nick\":\"$nick\", \"data\":\"$message\"}")
                                 sendBroadcast(intent)
-                                adapter.add(
-                                    PrivateChatMessage(
-                                        Message(
-                                            true,
-                                            nick,
-                                            message
-                                        )
-                                    )
-                                )
                             }
                         }
                     }
@@ -700,10 +695,33 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         if (CurrentUser.privateMessageUsers == null) {
             CurrentUser.privateMessageUsers = mutableListOf()
         }
-        val test = baseContext.fileList()
-        test.forEach {
+
+        baseContext.fileList().forEach {
             if (it.contains("${CurrentUser.user!!.username}_private_messages")) {
                 CurrentUser.privateMessageUsers!!.add(it)
+            }
+        }
+
+        if (CurrentUser.privateMessageUsers != null) {
+            CurrentUser.privateMessageUsers!!.forEach {
+                val nick = it.substringAfter("private_messages_").substringBefore(".txt")
+                val file =
+                    baseContext.getFileStreamPath(it)
+                if (file.exists()) {
+                    val fileInputStream = openFileInput(it)
+                    val inputStreamReader = InputStreamReader(fileInputStream)
+                    val bufferedReader = BufferedReader(inputStreamReader)
+                    val messagesArray = mutableListOf<Message>()
+                    while (bufferedReader.ready()) {
+                        val line = bufferedReader.readLine()
+                        val curPMessage: Message = Gson().fromJson(line, Message::class.java)
+                        messagesArray.add(curPMessage)
+                    }
+                    CurrentUser.whispersDictionary[nick] = messagesArray
+                    CurrentUser.whispersDictionary[nick]?.sortBy { message ->
+                        message.timestamp
+                    }
+                }
             }
         }
     }
@@ -747,7 +765,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
             R.id.nav_Chat -> {
                 supportFragmentManager.fragments.forEach {
-                    if (it.tag == "StreamsFragment" || it.tag == "ProfileFragment" || it.tag == "OptionsFragment") {
+                    if (it.tag == "StreamsFragment" || it.tag == "ProfileFragment" || it.tag == "OptionsFragment" || it.tag == "WhispersFragment") {
                         supportFragmentManager.beginTransaction().remove(it).commit()
                     }
                 }
@@ -778,7 +796,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onBackPressed() {
         if (supportFragmentManager.backStackEntryCount == 0) {
-            super.onBackPressed()
+            return
         } else {
             supportFragmentManager.popBackStack()
 
@@ -796,6 +814,10 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
                     "OptionsFragment" -> {
                         nav_view.setCheckedItem(R.id.nav_Settings)
+                    }
+
+                    "WhispersFragment" -> {
+                        nav_view.setCheckedItem(R.id.nav_Whispers)
                     }
                 }
             } else {
@@ -1297,13 +1319,13 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     private fun savePrivateMessage(messageJson: String, message: Message) {
-        if (CurrentUser.privateMessageUsers == null) {
-            CurrentUser.privateMessageUsers = mutableListOf()
-        }
         if (CurrentUser.user == null) {
             return
         }
         val otherUser = if (CurrentUser.user!!.username == message.nick) message.targetNick else message.nick
+        if (!CurrentUser.privateMessageUsers!!.contains(otherUser)) {
+            CurrentUser.privateMessageUsers!!.add(otherUser!!)
+        }
         val filename = "${CurrentUser.user!!.username}_private_messages_$otherUser.txt"
         val file =
             baseContext.getFileStreamPath(filename)
@@ -2106,7 +2128,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 viewHolder.itemView.alpha = 1f
             }
 
-            viewHolder.itemView.usernamePrivateMessage.text = messageData.nick
+            viewHolder.itemView.usernamePrivateMessage.text = if(messageData.nick == CurrentUser.user?.username) messageData.targetNick else messageData.nick
 
             viewHolder.itemView.messagePrivateMessage.movementMethod =
                 LinkMovementMethod.getInstance()
@@ -2284,16 +2306,11 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     CurrentUser.users!!.remove(userQuit)
                 }
             }
-            "PRIVMSG" -> {
+            "PRIVMSG", "PRIVMSGSENT" -> {
                 val message = Klaxon().parse<Message>(msg[1])!!
                 message.privMsg = true
                 savePrivateMessage(msg[1], message)
                 return message
-            }
-            "PRIVMSGSENT" -> {
-                val message = Klaxon().parse<Message>(msg[1])!!
-                message.privMsg = true
-                savePrivateMessage(msg[1], message)
             }
             "MSG" -> {
                 val message = Klaxon().parse<Message>(msg[1])!!

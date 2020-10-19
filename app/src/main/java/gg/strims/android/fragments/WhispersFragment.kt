@@ -1,7 +1,6 @@
 package gg.strims.android.fragments
 
 import android.annotation.SuppressLint
-import android.content.Intent
 import android.graphics.Rect
 import android.os.Bundle
 import android.util.TypedValue
@@ -18,11 +17,8 @@ import com.xwray.groupie.Item
 import gg.strims.android.*
 import gg.strims.android.models.Message
 import io.ktor.util.KtorExperimentalAPI
-import kotlinx.android.synthetic.main.activity_chat.*
 import kotlinx.android.synthetic.main.app_bar_main.*
-import kotlinx.android.synthetic.main.fragment_user_whispers.*
 import kotlinx.android.synthetic.main.fragment_whispers.*
-import kotlinx.android.synthetic.main.whisper_message_item_right.view.*
 import kotlinx.android.synthetic.main.whisper_user_item.view.*
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -81,24 +77,6 @@ class WhispersFragment : Fragment() {
         if (CurrentUser.privateMessageUsers != null) {
             CurrentUser.privateMessageUsers!!.forEach {
                 val nick = it.substringAfter("private_messages_").substringBefore(".txt")
-                val file =
-                    requireActivity().baseContext.getFileStreamPath(it)
-                if (file.exists()) {
-                    val fileInputStream =
-                        requireActivity().openFileInput(it)
-                    val inputStreamReader = InputStreamReader(fileInputStream)
-                    val bufferedReader = BufferedReader(inputStreamReader)
-                    val messagesArray = mutableListOf<Message>()
-                    while (bufferedReader.ready()) {
-                        val line = bufferedReader.readLine()
-                        val curPMessage: Message = Gson().fromJson(line, Message::class.java)
-                        messagesArray.add(curPMessage)
-                    }
-                    CurrentUser.whispersDictionary[nick] = messagesArray
-                    CurrentUser.whispersDictionary[nick]?.sortBy { message ->
-                        message.timestamp
-                    }
-                }
                 whispersAdapter.add(WhisperUserItem(nick))
             }
         }
