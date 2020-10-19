@@ -4,36 +4,50 @@
     android:id="@+id/constraintLayoutWhispersUser"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000">
-
-    <TextView
-        android:id="@+id/usernameWhispersUser"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="TextView"
-        android:textColor="#FF5D1F"
-        app:layout_constraintBottom_toTopOf="@+id/recyclerViewWhispersUser"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="@+id/backWhispersUser"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <ImageView
-        android:id="@+id/backWhispersUser"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_arrow_back_orange_24dp" />
+    android:background="#515151">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewWhispersUser"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginBottom="4dp"
-        app:layout_constraintVertical_bias="0.0"
         android:background="#080808"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/sendMessageTextWhisper"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/backWhispersUser" />
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <EditText
+        android:id="@+id/sendMessageTextWhisper"
+        android:layout_width="0dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
+        android:layout_marginBottom="4dp"
+        android:background="@drawable/rounded_text_enter_message"
+        android:ems="10"
+        android:hint="@string/log_in_to_send_messages"
+        android:imeOptions="actionSend"
+        android:inputType="text"
+        android:maxLines="3"
+        android:paddingStart="4dp"
+        android:paddingEnd="40dp"
+        android:textColor="#FFFFFF"
+        android:textColorHighlight="#40FF5722"
+        android:textCursorDrawable="@drawable/orange_cursor"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/sendMessageButtonWhisper"
+        android:layout_width="26dp"
+        android:layout_height="30dp"
+        android:layout_marginEnd="6dp"
+        android:background="@drawable/ic_send_orange_24dp"
+        app:layout_constraintBottom_toBottomOf="@+id/sendMessageTextWhisper"
+        app:layout_constraintEnd_toEndOf="@+id/sendMessageTextWhisper"
+        app:layout_constraintTop_toTopOf="@+id/sendMessageTextWhisper" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

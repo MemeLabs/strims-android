@@ -169,29 +169,6 @@
         tools:visibility="gone" />
 
     <fragment
-        android:id="@+id/whispers_fragment"
-        android:name="gg.strims.android.fragments.WhispersFragment"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:layout="@layout/fragment_whispers"
-        tools:visibility="gone" />
-
-    <fragment
-        android:id="@+id/whispers_user_fragment"
-        android:name="gg.strims.android.fragments.WhispersUserFragment"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@id/recyclerViewAutofill"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:layout="@layout/fragment_whispers"
-        tools:visibility="gone" />
-
-    <fragment
         android:id="@+id/nav_host_fragment"
         android:name="androidx.navigation.fragment.NavHostFragment"
         android:layout_width="match_parent"

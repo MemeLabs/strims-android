@@ -6,7 +6,8 @@ data class Message(
     var data: String,
     var timestamp: Long = System.currentTimeMillis(),
     var features: Array<String> = arrayOf(""),
-    var entities: Entities = Entities()
+    var entities: Entities = Entities(),
+    var targetNick: String? = null
 ) {
 
     constructor(): this(
@@ -30,6 +31,7 @@ data class Message(
         if (timestamp != other.timestamp) return false
         if (!features.contentEquals(other.features)) return false
         if (entities != other.entities) return false
+        if (targetNick != other.targetNick) return false
 
         return true
     }
@@ -41,6 +43,7 @@ data class Message(
         result = 31 * result + timestamp.hashCode()
         result = 31 * result + features.contentHashCode()
         result = 31 * result + entities.hashCode()
+        result = 31 * result + (targetNick?.hashCode() ?: 0)
         return result
     }
 }

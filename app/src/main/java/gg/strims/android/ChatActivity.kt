@@ -34,11 +34,9 @@ import android.view.animation.Animation
 import android.view.animation.ScaleAnimation
 import android.view.animation.TranslateAnimation
 import android.view.inputmethod.EditorInfo
-import android.webkit.CookieManager
 import android.widget.ImageView
 import android.widget.PopupMenu
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.appcompat.widget.Toolbar
@@ -55,25 +53,15 @@ import androidx.navigation.ui.setupWithNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.beust.klaxon.Klaxon
 import com.google.android.material.navigation.NavigationView
-import com.google.gson.Gson
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
-import gg.strims.android.clients.StrimsClient
 import gg.strims.android.customspans.CenteredImageSpan
 import gg.strims.android.customspans.ColouredUnderlineSpan
 import gg.strims.android.customspans.DrawableCallback
 import gg.strims.android.customspans.NoUnderlineClickableSpan
-import gg.strims.android.fragments.LoginFragment
-import gg.strims.android.fragments.OptionsFragment
-import gg.strims.android.fragments.ProfileFragment
-import gg.strims.android.fragments.StreamsFragment
+import gg.strims.android.fragments.*
 import gg.strims.android.models.*
-import io.ktor.client.*
-import io.ktor.client.features.websocket.*
-import io.ktor.client.request.get
-import io.ktor.client.request.header
-import io.ktor.http.cio.websocket.*
 import io.ktor.util.*
 import io.ktor.utils.io.errors.*
 import kotlinx.android.synthetic.main.activity_chat.*
@@ -85,15 +73,11 @@ import kotlinx.android.synthetic.main.chat_message_item_emote_combo.view.*
 import kotlinx.android.synthetic.main.error_chat_message_item.view.*
 import kotlinx.android.synthetic.main.nav_header_main.*
 import kotlinx.android.synthetic.main.private_chat_message_item.view.*
-import kotlinx.android.synthetic.main.whisper_message_item_right.view.*
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.launch
 import pl.droidsonroids.gif.GifDrawable
 import java.io.BufferedInputStream
-import java.io.BufferedReader
 import java.io.InputStream
-import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
@@ -148,7 +132,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                                     }
 
                                 }
-                                if (msg.entities.emotes != null && msg.entities.emotes!!.isNotEmpty() && msg.entities.emotes!![0].combo > 1) {
+                                if (adapter.itemCount > 0 && msg.entities.emotes != null && msg.entities.emotes!!.isNotEmpty() && msg.entities.emotes!![0].combo > 1) {
                                     if (msg.entities.emotes!![0].combo == 2) {
                                         adapter.removeGroupAtAdapterPosition(adapter.itemCount - 1)
                                         adapter.add(ChatMessageCombo(msg))
@@ -261,8 +245,31 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     Thread.sleep(3000)
                     stopService(socketIntent)
                     startService(socketIntent)
+                } else if (intent.action == "gg.strims.android.RETRIEVE_PRIVATE_MESSAGES") {
+                    retrievePrivateMessages()
                 }
             }
+        }
+    }
+
+    private var scrollUponResume = false
+
+    override fun onPause() {
+        val layoutTest = recyclerViewChat.layoutManager as LinearLayoutManager
+        val lastItem = layoutTest.findLastVisibleItemPosition()
+        if (lastItem < recyclerViewChat.adapter!!.itemCount - 1) {
+            scrollUponResume = false
+        } else {
+            goToBottomLayout.visibility = View.GONE
+            scrollUponResume = true
+        }
+        super.onPause()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (scrollUponResume) {
+            recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
         }
     }
 
@@ -309,7 +316,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 //            try {
 //                StrimsClient().onConnect()
 //            } catch (e: ClosedReceiveChannelException) {
-//                Log.d("TAG", "onClose ${e.localizedMessage}")
+//                Log.d("TAG", "StreamsSocket onClose ${e.localizedMessage}")
 //                runOnUiThread {
 //                    Toast.makeText(
 //                        this@ChatActivity,
@@ -331,6 +338,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         intentFilter.addAction("gg.strims.android.EMOTES")
         intentFilter.addAction("gg.strims.android.PROFILE")
         intentFilter.addAction("gg.strims.android.SOCKET_CLOSE")
+        intentFilter.addAction("gg.strims.android.RETRIEVE_PRIVATE_MESSAGES")
         registerReceiver(broadcastReceiver, intentFilter)
 
         val maxMemory = (Runtime.getRuntime().maxMemory() / 1024).toInt()
@@ -356,7 +364,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 autofillAdapter.clear()
                 if (sendMessageText.text.isNotEmpty()) {
                     recyclerViewAutofill.visibility = View.VISIBLE
-                    goToBottomLayout.visibility = View.GONE
+//                    goToBottomLayout.visibility = View.GONE
                     if (sendMessageText.text.first() == '/' && !sendMessageText.text.contains(' ')) {
                         val currentWord = sendMessageText.text.toString().substringAfter('/')
 
@@ -483,12 +491,11 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
                 }
                 if (privateMessageCommand != "") {
-                    val command = privateMessageCommand
                     if (messageText.length <= privateMessageCommand.length + 2) { // 1 for '/'  1 for space
                         adapter.add(ErrorChatMessage("Invalid nick - /$privateMessageCommand nick message"))
                     } else {
                         val nick =
-                            messageText.substringAfter("$command ").substringBefore(' ')
+                            messageText.substringAfter("$privateMessageCommand ").substringBefore(' ')
                         val nickRegex = "^[A-Za-z0-9_]{3,20}$"
                         val p: Pattern = Pattern.compile(nickRegex)
                         val m: Matcher = p.matcher(nick)
@@ -498,7 +505,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                                 adapter.add(ErrorChatMessage("Invalid nick - /$privateMessageCommand nick message"))
                             }
                         } else {
-                            var message = messageText.substringAfter("$command $nick")
+                            var message = messageText.substringAfter("$privateMessageCommand $nick")
                             message = message.substringAfter(" ")
                             if (message.trim() == "") {
                                 //TODO: empty message notify in chat ?
@@ -686,8 +693,23 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
+    private fun retrievePrivateMessages() {
+        if (CurrentUser.user == null) {
+            return
+        }
+        if (CurrentUser.privateMessageUsers == null) {
+            CurrentUser.privateMessageUsers = mutableListOf()
+        }
+        val test = baseContext.fileList()
+        test.forEach {
+            if (it.contains("${CurrentUser.user!!.username}_private_messages")) {
+                CurrentUser.privateMessageUsers!!.add(it)
+            }
+        }
+    }
+
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.navigation_drawer, menu)
+        menuInflater.inflate(R.menu.navigation_drawer_options, menu)
         return true
     }
 
@@ -736,6 +758,12 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 supportFragmentManager.beginTransaction()
                     .replace(R.id.nav_host_fragment, ProfileFragment(), "ProfileFragment")
                     .addToBackStack("ProfileFragment").commit()
+            }
+
+            R.id.nav_Whispers -> {
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.nav_host_fragment, WhispersFragment(), "WhispersFragment")
+                    .addToBackStack("WhispersFragment").commit()
             }
 
             R.id.nav_Settings -> {
@@ -1268,101 +1296,38 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    fun savePrivateMessage(whisperMessageItem: WhisperMessageItem) {
-        if (CurrentUser.privateMessages == null) {
-            CurrentUser.privateMessages = mutableListOf()
+    private fun savePrivateMessage(messageJson: String, message: Message) {
+        if (CurrentUser.privateMessageUsers == null) {
+            CurrentUser.privateMessageUsers = mutableListOf()
         }
         if (CurrentUser.user == null) {
             return
         }
-        CurrentUser.privateMessages!!.add(whisperMessageItem)
-        if (CurrentUser.tempWhisperUser != null) {
-            if (CurrentUser.tempWhisperUser == whisperMessageItem.getNick()) {
-                if (supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!.isVisible) {
-                    supportFragmentManager.beginTransaction()
-                        .hide(supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!)
-                        .commit()
-                    supportFragmentManager.beginTransaction()
-                        .show(supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!)
-                        .commit()
-                }
-            }
-        }
-        if (supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!.isVisible) {
-            supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!
-                .onHiddenChanged(false)
-        }
+        val otherUser = if (CurrentUser.user!!.username == message.nick) message.targetNick else message.nick
+        val filename = "${CurrentUser.user!!.username}_private_messages_$otherUser.txt"
         val file =
-            baseContext.getFileStreamPath("${CurrentUser.user!!.username}_private_messages.txt")
+            baseContext.getFileStreamPath(filename)
         if (file.exists()) {
             try {
                 val fileOutputStream = baseContext.openFileOutput(
-                    "${CurrentUser.user!!.username}_private_messages.txt",
+                    filename,
                     Context.MODE_APPEND
                 )
-                fileOutputStream.write("\n${Gson().toJson(whisperMessageItem)}".toByteArray())
+                fileOutputStream.write("\n$messageJson".toByteArray())
             } catch (e: java.lang.Exception) {
                 e.printStackTrace()
             }
         } else {
             try {
                 val fileOutputStream = baseContext.openFileOutput(
-                    "${CurrentUser.user!!.username}_private_messages.txt",
+                    filename,
                     Context.MODE_PRIVATE
                 )
 
-                fileOutputStream.write(Gson().toJson(whisperMessageItem).toByteArray())
+                fileOutputStream.write(messageJson.toByteArray())
             } catch (e: java.lang.Exception) {
                 e.printStackTrace()
             }
-        }
-    }
-
-    fun retrievePrivateMessages() {
-        if (CurrentUser.privateMessages == null) {
-            CurrentUser.privateMessages = mutableListOf()
-        }
-        if (CurrentUser.user == null) {
-            return
-        }
-        val file =
-            baseContext.getFileStreamPath("${CurrentUser.user!!.username}_private_messages.txt")
-        if (file.exists()) {
-            val fileInputStream =
-                openFileInput("${CurrentUser.user!!.username}_private_messages.txt")
-            val inputStreamReader = InputStreamReader(fileInputStream)
-            val bufferedReader = BufferedReader(inputStreamReader)
-            while (bufferedReader.ready()) {
-
-                val line = bufferedReader.readLine()
-                val curPMessage: WhisperMessageItem? =
-                    Gson().fromJson(line, WhisperMessageItem::class.java)
-                if (curPMessage != null) {
-                    CurrentUser.privateMessages!!.add(
-                        WhisperMessageItem(
-                            curPMessage.message,
-                            curPMessage.isReceived
-                        )
-                    )
-                }
-            }
-        }
-    }
-
-    fun retrieveOptions() {
-        val file = baseContext.getFileStreamPath("filename.txt")
-        if (file.exists()) {
-            val fileInputStream = openFileInput("filename.txt")
-            val inputStreamReader = InputStreamReader(fileInputStream)
-            val bufferedReader = BufferedReader(inputStreamReader)
-            val stringBuilder = StringBuilder()
-            var text: String? = null
-            while ({ text = bufferedReader.readLine(); text }() != null) {
-                stringBuilder.append(text)
-            }
-            CurrentUser.options = Klaxon().parse(stringBuilder.toString())
-        } else {
-            CurrentUser.options = Options()
         }
     }
 
@@ -2028,13 +1993,11 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 CurrentUser.tempHighlightNick = null
                 for (i in 0 until adapter.itemCount) {
                     if (adapter.getItem(i).layout == R.layout.chat_message_item || adapter.getItem(i).layout == R.layout.chat_message_item_consecutive_nick) {
-                        val item = adapter.getItem(i) as ChatMessage
                         val adapterItem =
                             recyclerViewChat.findViewHolderForAdapterPosition(i)
                         adapterItem?.itemView?.alpha = 1f
 
                     } else if (adapter.getItem(i).layout == R.layout.private_chat_message_item) {
-                        val item = adapter.getItem(i) as PrivateChatMessage
                         val adapterItem =
                             recyclerViewChat.findViewHolderForAdapterPosition(i)
                         adapterItem?.itemView?.alpha = 1f
@@ -2085,10 +2048,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             return R.layout.private_chat_message_item
         }
 
-        init {
-            savePrivateMessage(WhisperMessageItem(messageData, isReceived))
-        }
-
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
             if (CurrentUser.options!!.ignoreList.contains(messageData.nick)) {
                 return
@@ -2101,6 +2060,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 viewHolder.itemView.whisperedPrivateMessage.text = ":"
                 viewHolder.itemView.whisperedPrivateMessage.visibility = View.VISIBLE
             }
+
             if (CurrentUser.options!!.showTime) {
                 val dateFormat = SimpleDateFormat("HH:mm")
                 val time = dateFormat.format(messageData.timestamp)
@@ -2286,28 +2246,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    inner class WhisperMessageItem(val message: Message, val isReceived: Boolean) :
-        Item<GroupieViewHolder>() {
-        override fun getLayout(): Int {
-            if (isReceived) {
-                return R.layout.whisper_message_item_left
-            }
-            return R.layout.whisper_message_item_right
-        }
-
-        override fun bind(viewHolder: GroupieViewHolder, position: Int) {
-
-            viewHolder.itemView.messageWhisperMessageItem.movementMethod =
-                LinkMovementMethod.getInstance()
-            createMessageTextView(message, viewHolder.itemView.messageWhisperMessageItem)
-
-        }
-
-        fun getNick(): String {
-            return message.nick
-        }
-    }
-
     private fun parseChatMessage(input: String): Message? {
         val msg = input.split(" ", limit = 2)
         when (msg[0]) {
@@ -2349,7 +2287,13 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             "PRIVMSG" -> {
                 val message = Klaxon().parse<Message>(msg[1])!!
                 message.privMsg = true
+                savePrivateMessage(msg[1], message)
                 return message
+            }
+            "PRIVMSGSENT" -> {
+                val message = Klaxon().parse<Message>(msg[1])!!
+                message.privMsg = true
+                savePrivateMessage(msg[1], message)
             }
             "MSG" -> {
                 val message = Klaxon().parse<Message>(msg[1])!!

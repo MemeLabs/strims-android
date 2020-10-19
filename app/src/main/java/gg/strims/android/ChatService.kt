@@ -17,6 +17,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.PRIORITY_MIN
 import com.beust.klaxon.Klaxon
+import com.google.gson.Gson
 import gg.strims.android.models.EmotesParsed
 import gg.strims.android.models.Options
 import io.ktor.client.*
@@ -52,7 +53,8 @@ class ChatService: Service() {
                 try {
                     ChatClient().onConnect()
                 } catch (e: ClosedReceiveChannelException) {
-                    Log.d("TAG", "onClose ${e.localizedMessage}")
+                    job?.cancel()
+                    Log.d("TAG", "ChatSocket onClose ${e.localizedMessage}")
                     sendBroadcast(Intent("gg.strims.android.SOCKET_CLOSE"))
                 }
             }
@@ -92,18 +94,10 @@ class ChatService: Service() {
 //    }
 
     private fun startForeground() {
-        val channelId =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                createNotificationChannel("my_service", "My Background Service")
-            } else {
-                // If earlier version channel ID is not used
-                // https://developer.android.com/reference/android/support/v4/app/NotificationCompat.Builder.html#NotificationCompat.Builder(android.content.Context)
-                ""
-            }
-
+        val channelId = createNotificationChannel("strims_chat_service", "Strims Chat Service")
         val notificationBuilder = NotificationCompat.Builder(this, channelId )
         val notification = notificationBuilder.setOngoing(true)
-            .setSmallIcon(gg.strims.android.R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.mipmap.ic_launcher_foreground)
             .setPriority(PRIORITY_MIN)
             .setCategory(Notification.CATEGORY_SERVICE)
             .build()
@@ -203,11 +197,11 @@ class ChatService: Service() {
         ) {
             if (jwt != null) {
                 retrieveProfile()
+                sendBroadcast(Intent("gg.strims.android.RETRIEVE_PRIVATE_MESSAGES"))
             }
             retrieveEmotes()
             retrieveOptions()
             retrieveHistory()
-//            retrievePrivateMessages()
 
             val broadcastReceiver = object : BroadcastReceiver() {
                 override fun onReceive(context: Context?, intent: Intent?) {
@@ -225,7 +219,6 @@ class ChatService: Service() {
             }
 
             val intentFilter = IntentFilter("gg.strims.android.SEND_MESSAGE")
-
             registerReceiver(broadcastReceiver, intentFilter)
 
             while (true) {
