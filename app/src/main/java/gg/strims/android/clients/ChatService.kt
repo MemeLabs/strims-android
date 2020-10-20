@@ -1,4 +1,4 @@
-package gg.strims.android
+package gg.strims.android.clients
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -17,6 +17,8 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.PRIORITY_MIN
 import com.beust.klaxon.Klaxon
+import gg.strims.android.CurrentUser
+import gg.strims.android.R
 import gg.strims.android.models.EmotesParsed
 import gg.strims.android.models.Options
 import io.ktor.client.*
@@ -32,7 +34,6 @@ import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.URL
-
 
 @KtorExperimentalAPI
 class ChatService: Service() {
@@ -52,18 +53,18 @@ class ChatService: Service() {
                 } catch (e: ClosedReceiveChannelException) {
                     job?.cancel()
                     Log.d("TAG", "ChatSocket onClose ${e.localizedMessage}")
-                    sendBroadcast(Intent("gg.strims.android.SOCKET_CLOSE"))
+                    sendBroadcast(Intent("gg.strims.android.CHAT_SOCKET_CLOSE"))
                 }
             }
         } catch (e: InterruptedException) {
             Thread.currentThread().interrupt()
-            sendBroadcast(Intent("gg.strims.android.SOCKET_CLOSE"))
+            sendBroadcast(Intent("gg.strims.android.CHAT_SOCKET_CLOSE"))
         }
         return START_STICKY
     }
 
     override fun onDestroy() {
-        Log.d("TAG", "Destroying...")
+        Log.d("TAG", "Destroying Chat Service...")
         broadcastReceivers.forEach {
             unregisterReceiver(it)
         }
@@ -85,7 +86,7 @@ class ChatService: Service() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun createNotificationChannel(channelId: String, channelName: String): String{
+    private fun createNotificationChannel(channelId: String, channelName: String): String {
         val chan = NotificationChannel(
             channelId,
             channelName, NotificationManager.IMPORTANCE_NONE

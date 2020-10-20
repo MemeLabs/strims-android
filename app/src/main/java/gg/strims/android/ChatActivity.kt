@@ -37,14 +37,12 @@ import android.view.inputmethod.EditorInfo
 import android.widget.ImageView
 import android.widget.PopupMenu
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.RemoteInput
-import androidx.core.app.TaskStackBuilder
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
@@ -58,13 +56,17 @@ import com.google.gson.Gson
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
-import gg.strims.android.clients.StrimsClient
+import gg.strims.android.clients.ChatService
+import gg.strims.android.clients.StreamsService
 import gg.strims.android.customspans.CenteredImageSpan
 import gg.strims.android.customspans.ColouredUnderlineSpan
 import gg.strims.android.customspans.DrawableCallback
 import gg.strims.android.customspans.NoUnderlineClickableSpan
 import gg.strims.android.fragments.*
-import gg.strims.android.models.*
+import gg.strims.android.models.ChatUser
+import gg.strims.android.models.Emote
+import gg.strims.android.models.Message
+import gg.strims.android.models.NamesMessage
 import io.ktor.util.*
 import io.ktor.utils.io.errors.*
 import kotlinx.android.synthetic.main.activity_chat.*
@@ -77,7 +79,6 @@ import kotlinx.android.synthetic.main.error_chat_message_item.view.*
 import kotlinx.android.synthetic.main.nav_header_main.*
 import kotlinx.android.synthetic.main.private_chat_message_item.view.*
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.launch
 import pl.droidsonroids.gif.GifDrawable
 import java.io.BufferedInputStream
@@ -94,12 +95,12 @@ import java.util.regex.Pattern
 @SuppressLint("SetTextI18n", "SimpleDateFormat", "WrongViewCast")
 class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
-    var socketIntent: Intent? = null
+    var chatSocketIntent: Intent? = null
+    var streamsSocketIntent: Intent? = null
 
     companion object {
         var channelId = "chat_notifications"
         var NOTIFICATION_ID = 1
-        var NOT_USER_KEY = "NOT_USER_KEY"
         var NOTIFICATION_REPLY_KEY = "Text"
     }
 
@@ -107,9 +108,9 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     val adapter = GroupAdapter<GroupieViewHolder>()
 
-    private lateinit var bitmapMemoryCache: LruCache<String, Bitmap>
-
-    private lateinit var gifMemoryCache: LruCache<String, GifDrawable>
+//    private lateinit var bitmapMemoryCache: LruCache<String, Bitmap>
+//
+//    private lateinit var gifMemoryCache: LruCache<String, GifDrawable>
 
     private var privateMessageArray = arrayOf("w", "whisper", "msg", "tell", "t", "notify")
 
@@ -239,7 +240,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     nav_view.menu.findItem(R.id.nav_Whispers).isVisible = true
                     nav_view.setCheckedItem(R.id.nav_Chat)
                     invalidateOptionsMenu()
-                } else if (intent.action == "gg.strims.android.SOCKET_CLOSE") {
+                } else if (intent.action == "gg.strims.android.CHAT_SOCKET_CLOSE") {
                     adapter.add(
                         ChatMessage(
                             Message(
@@ -250,10 +251,16 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         )
                     )
                     Thread.sleep(3000)
-                    stopService(socketIntent)
-                    startService(socketIntent)
+                    stopService(chatSocketIntent)
+                    startService(chatSocketIntent)
+                } else if (intent.action == "gg.strims.android.STREAMS_SOCKET_CLOSE") {
+                    stopService(streamsSocketIntent)
+                    startService(streamsSocketIntent)
                 } else if (intent.action == "gg.strims.android.RETRIEVE_PRIVATE_MESSAGES") {
                     retrievePrivateMessages()
+                } else if (intent.action == "gg.strims.android.STREAMS") {
+                    val streams = intent.getStringExtra("gg.strims.android.STREAMS_TEXT")
+                    StreamsFragment().parseStream(streams!!)
                 }
             }
         }
@@ -275,6 +282,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onResume() {
         super.onResume()
+
         if (scrollUponResume) {
             recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
         }
@@ -302,41 +310,30 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         navView.setCheckedItem(R.id.nav_Chat)
 
-        GlobalScope.launch {
-            try {
-                StrimsClient().onConnect()
-            } catch (e: ClosedReceiveChannelException) {
-                Log.d("TAG", "StreamsSocket onClose ${e.localizedMessage}")
-                runOnUiThread {
-                    Toast.makeText(
-                        this@ChatActivity,
-                        "Disconnected, reconnecting...",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-            }
-        }
-
-        socketIntent = Intent(this, ChatService::class.java)
-        startService(socketIntent)
+        chatSocketIntent = Intent(this, ChatService::class.java)
+        streamsSocketIntent = Intent(this, StreamsService::class.java)
+        startService(chatSocketIntent)
+        startService(streamsSocketIntent)
 
         val intentFilter = IntentFilter()
         intentFilter.addAction("gg.strims.android.MESSAGE")
         intentFilter.addAction("gg.strims.android.MESSAGE_HISTORY")
         intentFilter.addAction("gg.strims.android.EMOTES")
         intentFilter.addAction("gg.strims.android.PROFILE")
-        intentFilter.addAction("gg.strims.android.SOCKET_CLOSE")
+        intentFilter.addAction("gg.strims.android.CHAT_SOCKET_CLOSE")
+        intentFilter.addAction("gg.strims.android.STREAMS_SOCKET_CLOSE")
         intentFilter.addAction("gg.strims.android.RETRIEVE_PRIVATE_MESSAGES")
+        intentFilter.addAction("gg.strims.android.STREAMS")
         registerReceiver(broadcastReceiver, intentFilter)
 
         val maxMemory = (Runtime.getRuntime().maxMemory() / 1024).toInt()
         val cacheSize = maxMemory / 8
-        bitmapMemoryCache = object : LruCache<String, Bitmap>(cacheSize) {
+        CurrentUser.bitmapMemoryCache = object : LruCache<String, Bitmap>(cacheSize) {
             override fun sizeOf(key: String, bitmap: Bitmap): Int {
                 return bitmap.byteCount / 1024
             }
         }
-        gifMemoryCache = object : LruCache<String, GifDrawable>(cacheSize) {}
+        CurrentUser.gifMemoryCache = object : LruCache<String, GifDrawable>(cacheSize) {}
 
         sendMessageText.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
@@ -483,7 +480,9 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         adapter.add(ErrorChatMessage("Invalid nick - /$privateMessageCommand nick message"))
                     } else {
                         val nick =
-                            messageText.substringAfter("$privateMessageCommand ").substringBefore(' ')
+                            messageText.substringAfter("$privateMessageCommand ").substringBefore(
+                                ' '
+                            )
                         val nickRegex = "^[A-Za-z0-9_]{3,20}$"
                         val p: Pattern = Pattern.compile(nickRegex)
                         val m: Matcher = p.matcher(nick)
@@ -500,7 +499,10 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                                 return@setOnClickListener
                             } else {
                                 val intent = Intent("gg.strims.android.SEND_MESSAGE")
-                                intent.putExtra("gg.strims.android.SEND_MESSAGE_TEXT", "PRIVMSG {\"nick\":\"$nick\", \"data\":\"$message\"}")
+                                intent.putExtra(
+                                    "gg.strims.android.SEND_MESSAGE_TEXT",
+                                    "PRIVMSG {\"nick\":\"$nick\", \"data\":\"$message\"}"
+                                )
                                 sendBroadcast(intent)
                             }
                         }
@@ -618,7 +620,10 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 }
             } else {
                 val intent = Intent("gg.strims.android.SEND_MESSAGE")
-                intent.putExtra("gg.strims.android.SEND_MESSAGE_TEXT", "MSG {\"data\":\"${sendMessageText.text}\"}")
+                intent.putExtra(
+                    "gg.strims.android.SEND_MESSAGE_TEXT",
+                    "MSG {\"data\":\"${sendMessageText.text}\"}"
+                )
                 sendBroadcast(intent)
             }
             sendMessageText.text.clear()
@@ -661,12 +666,12 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             if (!biggestEmote.animated) {
                 GlobalScope.launch {
                     val bitmap = getBitmapFromURL(url)
-                    bitmapMemoryCache.put(it.name, bitmap)
+                    CurrentUser.bitmapMemoryCache.put(it.name, bitmap)
                 }
             } else {
                 GlobalScope.launch {
                     val gif = getGifFromURL(url)
-                    gifMemoryCache.put(it.name, gif)
+                    CurrentUser.gifMemoryCache.put(it.name, gif)
                 }
             }
         }
@@ -837,7 +842,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     if (!animated) {
                         var bitmap: Bitmap? = null
                         while (bitmap == null) {
-                            bitmap = bitmapMemoryCache.get(it.name)
+                            bitmap = CurrentUser.bitmapMemoryCache.get(it.name)
                         }
                         var width = bitmap.width * 0.75
                         if (it.modifiers.contains("wide")) {
@@ -859,7 +864,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
                         var gif: GifDrawable? = null
                         while (gif == null) {
-                            gif = gifMemoryCache.get(it.name)
+                            gif = CurrentUser.gifMemoryCache.get(it.name)
                         }
 //                        gif.loopCount = 1
                         gif.callback = DrawableCallback(messageTextView)
@@ -1340,10 +1345,16 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         CurrentUser.whispersDictionary[otherUser]?.add(message)
     }
 
+    override fun onDestroy() {
+        Log.d("TAG", "DESTROYED")
+        super.onDestroy()
+    }
+
     private fun displayNotification(message: Message) {
-        val pendingIntent = TaskStackBuilder.create(this)
-            .addNextIntent(Intent(this, ChatActivity::class.java))
-            .getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
+        val activityIntent = Intent(this, ChatActivity::class.java)
+        val resultingActivityPendingIntent = PendingIntent.getActivity(
+            this, 0, activityIntent, PendingIntent.FLAG_UPDATE_CURRENT
+        )
 
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
@@ -1351,21 +1362,21 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             .setContentText(message.data)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setAutoCancel(true)
-            .setContentIntent(pendingIntent)
+            .setContentIntent(resultingActivityPendingIntent)
 
         val remoteInput = RemoteInput.Builder(NOTIFICATION_REPLY_KEY).setLabel("Reply").build()
 
-        val replyIntent = Intent(this, ChatActivity::class.java)
-            .putExtra(NOT_USER_KEY, message.nick)
+        val remoteReply = RemoteInput.getResultsFromIntent(intent)
 
-        val replyPendingIntent =
-            PendingIntent.getActivity(this, 0, replyIntent, PendingIntent.FLAG_UPDATE_CURRENT)
-
-        val action = NotificationCompat.Action.Builder(
-            R.drawable.ic_launcher_foreground,
-            "Reply",
-            replyPendingIntent
+        val replyIntent = Intent("gg.strims.android.SEND_MESSAGE")
+        replyIntent.putExtra(
+            "gg.strims.android.SEND_MESSAGE_TEXT",
+            "PRIVMSG {\"nick\":\"${message.nick}\", \"data\":\"${remoteReply.getCharSequence(NOTIFICATION_REPLY_KEY) as String}\"}"
         )
+
+        val replyPendingIntent = PendingIntent.getBroadcast(this, 0, replyIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+
+        val action = NotificationCompat.Action.Builder(R.drawable.ic_launcher_foreground, "Reply", replyPendingIntent)
             .addRemoteInput(remoteInput).build()
 
         notificationBuilder.addAction(action)

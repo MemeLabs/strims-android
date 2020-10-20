@@ -52,8 +52,7 @@ class WhispersUserFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val intentFilter = IntentFilter()
-        intentFilter.addAction("gg.strims.android.PRIVATE_MESSAGE")
+        val intentFilter = IntentFilter("gg.strims.android.PRIVATE_MESSAGE")
         requireActivity().registerReceiver(broadcastReceiver, intentFilter)
         return inflater.inflate(R.layout.fragment_user_whispers, container, false)
     }

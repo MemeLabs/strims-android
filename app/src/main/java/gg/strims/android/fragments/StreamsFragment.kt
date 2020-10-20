@@ -9,6 +9,8 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.navigation.NavigationView
+import com.google.gson.Gson
+import com.google.gson.JsonElement
 import com.squareup.picasso.Picasso
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
@@ -42,10 +44,30 @@ class StreamsFragment : Fragment() {
 
         requireActivity().toolbar.title = "Streams"
 
-        refreshStreams()
+        displayStreams()
     }
 
-    private fun refreshStreams() {
+    fun parseStream(input: String) {
+        val test = Gson().fromJson(input, JsonElement::class.java)
+        when (test.asJsonArray[0].asString) {
+            "RUSTLERS_SET" -> {
+                if (CurrentUser.streams != null) {
+                    CurrentUser.streams!!.forEach {
+                        if (it.id == test.asJsonArray[1].asLong) {
+                            it.rustlers = test.asJsonArray[2].asInt
+                            it.afk_rustlers = test.asJsonArray[3].asInt
+                        }
+                    }
+                }
+            }
+            "STREAMS_SET" -> {
+                val streams2 = Gson().fromJson(test.asJsonArray[1], Array<Stream>::class.java)
+                CurrentUser.streams = streams2.toMutableList()
+            }
+        }
+    }
+
+    private fun displayStreams() {
         if (CurrentUser.streams != null) {
             streamsAdapter.clear()
             CurrentUser.streams!!.sortByDescending {
@@ -84,38 +106,38 @@ class StreamsFragment : Fragment() {
             }
 
             viewHolder.itemView.setOnClickListener {
-                requireFragmentManager().fragments.forEach {
+                parentFragmentManager.fragments.forEach {
                     if (it.tag == "StreamsFragment" || it.tag == "ProfileFragment" || it.tag == "OptionsFragment") {
-                        requireFragmentManager().beginTransaction().remove(it).commit()
+                        parentFragmentManager.beginTransaction().remove(it).commit()
                     }
                 }
-                hideFragment(activity!!, fragmentManager!!.findFragmentById(R.id.angelthump_fragment)!!)
-                hideFragment(activity!!, fragmentManager!!.findFragmentById(R.id.twitch_fragment)!!)
-                hideFragment(activity!!, fragmentManager!!.findFragmentById(R.id.youtube_fragment)!!)
+                hideFragment(activity!!, parentFragmentManager.findFragmentById(R.id.angelthump_fragment)!!)
+                hideFragment(activity!!, parentFragmentManager.findFragmentById(R.id.twitch_fragment)!!)
+                hideFragment(activity!!, parentFragmentManager.findFragmentById(R.id.youtube_fragment)!!)
                 val navView = requireActivity().findViewById<NavigationView>(R.id.nav_view)
                 navView.setCheckedItem(R.id.nav_Chat)
                 requireActivity().toolbar.title = "Chat"
                 when (stream.service) {
                     "angelthump", "m3u8" -> {
                         CurrentUser.tempStream = stream
-                        val fragment = fragmentManager!!.findFragmentById(R.id.angelthump_fragment)
+                        val fragment = parentFragmentManager.findFragmentById(R.id.angelthump_fragment)
                         showFragment(activity!!, fragment!!)
                     }
                     "twitch" -> {
                         CurrentUser.tempTwitchUrl = stream.channel
                         CurrentUser.tempTwitchVod = false
-                        val fragment = fragmentManager!!.findFragmentById(R.id.twitch_fragment)
+                        val fragment = parentFragmentManager.findFragmentById(R.id.twitch_fragment)
                         showFragment(activity!!, fragment!!)
                     }
                     "youtube" -> {
                         CurrentUser.tempYouTubeId = stream.channel
-                        val fragment = fragmentManager!!.findFragmentById(R.id.youtube_fragment)
+                        val fragment = parentFragmentManager.findFragmentById(R.id.youtube_fragment)
                         showFragment(activity!!, fragment!!)
                     }
                     "twitch-vod" -> {
                         CurrentUser.tempTwitchUrl = stream.channel
                         CurrentUser.tempTwitchVod = true
-                        val fragment = fragmentManager!!.findFragmentById(R.id.twitch_fragment)
+                        val fragment = parentFragmentManager.findFragmentById(R.id.twitch_fragment)
                         showFragment(activity!!, fragment!!)
                     }
                 }

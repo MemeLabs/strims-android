@@ -18,10 +18,12 @@ import gg.strims.android.R
 import gg.strims.android.hideFragment
 import gg.strims.android.keyRequestFocus
 import gg.strims.android.models.ChatUser
+import io.ktor.util.*
 import kotlinx.android.synthetic.main.activity_chat.*
 import kotlinx.android.synthetic.main.fragment_user_list.*
 import kotlinx.android.synthetic.main.chat_user_item.view.*
 
+@KtorExperimentalAPI
 class UserListFragment : Fragment() {
     private val userListAdapter =
         GroupAdapter<GroupieViewHolder>()
@@ -94,7 +96,7 @@ class UserListFragment : Fragment() {
         recyclerViewUserList.adapter = userListAdapter
 
         closeUserListButton.setOnClickListener {
-            requireFragmentManager().beginTransaction()
+            parentFragmentManager.beginTransaction()
                 .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
                 .hide(this)
                 .commit()
@@ -131,7 +133,7 @@ class UserListFragment : Fragment() {
                 )
                 activity!!.sendMessageText.setSelection(activity!!.sendMessageText.text.length)
                 val fragment = this@UserListFragment
-                val fragmentTransaction = fragmentManager!!.beginTransaction()
+                val fragmentTransaction = parentFragmentManager.beginTransaction()
                 fragmentTransaction.setCustomAnimations(
                     android.R.anim.fade_in,
                     android.R.anim.fade_out

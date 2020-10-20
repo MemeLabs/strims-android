@@ -9,8 +9,10 @@ import androidx.fragment.app.Fragment
 import gg.strims.android.CurrentUser
 import gg.strims.android.R
 import gg.strims.android.hideFragment
+import io.ktor.util.*
 import kotlinx.android.synthetic.main.fragment_angelthump.*
 
+@KtorExperimentalAPI
 class AngelThumpFragment: Fragment() {
 
     override fun onCreateView(
@@ -27,7 +29,7 @@ class AngelThumpFragment: Fragment() {
         angelThumpClose.setOnClickListener {
             angelThumpVideoView.stopPlayback()
             CurrentUser.tempStream = null
-            requireFragmentManager().beginTransaction()
+            parentFragmentManager.beginTransaction()
                 .hide(this)
                 .commit()
         }

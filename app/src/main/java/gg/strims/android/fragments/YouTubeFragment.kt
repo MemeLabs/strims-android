@@ -10,8 +10,10 @@ import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.You
 import gg.strims.android.CurrentUser
 import gg.strims.android.R
 import gg.strims.android.hideFragment
+import io.ktor.util.*
 import kotlinx.android.synthetic.main.fragment_youtube.*
 
+@KtorExperimentalAPI
 class YouTubeFragment: Fragment() {
 
     override fun onCreateView(
@@ -32,7 +34,7 @@ class YouTubeFragment: Fragment() {
                 }
             })
             CurrentUser.tempYouTubeId = null
-            requireFragmentManager().beginTransaction()
+            parentFragmentManager.beginTransaction()
                 .hide(this)
                 .commit()
         }

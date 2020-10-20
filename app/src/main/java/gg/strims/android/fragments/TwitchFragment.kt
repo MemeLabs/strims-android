@@ -9,9 +9,11 @@ import androidx.fragment.app.Fragment
 import gg.strims.android.CurrentUser
 import gg.strims.android.R
 import gg.strims.android.hideFragment
+import io.ktor.util.*
 import kotlinx.android.synthetic.main.fragment_twitch.*
 
 @SuppressLint("SetJavaScriptEnabled")
+@KtorExperimentalAPI
 class TwitchFragment: Fragment() {
 
     override fun onCreateView(
@@ -31,7 +33,7 @@ class TwitchFragment: Fragment() {
             webViewTwitch.loadUrl("")
             CurrentUser.tempTwitchVod = null
             CurrentUser.tempYouTubeId = null
-            requireFragmentManager().beginTransaction()
+            parentFragmentManager.beginTransaction()
                 .hide(this)
                 .commit()
         }

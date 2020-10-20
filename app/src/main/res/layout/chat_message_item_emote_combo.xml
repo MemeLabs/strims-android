@@ -5,7 +5,7 @@
     android:id="@+id/constraintLayoutChatMessageItem"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="#000000">
+    android:background="#111111">
 
     <ImageView
         android:id="@+id/graySplatChatMessageCombo"
@@ -20,6 +20,7 @@
         app:layout_constraintTop_toTopOf="@+id/comboCountChatMessageCombo"
         app:srcCompat="@drawable/ic_emote_splat_grayscale"
         tools:visibility="gone" />
+
     <ImageView
         android:id="@+id/redSplatChatMessageCombo"
         android:layout_width="0dp"

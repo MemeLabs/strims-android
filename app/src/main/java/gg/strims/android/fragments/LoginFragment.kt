@@ -1,7 +1,6 @@
 package gg.strims.android.fragments
 
 import android.annotation.SuppressLint
-import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -37,8 +36,8 @@ class LoginFragment: Fragment() {
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                 if (url == "https://strims.gg/" || url == "https://chat.strims.gg/") {
                     val activity = requireActivity() as ChatActivity
-                    requireActivity().stopService(activity.socketIntent)
-                    requireActivity().startService(activity.socketIntent)
+                    requireActivity().stopService(activity.chatSocketIntent)
+                    requireActivity().startService(activity.chatSocketIntent)
                     activity.onBackPressed()
                 }
             }

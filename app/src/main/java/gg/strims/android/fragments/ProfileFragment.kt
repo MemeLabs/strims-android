@@ -1,18 +1,14 @@
 package gg.strims.android.fragments
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.CookieManager
 import android.widget.ArrayAdapter
-import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.google.gson.Gson
 import gg.strims.android.ChatActivity
-import gg.strims.android.ChatService
 import gg.strims.android.CurrentUser
 import gg.strims.android.R
 import io.ktor.client.HttpClient
@@ -95,8 +91,8 @@ class ProfileFragment: Fragment() {
             CurrentUser.user = null
             deleteCookie()
             val activity = requireActivity() as ChatActivity
-            requireActivity().stopService(activity.socketIntent)
-            requireActivity().startService(activity.socketIntent)
+            requireActivity().stopService(activity.chatSocketIntent)
+            requireActivity().startService(activity.chatSocketIntent)
             activity.onBackPressed()
             activity.invalidateOptionsMenu()
             activity.navHeaderUsername.text = "Anonymous"
