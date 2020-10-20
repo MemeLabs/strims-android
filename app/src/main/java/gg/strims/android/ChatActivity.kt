@@ -37,6 +37,7 @@ import android.view.inputmethod.EditorInfo
 import android.widget.ImageView
 import android.widget.PopupMenu
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.appcompat.widget.Toolbar
@@ -57,6 +58,7 @@ import com.google.gson.Gson
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
+import gg.strims.android.clients.StrimsClient
 import gg.strims.android.customspans.CenteredImageSpan
 import gg.strims.android.customspans.ColouredUnderlineSpan
 import gg.strims.android.customspans.DrawableCallback
@@ -75,6 +77,7 @@ import kotlinx.android.synthetic.main.error_chat_message_item.view.*
 import kotlinx.android.synthetic.main.nav_header_main.*
 import kotlinx.android.synthetic.main.private_chat_message_item.view.*
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.launch
 import pl.droidsonroids.gif.GifDrawable
 import java.io.BufferedInputStream
@@ -299,39 +302,20 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         navView.setCheckedItem(R.id.nav_Chat)
 
-//        GlobalScope.launch {
-//            try {
-//                ChatClient().onConnect()
-//            } catch (e: ClosedReceiveChannelException) {
-//                Log.d("TAG", "onClose ${e.localizedMessage}")
-//                runOnUiThread {
-//                    Toast.makeText(
-//                        this@ChatActivity,
-//                        "Disconnected, reconnecting...",
-//                        Toast.LENGTH_LONG
-//                    ).show()
-//                }
-//                startActivity(Intent(this@ChatActivity, ChatActivity::class.java))
-//                this@ChatActivity.finish()
-//            }
-//        }
-
-//        GlobalScope.launch {
-//            try {
-//                StrimsClient().onConnect()
-//            } catch (e: ClosedReceiveChannelException) {
-//                Log.d("TAG", "StreamsSocket onClose ${e.localizedMessage}")
-//                runOnUiThread {
-//                    Toast.makeText(
-//                        this@ChatActivity,
-//                        "Disconnected, reconnecting...",
-//                        Toast.LENGTH_LONG
-//                    ).show()
-//                }
-//                startActivity(Intent(this@ChatActivity, ChatActivity::class.java))
-//                this@ChatActivity.finish()
-//            }
-//        }
+        GlobalScope.launch {
+            try {
+                StrimsClient().onConnect()
+            } catch (e: ClosedReceiveChannelException) {
+                Log.d("TAG", "StreamsSocket onClose ${e.localizedMessage}")
+                runOnUiThread {
+                    Toast.makeText(
+                        this@ChatActivity,
+                        "Disconnected, reconnecting...",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
 
         socketIntent = Intent(this, ChatService::class.java)
         startService(socketIntent)
@@ -717,6 +701,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         val curPMessage: Message = Gson().fromJson(line, Message::class.java)
                         messagesArray.add(curPMessage)
                     }
+                    bufferedReader.close()
                     CurrentUser.whispersDictionary[it] = messagesArray
                     CurrentUser.whispersDictionary[it]?.sortBy { message ->
                         message.timestamp

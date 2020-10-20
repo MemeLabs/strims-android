@@ -39,9 +39,7 @@ class ChatService: Service() {
 
     private var job: Job? = null
 
-    init {
-        instance = this
-    }
+    private val broadcastReceivers = mutableListOf<BroadcastReceiver>()
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
@@ -64,37 +62,20 @@ class ChatService: Service() {
         return START_STICKY
     }
 
-    companion object {
-        private lateinit var instance: ChatService
-
-        fun stopSocket() {
-            Log.d("TAG", "Stopping socket...")
-            instance.job?.cancel()
-        }
-    }
-
     override fun onDestroy() {
         Log.d("TAG", "Destroying...")
+        broadcastReceivers.forEach {
+            unregisterReceiver(it)
+        }
         job?.cancel()
         super.onDestroy()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
-//    override fun onHandleIntent(intent: Intent?) {
-//        try {
-//            job = GlobalScope.launch {
-//                Log.d("TAG", "Launching socket")
-//                ChatClient().onConnect()
-//            }
-//        } catch (e: InterruptedException) {
-//            Thread.currentThread().interrupt()
-//        }
-//    }
-
     private fun startForeground() {
         val channelId = createNotificationChannel("strims_chat_service", "Strims Chat Service")
-        val notificationBuilder = NotificationCompat.Builder(this, channelId )
+        val notificationBuilder = NotificationCompat.Builder(this, channelId)
         val notification = notificationBuilder.setOngoing(true)
             .setSmallIcon(R.mipmap.ic_launcher_foreground)
             .setPriority(PRIORITY_MIN)
@@ -105,8 +86,10 @@ class ChatService: Service() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun createNotificationChannel(channelId: String, channelName: String): String{
-        val chan = NotificationChannel(channelId,
-            channelName, NotificationManager.IMPORTANCE_NONE)
+        val chan = NotificationChannel(
+            channelId,
+            channelName, NotificationManager.IMPORTANCE_NONE
+        )
         chan.lightColor = Color.BLUE
         chan.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
         val service = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -178,6 +161,7 @@ class ChatService: Service() {
                     stringBuilder.append(text)
                 }
                 CurrentUser.options = Klaxon().parse(stringBuilder.toString())
+                bufferedReader.close()
             } else {
                 CurrentUser.options = Options()
             }
@@ -219,6 +203,7 @@ class ChatService: Service() {
 
             val intentFilter = IntentFilter("gg.strims.android.SEND_MESSAGE")
             registerReceiver(broadcastReceiver, intentFilter)
+            broadcastReceivers.add(broadcastReceiver)
 
             while (true) {
                 when (val frame = incoming.receive()) {
