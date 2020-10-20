@@ -5,7 +5,7 @@
     android:id="@+id/constraintLayoutPrivateMessageItem"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="#222222">
+    android:background="#1A1A1A">
 
     <TextView
         android:id="@+id/usernamePrivateMessage"

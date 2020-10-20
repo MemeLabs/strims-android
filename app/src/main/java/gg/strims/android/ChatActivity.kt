@@ -1865,21 +1865,21 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
 
             if (CurrentUser.user != null) {
-                if (messageData.data.contains(CurrentUser.user!!.username)) {
+                if (CurrentUser.user!!.username == messageData.nick) {
+                    viewHolder.itemView.setBackgroundColor(Color.parseColor("#1A1A1A"))
+                } else if (messageData.data.toLowerCase().contains(CurrentUser.user!!.username.toLowerCase())) {
                     viewHolder.itemView.setBackgroundColor(Color.parseColor("#001D36"))
-                } else if (CurrentUser.user!!.username == messageData.nick) {
-                    viewHolder.itemView.setBackgroundColor(Color.parseColor("#151515"))
                 } else if (CurrentUser.user!!.username != messageData.nick && !messageData.data.contains(
                         CurrentUser.user!!.username
                     )
                 ) {
-                    viewHolder.itemView.setBackgroundColor(Color.parseColor("#000000"))
+                    viewHolder.itemView.setBackgroundColor(Color.parseColor("#111111"))
                 }
             } else if (CurrentUser.user == null) {
                 if (messageData.data.contains("anonymous")) {
                     viewHolder.itemView.setBackgroundColor(Color.parseColor("#001D36"))
                 } else {
-                    viewHolder.itemView.setBackgroundColor(Color.parseColor("#000000"))
+                    viewHolder.itemView.setBackgroundColor(Color.parseColor("#111111"))
                 }
             }
 
@@ -2074,11 +2074,12 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
             if (isReceived) {
                 viewHolder.itemView.whisperedPrivateMessage.visibility = View.VISIBLE
-
+                viewHolder.itemView.setBackgroundColor(Color.parseColor("#001D36"))
             } else {
                 viewHolder.itemView.toPrivateMessage.visibility = View.VISIBLE
                 viewHolder.itemView.whisperedPrivateMessage.text = ":"
                 viewHolder.itemView.whisperedPrivateMessage.visibility = View.VISIBLE
+                viewHolder.itemView.setBackgroundColor(Color.parseColor("#1A1A1A"))
             }
 
             if (CurrentUser.options!!.showTime) {
@@ -2086,20 +2087,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 val time = dateFormat.format(messageData.timestamp)
                 viewHolder.itemView.timestampPrivateMessage.visibility = View.VISIBLE
                 viewHolder.itemView.timestampPrivateMessage.text = time
-            }
-
-            if (CurrentUser.user != null) {
-                if (messageData.data.contains(CurrentUser.user!!.username)) {
-                    viewHolder.itemView.setBackgroundColor(Color.parseColor("#001D36"))
-                } else {
-                    viewHolder.itemView.setBackgroundColor(Color.parseColor("#151515"))
-                }
-            } else if (CurrentUser.user == null) {
-                if (messageData.data.contains("anonymous")) {
-                    viewHolder.itemView.setBackgroundColor(Color.parseColor("#001D36"))
-                } else {
-                    viewHolder.itemView.setBackgroundColor(Color.parseColor("#000000"))
-                }
             }
 
             if (CurrentUser.options!!.customHighlights.isNotEmpty()) {
