@@ -698,17 +698,17 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         baseContext.fileList().forEach {
             if (it.contains("${CurrentUser.user!!.username}_private_messages")) {
-                CurrentUser.privateMessageUsers!!.add(it)
+                val nick = it.substringAfter("private_messages_").substringBefore(".txt")
+                CurrentUser.privateMessageUsers!!.add(nick)
             }
         }
 
         if (CurrentUser.privateMessageUsers != null) {
             CurrentUser.privateMessageUsers!!.forEach {
-                val nick = it.substringAfter("private_messages_").substringBefore(".txt")
                 val file =
-                    baseContext.getFileStreamPath(it)
+                    baseContext.getFileStreamPath("${CurrentUser.user?.username}_private_messages_$it.txt")
                 if (file.exists()) {
-                    val fileInputStream = openFileInput(it)
+                    val fileInputStream = openFileInput(file.name)
                     val inputStreamReader = InputStreamReader(fileInputStream)
                     val bufferedReader = BufferedReader(inputStreamReader)
                     val messagesArray = mutableListOf<Message>()
@@ -717,8 +717,8 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         val curPMessage: Message = Gson().fromJson(line, Message::class.java)
                         messagesArray.add(curPMessage)
                     }
-                    CurrentUser.whispersDictionary[nick] = messagesArray
-                    CurrentUser.whispersDictionary[nick]?.sortBy { message ->
+                    CurrentUser.whispersDictionary[it] = messagesArray
+                    CurrentUser.whispersDictionary[it]?.sortBy { message ->
                         message.timestamp
                     }
                 }
@@ -1351,6 +1351,8 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 e.printStackTrace()
             }
         }
+
+        CurrentUser.whispersDictionary[otherUser]?.add(message)
     }
 
     private fun displayNotification(message: Message) {
@@ -2051,7 +2053,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             return messageData.nick == nick
         }
 
-
         fun isFeaturesEmpty(): Boolean {
             return messageData.features.isEmpty()
         }
@@ -2071,9 +2072,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
 
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
-            if (CurrentUser.options!!.ignoreList.contains(messageData.nick)) {
-                return
-            }
             if (isReceived) {
                 viewHolder.itemView.whisperedPrivateMessage.visibility = View.VISIBLE
 
@@ -2309,7 +2307,22 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             "PRIVMSG", "PRIVMSGSENT" -> {
                 val message = Klaxon().parse<Message>(msg[1])!!
                 message.privMsg = true
+
+                if (CurrentUser.options!!.ignoreList.isNotEmpty()) {
+                    CurrentUser.options!!.ignoreList.forEach {
+                        if (message.nick == it) {
+                            return null
+                        }
+                        if (CurrentUser.options!!.harshIgnore) {
+                            if (message.data.contains(it)) {
+                                return null
+                            }
+                        }
+                    }
+                }
+
                 savePrivateMessage(msg[1], message)
+                sendBroadcast(Intent("gg.strims.android.PRIVATE_MESSAGE"))
                 return message
             }
             "MSG" -> {

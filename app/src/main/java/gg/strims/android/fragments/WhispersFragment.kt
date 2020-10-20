@@ -1,6 +1,10 @@
 package gg.strims.android.fragments
 
 import android.annotation.SuppressLint
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Rect
 import android.os.Bundle
 import android.util.TypedValue
@@ -10,18 +14,14 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.gson.Gson
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
 import gg.strims.android.*
-import gg.strims.android.models.Message
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.fragment_whispers.*
 import kotlinx.android.synthetic.main.whisper_user_item.view.*
-import java.io.BufferedReader
-import java.io.InputStreamReader
 
 @SuppressLint("SetTextI18n")
 @KtorExperimentalAPI
@@ -29,11 +29,24 @@ class WhispersFragment : Fragment() {
 
     private val whispersAdapter = GroupAdapter<GroupieViewHolder>()
 
+    private val broadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent != null) {
+                if (intent.action == "gg.strims.android.PRIVATE_MESSAGE") {
+                    whispersAdapter.notifyDataSetChanged()
+                }
+            }
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        val intentFilter = IntentFilter()
+        intentFilter.addAction("gg.strims.android.PRIVATE_MESSAGE")
+        requireActivity().registerReceiver(broadcastReceiver, intentFilter)
         return inflater.inflate(R.layout.fragment_whispers, container, false)
     }
 
@@ -76,8 +89,7 @@ class WhispersFragment : Fragment() {
         whispersAdapter.clear()
         if (CurrentUser.privateMessageUsers != null) {
             CurrentUser.privateMessageUsers!!.forEach {
-                val nick = it.substringAfter("private_messages_").substringBefore(".txt")
-                whispersAdapter.add(WhisperUserItem(nick))
+                whispersAdapter.add(WhisperUserItem(it))
             }
         }
         whispersAdapter.notifyDataSetChanged()

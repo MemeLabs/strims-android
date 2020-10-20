@@ -17,7 +17,6 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.PRIORITY_MIN
 import com.beust.klaxon.Klaxon
-import com.google.gson.Gson
 import gg.strims.android.models.EmotesParsed
 import gg.strims.android.models.Options
 import io.ktor.client.*

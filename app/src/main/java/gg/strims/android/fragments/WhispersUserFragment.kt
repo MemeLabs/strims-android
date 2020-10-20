@@ -1,7 +1,10 @@
 package gg.strims.android.fragments
 
 import android.annotation.SuppressLint
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Rect
 import android.os.Bundle
 import android.text.Editable
@@ -17,12 +20,9 @@ import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
 import gg.strims.android.*
-import gg.strims.android.models.ChatUser
 import gg.strims.android.models.Message
 import io.ktor.util.KtorExperimentalAPI
-import kotlinx.android.synthetic.main.activity_chat.*
 import kotlinx.android.synthetic.main.app_bar_main.*
-import kotlinx.android.synthetic.main.fragment_user_list.*
 import kotlinx.android.synthetic.main.fragment_user_whispers.*
 import kotlinx.android.synthetic.main.whisper_message_item_left.view.*
 import kotlinx.android.synthetic.main.whisper_message_item_right.view.*
@@ -35,11 +35,26 @@ class WhispersUserFragment : Fragment() {
 
     private val whispersUserAdapter = GroupAdapter<GroupieViewHolder>()
 
+    private val broadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent != null) {
+                if (intent.action == "gg.strims.android.PRIVATE_MESSAGE") {
+                    // Add new message
+                    whispersUserAdapter.add(WhisperMessageItem(CurrentUser.whispersDictionary[CurrentUser.tempWhisperUser]!!.last()))
+                    recyclerViewWhispersUser.scrollToPosition(whispersUserAdapter.itemCount - 1)
+                }
+            }
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        val intentFilter = IntentFilter()
+        intentFilter.addAction("gg.strims.android.PRIVATE_MESSAGE")
+        requireActivity().registerReceiver(broadcastReceiver, intentFilter)
         return inflater.inflate(R.layout.fragment_user_whispers, container, false)
     }
 
@@ -79,7 +94,10 @@ class WhispersUserFragment : Fragment() {
 
         sendMessageButtonWhisper.setOnClickListener {
             val intent = Intent("gg.strims.android.SEND_MESSAGE")
-            intent.putExtra("gg.strims.android.SEND_MESSAGE_TEXT", "PRIVMSG {\"nick\":\"${CurrentUser.tempWhisperUser}\", \"data\":\"${sendMessageTextWhisper.text}\"}")
+            intent.putExtra(
+                "gg.strims.android.SEND_MESSAGE_TEXT",
+                "PRIVMSG {\"nick\":\"${CurrentUser.tempWhisperUser}\", \"data\":\"${sendMessageTextWhisper.text}\"}"
+            )
             requireActivity().sendBroadcast(intent)
             sendMessageTextWhisper.text.clear()
         }
@@ -126,12 +144,10 @@ class WhispersUserFragment : Fragment() {
 
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
             val parentActivity = requireActivity() as ChatActivity
-            parentActivity.createMessageTextView(message, viewHolder.itemView.messageWhisperMessageItemLeft)
-
-            if (CurrentUser.options!!.showTime) {
-                val dateFormat = SimpleDateFormat("HH:mm")
-                val time = dateFormat.format(message.timestamp)
-            }
+            parentActivity.createMessageTextView(
+                message,
+                viewHolder.itemView.messageWhisperMessageItemLeft
+            )
 
             if (layout == R.layout.whisper_message_item_left) {
                 viewHolder.itemView.usernameWhisperMessageItemLeft.text = message.nick
@@ -150,26 +166,5 @@ class WhispersUserFragment : Fragment() {
             }
         }
     }
-
-
-//    override fun onHiddenChanged(hidden: Boolean) {
-//        if (hidden) {
-//            return
-//        }
-//        if (CurrentUser.privateMessages != null && CurrentUser.tempWhisperUser != null) {
-//            whispersUserAdapter.clear()
-//            whispersUserAdapter.notifyDataSetChanged()
-//            CurrentUser.privateMessages!!.forEach {
-//                if (it.getNick() == CurrentUser.tempWhisperUser!!) {
-//                    whispersUserAdapter.add(it)
-//                }
-//            }
-//
-//            // showWhispers()
-//        }
-//        recyclerViewWhispersUser.scrollToPosition(whispersUserAdapter.itemCount - 1)
-//        whispersUserAdapter.notifyDataSetChanged()
-//
-//    }
 }
 
