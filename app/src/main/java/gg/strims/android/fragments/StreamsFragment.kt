@@ -18,6 +18,7 @@ import com.xwray.groupie.Item
 import gg.strims.android.*
 import gg.strims.android.models.Stream
 import io.ktor.util.KtorExperimentalAPI
+import kotlinx.android.synthetic.main.activity_navigation_drawer.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.fragment_streams.*
 import kotlinx.android.synthetic.main.stream_item.view.*
@@ -43,6 +44,8 @@ class StreamsFragment : Fragment() {
         recyclerViewStreams.adapter = streamsAdapter
 
         requireActivity().toolbar.title = "Streams"
+
+        requireActivity().nav_view.setCheckedItem(R.id.nav_Streams)
 
         displayStreams()
     }
@@ -107,7 +110,12 @@ class StreamsFragment : Fragment() {
 
             viewHolder.itemView.setOnClickListener {
                 parentFragmentManager.fragments.forEach {
-                    if (it.tag == "StreamsFragment" || it.tag == "ProfileFragment" || it.tag == "OptionsFragment") {
+                    if (it.tag == "StreamsFragment" ||
+                        it.tag == "ProfileFragment" ||
+                        it.tag == "OptionsFragment" ||
+                        it.tag == "WhispersFragment" ||
+                        it.tag == "WhispersUserFragment"
+                    ) {
                         parentFragmentManager.beginTransaction().remove(it).commit()
                     }
                 }

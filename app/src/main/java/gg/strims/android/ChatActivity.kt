@@ -44,8 +44,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.RemoteInput
 import androidx.drawerlayout.widget.DrawerLayout
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModel
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
@@ -172,6 +171,18 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     }
                 } else if (intent.action == "gg.strims.android.MESSAGE") {
                     val message = parseChatMessage(intent.getStringExtra("gg.strims.android.MESSAGE_TEXT")!!)
+                    if (adapter.itemCount > 0 && message != null) {
+                        if (adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item || adapter.getItem(
+                                adapter.itemCount - 1
+                            ).layout == R.layout.chat_message_item_consecutive_nick
+                        ) {
+                            val lastMessage =
+                                adapter.getItem(adapter.itemCount - 1) as ChatMessage
+                            if (lastMessage.messageData.nick == message.nick && lastMessage.messageData.data == message.data) {
+                                return
+                            }
+                        }
+                    }
                     if (message != null) {
                         Log.d("TAG", "FROM SERVICE: ${message.nick} + ${message.data}")
                         if (!CurrentUser.options!!.ignoreList.contains(message.nick)) {
@@ -784,6 +795,8 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
 
+    private var recentFragment: Fragment? = null
+
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.nav_Streams -> {
@@ -793,8 +806,14 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
 
             R.id.nav_Chat -> {
+                recentFragment = supportFragmentManager.fragments[supportFragmentManager.backStackEntryCount + 4]
                 supportFragmentManager.fragments.forEach {
-                    if (it.tag == "StreamsFragment" || it.tag == "ProfileFragment" || it.tag == "OptionsFragment" || it.tag == "WhispersFragment") {
+                    if (it.tag == "StreamsFragment" ||
+                        it.tag == "ProfileFragment" ||
+                        it.tag == "OptionsFragment" ||
+                        it.tag == "WhispersFragment" ||
+                        it.tag == "WhispersUserFragment"
+                    ) {
                         supportFragmentManager.beginTransaction().remove(it).commit()
                     }
                 }
@@ -827,31 +846,16 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         if (supportFragmentManager.backStackEntryCount == 0) {
             return
         } else {
-            supportFragmentManager.popBackStack()
-
-            if (supportFragmentManager.backStackEntryCount > 1) {
-                val fragment =
-                    supportFragmentManager.getBackStackEntryAt(supportFragmentManager.backStackEntryCount - 2)
-                when (fragment.name) {
-                    "ProfileFragment" -> {
-                        nav_view.setCheckedItem(R.id.nav_Profile)
-                    }
-
-                    "StreamsFragment" -> {
-                        nav_view.setCheckedItem(R.id.nav_Streams)
-                    }
-
-                    "OptionsFragment" -> {
-                        nav_view.setCheckedItem(R.id.nav_Settings)
-                    }
-
-                    "WhispersFragment" -> {
-                        nav_view.setCheckedItem(R.id.nav_Whispers)
-                    }
-                }
+            if (supportFragmentManager.fragments[supportFragmentManager.backStackEntryCount] != null && nav_view.checkedItem?.title == "Chat") {
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.nav_host_fragment, recentFragment!!).commit()
             } else {
-                nav_view.setCheckedItem(R.id.nav_Chat)
-                toolbar.title = "Chat"
+                supportFragmentManager.popBackStack()
+
+                if (supportFragmentManager.backStackEntryCount <= 1) {
+                    nav_view.setCheckedItem(R.id.nav_Chat)
+                    toolbar.title = "Chat"
+                }
             }
         }
     }
@@ -881,7 +885,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     if (!animated) {
                         var bitmap: Bitmap? = null
                         while (bitmap == null) {
-                            bitmap = CurrentUser.bitmapMemoryCache.get(it.name)
+                            bitmap = CurrentUser.bitmapMemoryCache[it.name]
                         }
                         var width = bitmap.width * 0.75
                         if (it.modifiers.contains("wide")) {
@@ -1873,7 +1877,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     inner class ChatMessage(
-        private val messageData: Message,
+        val messageData: Message,
         private val isConsecutive: Boolean = false
     ) :
         Item<GroupieViewHolder>() {
@@ -2314,6 +2318,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             )
                         )
                     )
+                    progressBar.visibility = View.GONE
                     recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
                 }
             }

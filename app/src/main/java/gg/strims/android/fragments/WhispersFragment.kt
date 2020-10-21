@@ -19,6 +19,7 @@ import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
 import gg.strims.android.*
 import io.ktor.util.KtorExperimentalAPI
+import kotlinx.android.synthetic.main.activity_navigation_drawer.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.fragment_whispers.*
 import kotlinx.android.synthetic.main.whisper_user_item.view.*
@@ -54,6 +55,8 @@ class WhispersFragment : Fragment() {
         recyclerViewWhispers.adapter = whispersAdapter
 
         requireActivity().toolbar.title = "Private Messages"
+
+        requireActivity().nav_view.setCheckedItem(R.id.nav_Whispers)
 
         class MarginItemDecoration(private val spaceHeight: Int) : RecyclerView.ItemDecoration() {
             override fun getItemOffsets(

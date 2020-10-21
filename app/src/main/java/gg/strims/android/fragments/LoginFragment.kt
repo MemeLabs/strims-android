@@ -11,6 +11,7 @@ import android.webkit.WebViewClient
 import androidx.fragment.app.Fragment
 import gg.strims.android.*
 import io.ktor.util.KtorExperimentalAPI
+import kotlinx.android.synthetic.main.activity_chat.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.fragment_login.*
 
@@ -38,7 +39,9 @@ class LoginFragment: Fragment() {
                     val activity = requireActivity() as ChatActivity
                     requireActivity().stopService(activity.chatSocketIntent)
                     requireActivity().startService(activity.chatSocketIntent)
-                    activity.onBackPressed()
+                    parentFragmentManager.popBackStack()
+                    requireActivity().toolbar.title = "Chat"
+                    requireActivity().progressBar.visibility = View.VISIBLE
                 }
             }
         }

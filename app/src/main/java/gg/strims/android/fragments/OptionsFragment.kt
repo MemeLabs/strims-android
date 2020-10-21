@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import gg.strims.android.CurrentUser
 import gg.strims.android.R
 import io.ktor.util.KtorExperimentalAPI
+import kotlinx.android.synthetic.main.activity_navigation_drawer.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.fragment_chat_options.*
 
@@ -44,6 +45,8 @@ class OptionsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         requireActivity().toolbar.title = "Settings"
+
+        requireActivity().nav_view.setCheckedItem(R.id.nav_Settings)
 
         retrieveOptions()
 
