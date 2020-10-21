@@ -88,8 +88,10 @@ import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
+import java.util.*
 import java.util.regex.Matcher
 import java.util.regex.Pattern
+import kotlin.collections.HashMap
 
 @KtorExperimentalAPI
 @SuppressLint("SetTextI18n", "SimpleDateFormat", "WrongViewCast")
@@ -324,11 +326,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         val maxMemory = (Runtime.getRuntime().maxMemory() / 1024).toInt()
         val cacheSize = maxMemory / 8
-        CurrentUser.bitmapMemoryCache = object : LruCache<String, Bitmap>(cacheSize) {
-            override fun sizeOf(key: String, bitmap: Bitmap): Int {
-                return bitmap.byteCount / 1024
-            }
-        }
+        CurrentUser.bitmapMemoryCache = HashMap()
         CurrentUser.gifMemoryCache = object : LruCache<String, GifDrawable>(cacheSize) {}
 
         sendMessageText.addTextChangedListener(object : TextWatcher {
@@ -423,6 +421,14 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             showHideFragment(
                 this,
                 supportFragmentManager.findFragmentById(R.id.user_list_fragment)!!
+            )
+        }
+
+        emoteMenuButton.setOnClickListener {
+            hideKeyboardFrom(this, sendMessageText)
+            showHideFragment(
+                this,
+                supportFragmentManager.findFragmentById(R.id.emote_menu_fragment)!!
             )
         }
 
@@ -662,7 +668,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             if (!biggestEmote.animated) {
                 GlobalScope.launch {
                     val bitmap = getBitmapFromURL(url)
-                    CurrentUser.bitmapMemoryCache.put(it.name, bitmap)
+                    CurrentUser.bitmapMemoryCache[it.name] = bitmap!!
                 }
             } else {
                 GlobalScope.launch {
@@ -1857,7 +1863,12 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             if (CurrentUser.user != null) {
                 if (CurrentUser.user!!.username == messageData.nick) {
                     viewHolder.itemView.setBackgroundColor(Color.parseColor("#1A1A1A"))
-                } else if (messageData.data.toLowerCase().contains(CurrentUser.user!!.username.toLowerCase())) {
+                } else if (messageData.data.toLowerCase(Locale.ROOT).contains(
+                        CurrentUser.user!!.username.toLowerCase(
+                            Locale.ROOT
+                        )
+                    )
+                ) {
                     viewHolder.itemView.setBackgroundColor(Color.parseColor("#001D36"))
                 } else if (CurrentUser.user!!.username != messageData.nick && !messageData.data.contains(
                         CurrentUser.user!!.username

@@ -29,7 +29,7 @@ object CurrentUser {
     var privateMessageUsers: MutableList<String>? = null // List of users currently with private conversations
     var tempWhisperUser : String? = null // User to be passed to WhispersUserFragment
     var whispersDictionary = HashMap<String, MutableList<Message>>() // HashMap of users and their private conversations
-    lateinit var bitmapMemoryCache: LruCache<String, Bitmap>
+    lateinit var bitmapMemoryCache: HashMap<String, Bitmap>
     lateinit var gifMemoryCache: LruCache<String, GifDrawable>
 
     fun saveOptions(context: Context) {
