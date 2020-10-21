@@ -301,6 +301,9 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         unregisterReceiver(broadcastReceiver)
         chatViewModel?.chatAdapter = adapter
+
+        chatViewModel?.streamsSocketIntent = streamsSocketIntent
+        chatViewModel?.chatSocketIntent = chatSocketIntent
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -322,6 +325,10 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         navView.setNavigationItemSelectedListener(this)
 
         toolbar.title = "Chat"
+
+        button.setOnClickListener {
+            stopService(streamsSocketIntent)
+        }
 
         navView.setCheckedItem(R.id.nav_Chat)
 
@@ -352,6 +359,9 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 nav_view.menu.findItem(R.id.nav_Profile).isVisible = true
                 nav_view.menu.findItem(R.id.nav_Whispers).isVisible = true
                 nav_view.setCheckedItem(R.id.nav_Chat)
+
+                streamsSocketIntent = chatViewModel?.streamsSocketIntent
+                chatSocketIntent = chatViewModel?.chatSocketIntent
             }
         } else {
             val maxMemory = (Runtime.getRuntime().maxMemory() / 1024).toInt()
@@ -482,32 +492,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 return@setOnClickListener
             }
             val first = messageText.first()
-//                    if (supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!.isVisible) {
-//                        when {
-//                            messageText.trim() == "" -> {
-//                                //TODO: empty message notify in chat ?
-//                                return@launch
-//                            }
-//                            CurrentUser.tempWhisperUser == null -> {
-//                                // TODO: error
-//                            }
-//                            else -> {
-//                                val nick = CurrentUser.tempWhisperUser!!
-//                                send("PRIVMSG {\"nick\":\"$nick\", \"data\":\"$messageText\"}")
-//                                runOnUiThread {
-//                                    adapter.add(
-//                                        PrivateChatMessage(
-//                                            Message(
-//                                                true,
-//                                                nick,
-//                                                messageText
-//                                            )
-//                                        )
-//                                    )
-//                                }
-//                            }
-//                        }
-//                    } else
             if (first == '/' && messageText.substringBefore(' ') != "/me") {
                 val command = messageText.substringAfter(first).substringBefore(' ')
                 var privateMessageCommand = ""
