@@ -44,12 +44,16 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.RemoteInput
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.beust.klaxon.Klaxon
 import com.google.android.material.navigation.NavigationView
 import com.google.gson.Gson
@@ -67,6 +71,7 @@ import gg.strims.android.models.ChatUser
 import gg.strims.android.models.Emote
 import gg.strims.android.models.Message
 import gg.strims.android.models.NamesMessage
+import gg.strims.android.viewmodels.ChatViewModel
 import io.ktor.util.*
 import io.ktor.utils.io.errors.*
 import kotlinx.android.synthetic.main.activity_chat.*
@@ -77,6 +82,7 @@ import kotlinx.android.synthetic.main.chat_message_item.view.*
 import kotlinx.android.synthetic.main.chat_message_item_emote_combo.view.*
 import kotlinx.android.synthetic.main.error_chat_message_item.view.*
 import kotlinx.android.synthetic.main.nav_header_main.*
+import kotlinx.android.synthetic.main.nav_header_main.view.*
 import kotlinx.android.synthetic.main.private_chat_message_item.view.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -108,7 +114,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     private lateinit var appBarConfiguration: AppBarConfiguration
 
-    val adapter = GroupAdapter<GroupieViewHolder>()
+    var adapter = GroupAdapter<GroupieViewHolder>()
 
     private var privateMessageArray = arrayOf("w", "whisper", "msg", "tell", "t", "notify")
 
@@ -221,11 +227,12 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                                     )
                                 }
                             }
+                            val recycler = findViewById<RecyclerView>(R.id.recyclerViewChat)
                             val layoutTest =
-                                recyclerViewChat.layoutManager as LinearLayoutManager
+                                recycler.layoutManager as LinearLayoutManager
                             val lastItem = layoutTest.findLastVisibleItemPosition()
-                            if (lastItem >= recyclerViewChat.adapter!!.itemCount - 3) {
-                                recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
+                            if (lastItem >= adapter.itemCount - 3) {
+                                recycler.scrollToPosition(adapter.itemCount - 1)
                             }
                         }
                     }
@@ -286,6 +293,16 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
+    private var chatViewModel: ChatViewModel? = null
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean("rotated", true)
+
+        unregisterReceiver(broadcastReceiver)
+        chatViewModel?.chatAdapter = adapter
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_navigation_drawer)
@@ -308,10 +325,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         navView.setCheckedItem(R.id.nav_Chat)
 
-        chatSocketIntent = Intent(this, ChatService::class.java)
-        streamsSocketIntent = Intent(this, StreamsService::class.java)
-        startService(chatSocketIntent)
-        startService(streamsSocketIntent)
+        chatViewModel = ViewModelProvider(this).get(ChatViewModel::class.java)
 
         val intentFilter = IntentFilter()
         intentFilter.addAction("gg.strims.android.MESSAGE")
@@ -324,10 +338,32 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         intentFilter.addAction("gg.strims.android.STREAMS")
         registerReceiver(broadcastReceiver, intentFilter)
 
-        val maxMemory = (Runtime.getRuntime().maxMemory() / 1024).toInt()
-        val cacheSize = maxMemory / 8
-        CurrentUser.bitmapMemoryCache = HashMap()
-        CurrentUser.gifMemoryCache = object : LruCache<String, GifDrawable>(cacheSize) {}
+        if (savedInstanceState != null) {
+            val test = savedInstanceState.getBoolean("rotated")
+            Log.d("TAG", "$test")
+            Log.d("TAG", "test")
+
+            if (chatViewModel != null && chatViewModel!!.chatAdapter != null) {
+                adapter = chatViewModel!!.chatAdapter!!
+
+                sendMessageText.hint = "Write something ${CurrentUser.user!!.username} ..."
+                val header = navView.getHeaderView(0)
+                header.navHeaderUsername.text = CurrentUser.user!!.username
+                nav_view.menu.findItem(R.id.nav_Profile).isVisible = true
+                nav_view.menu.findItem(R.id.nav_Whispers).isVisible = true
+                nav_view.setCheckedItem(R.id.nav_Chat)
+            }
+        } else {
+            val maxMemory = (Runtime.getRuntime().maxMemory() / 1024).toInt()
+            val cacheSize = maxMemory / 8
+            CurrentUser.bitmapMemoryCache = HashMap()
+            CurrentUser.gifMemoryCache = object : LruCache<String, GifDrawable>(cacheSize) {}
+
+            chatSocketIntent = Intent(this, ChatService::class.java)
+            streamsSocketIntent = Intent(this, StreamsService::class.java)
+            startService(chatSocketIntent)
+            startService(streamsSocketIntent)
+        }
 
         sendMessageText.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
@@ -393,6 +429,14 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         layoutManager.stackFromEnd = true
         recyclerViewChat.layoutManager = layoutManager
         recyclerViewChat.adapter = adapter
+
+//        chatViewModel.getChatData()?.observe(this, object : Observer<GroupAdapter<GroupieViewHolder>> {
+//            override fun onChanged(t: GroupAdapter<GroupieViewHolder>?) {
+//                if (t != null) {
+//                    adapter = t
+//                }
+//            }
+//        })
 
         recyclerViewChat.setOnScrollChangeListener { _, _, _, _, _ ->
             val layoutTest = recyclerViewChat.layoutManager as LinearLayoutManager
