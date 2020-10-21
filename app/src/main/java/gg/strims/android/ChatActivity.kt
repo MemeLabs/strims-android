@@ -291,6 +291,16 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         if (scrollUponResume) {
             recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
         }
+
+        val layoutTest = recyclerViewChat.layoutManager as LinearLayoutManager
+        val lastItem = layoutTest.findLastVisibleItemPosition()
+        if (lastItem < recyclerViewChat.adapter!!.itemCount - 1) {
+            goToBottomLayout.visibility = View.VISIBLE
+            goToBottom.isEnabled = true
+        } else {
+            goToBottomLayout.visibility = View.GONE
+            goToBottom.isEnabled = false
+        }
     }
 
     private var chatViewModel: ChatViewModel? = null

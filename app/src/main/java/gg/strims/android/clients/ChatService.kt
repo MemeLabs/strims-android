@@ -106,7 +106,7 @@ class ChatService: Service() {
 
         private fun retrieveHistory() {
             val messageHistory =
-                Klaxon().parseArray<String>(URL("https://chat2.strims.gg/api/chat/history").readText())
+                Klaxon().parseArray<String>(URL("https://chat.strims.gg/api/chat/history").readText())
             val intent = Intent("gg.strims.android.MESSAGE_HISTORY")
             val arrayList = arrayListOf<String>()
             if (messageHistory != null) {
@@ -167,7 +167,7 @@ class ChatService: Service() {
         }
 
         suspend fun onConnect() = client.wss(
-            host = "chat2.strims.gg",
+            host = "chat.strims.gg",
             path = "/ws",
             request = {
                 retrieveCookie()
