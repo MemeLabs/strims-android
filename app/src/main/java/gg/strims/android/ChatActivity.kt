@@ -318,7 +318,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putBoolean("rotated", true)
 
         unregisterReceiver(broadcastReceiver)
         chatViewModel?.chatAdapter = adapter
@@ -363,9 +362,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         registerReceiver(broadcastReceiver, intentFilter)
 
         if (savedInstanceState != null) {
-            val test = savedInstanceState.getBoolean("rotated")
-            Log.d("TAG", "$test")
-            Log.d("TAG", "test")
+            progressBar.visibility = View.GONE
 
             if (chatViewModel != null && chatViewModel!!.chatAdapter != null) {
                 adapter = chatViewModel!!.chatAdapter!!
