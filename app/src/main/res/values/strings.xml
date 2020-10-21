@@ -33,6 +33,7 @@
     <string name="log_out">Log Out</string>
     <string name="show_what_i_m_watching_in_chat">Show what I\'m watching in chat</string>
     <string name="whispers">Whispers</string>
+    <string name="help">"/me - A normal message, but emotive.\n/message - Whisper someone.\n/ignore &lt;nick&gt; - No longer see user messages, without &lt;nick&gt; to list the nicks ignored.\n/unignore - Remove a user from your ignore list.\n/highlight - Highlights target nicks messages for easier visibility.\n/unhighlight - Unhighlights target nick."</string>
 
     <string-array name="streaming_service_spinner">
         <item name="angelthump">AngelThump</item>

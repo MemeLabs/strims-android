@@ -73,6 +73,7 @@ class UserListFragment : Fragment() {
                         list.add(item.user)
                     }
                 }
+
                 userListAdapter.clear()
                 list.forEach {
                     for (i in 0 until userListAdapter.itemCount) {

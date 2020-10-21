@@ -465,6 +465,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 //                        }
 //                    } else
             if (first == '/' && messageText.substringBefore(' ') != "/me") {
+                val command = messageText.substringAfter(first).substringBefore(' ')
                 var privateMessageCommand = ""
                 for (privateMessageItem in privateMessageArray) {
                     if (privateMessageItem.contains(
@@ -509,9 +510,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             }
                         }
                     }
-                } else if (messageText.substringAfter(first)
-                        .substringBefore(' ') == "ignore"
-                ) {
+                } else if (command == "ignore") {
                     val nickIgnore =
                         messageText.substringAfter("/ignore ").substringBefore(' ')
                     CurrentUser.options!!.ignoreList.add(nickIgnore)
@@ -525,9 +524,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             )
                         )
                     )
-                } else if (messageText.substringAfter(first)
-                        .substringBefore(' ') == "unignore"
-                ) {
+                } else if (command == "unignore") {
                     val nickUnignore =
                         messageText.substringAfter("/unignore ").substringBefore(' ')
                     if (CurrentUser.options!!.ignoreList.contains(nickUnignore)) {
@@ -553,9 +550,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             )
                         )
                     }
-                } else if (messageText.substringAfter(first)
-                        .substringBefore(' ') == "highlight"
-                ) {
+                } else if (command == "highlight") {
                     val nickHighlight =
                         messageText.substringAfter("/highlight ").substringBefore(' ')
                     if (CurrentUser.options!!.customHighlights.contains(nickHighlight)) {
@@ -581,9 +576,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             )
                         )
                     }
-                } else if (messageText.substringAfter(first)
-                        .substringBefore(' ') == "unhighlight"
-                ) {
+                } else if (command == "unhighlight") {
                     val nickUnhighlight =
                         messageText.substringAfter("/unhighlight ").substringBefore(' ')
                     if (CurrentUser.options!!.customHighlights.contains(nickUnhighlight)) {
@@ -609,6 +602,16 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             )
                         )
                     }
+                } else if (command == "help") {
+                    adapter.add(
+                        ChatMessage(
+                            Message(
+                                false,
+                                "Info",
+                                resources.getString(R.string.help)
+                            )
+                        )
+                    )
                 } else {
                     adapter.add(
                         ChatMessage(
@@ -2343,6 +2346,36 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 val message = Klaxon().parse<Message>(msg[1])
                 message!!.data = message.data.plus(" muted by Bot.")
                 return message
+            }
+            "ERR" -> {
+                val error = msg[1].replace("\"", "")
+                if (error == "throttled") {
+                    adapter.add(
+                        ChatMessage(
+                            Message(
+                                false,
+                                "Info",
+                                "Throttled! You were trying to send messages too fast."
+                            )
+                        )
+                    )
+                } else if (error == "duplicate") {
+                    adapter.add(
+                        ChatMessage(
+                            Message(
+                                false,
+                                "Info",
+                                "The message is identical to the last one you sent."
+                            )
+                        )
+                    )
+                }
+                val layoutTest =
+                    recyclerViewChat.layoutManager as LinearLayoutManager
+                val lastItem = layoutTest.findLastVisibleItemPosition()
+                if (lastItem >= recyclerViewChat.adapter!!.itemCount - 3) {
+                    recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
+                }
             }
         }
         return null
