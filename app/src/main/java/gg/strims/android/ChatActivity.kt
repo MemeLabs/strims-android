@@ -1366,12 +1366,10 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         val remoteInput = RemoteInput.Builder(NOTIFICATION_REPLY_KEY).setLabel("Reply").build()
 
-        val remoteReply = RemoteInput.getResultsFromIntent(intent)
-
-        val replyIntent = Intent("gg.strims.android.SEND_MESSAGE")
+        val replyIntent = Intent("gg.strims.android.SEND_NOT_MESSAGE")
         replyIntent.putExtra(
-            "gg.strims.android.SEND_MESSAGE_TEXT",
-            "PRIVMSG {\"nick\":\"${message.nick}\", \"data\":\"${remoteReply.getCharSequence(NOTIFICATION_REPLY_KEY) as String}\"}"
+            "gg.strims.android.SEND_MESSAGE_NICK",
+            message.nick
         )
 
         val replyPendingIntent = PendingIntent.getBroadcast(this, 0, replyIntent, PendingIntent.FLAG_UPDATE_CURRENT)

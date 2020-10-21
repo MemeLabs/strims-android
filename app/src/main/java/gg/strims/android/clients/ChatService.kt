@@ -1,9 +1,6 @@
 package gg.strims.android.clients
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.Service
+import android.app.*
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -17,6 +14,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.PRIORITY_MIN
 import com.beust.klaxon.Klaxon
+import gg.strims.android.ChatActivity
 import gg.strims.android.CurrentUser
 import gg.strims.android.R
 import gg.strims.android.models.EmotesParsed
@@ -197,12 +195,22 @@ class ChatService: Service() {
                                     send(message)
                                 }
                             }
+                        } else if (intent.action == "gg.strims.android.SEND_NOT_MESSAGE") {
+                            val nick = intent.getStringExtra("gg.strims.android.SEND_MESSAGE_NICK")
+                            val remoteInput = RemoteInput.getResultsFromIntent(intent)
+                            val message = remoteInput.getCharSequence(ChatActivity.NOTIFICATION_REPLY_KEY)
+                            if (nick != null) {
+                                launch {
+                                    send("PRIVMSG {\"nick\":\"${nick}\", \"data\":\"$message\"}")
+                                }
+                            }
                         }
                     }
                 }
             }
 
             val intentFilter = IntentFilter("gg.strims.android.SEND_MESSAGE")
+            intentFilter.addAction("gg.strims.android.SEND_NOT_MESSAGE")
             registerReceiver(broadcastReceiver, intentFilter)
             broadcastReceivers.add(broadcastReceiver)
 
