@@ -326,10 +326,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         toolbar.title = "Chat"
 
-        button.setOnClickListener {
-            stopService(streamsSocketIntent)
-        }
-
         navView.setCheckedItem(R.id.nav_Chat)
 
         chatViewModel = ViewModelProvider(this).get(ChatViewModel::class.java)
