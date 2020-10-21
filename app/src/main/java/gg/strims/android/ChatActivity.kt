@@ -108,10 +108,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     val adapter = GroupAdapter<GroupieViewHolder>()
 
-//    private lateinit var bitmapMemoryCache: LruCache<String, Bitmap>
-//
-//    private lateinit var gifMemoryCache: LruCache<String, GifDrawable>
-
     private var privateMessageArray = arrayOf("w", "whisper", "msg", "tell", "t", "notify")
 
     private val autofillAdapter = GroupAdapter<GroupieViewHolder>()
@@ -178,7 +174,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                                         message, isReceived
                                     )
                                 )
-                                if (CurrentUser.options!!.notifications) {
+                                if (CurrentUser.options!!.notifications && message.nick != CurrentUser.user!!.username) {
                                     displayNotification(message)
                                 }
                             } else {

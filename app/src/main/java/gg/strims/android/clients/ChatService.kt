@@ -201,7 +201,10 @@ class ChatService: Service() {
                             val message = remoteInput.getCharSequence(ChatActivity.NOTIFICATION_REPLY_KEY)
                             if (nick != null) {
                                 launch {
-                                    send("PRIVMSG {\"nick\":\"${nick}\", \"data\":\"$message\"}")
+                                    send("PRIVMSG {\"nick\":\"$nick\", \"data\":\"$message\"}")
+
+                                    val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                                    nm.cancel(ChatActivity.NOTIFICATION_ID)
                                 }
                             }
                         }
