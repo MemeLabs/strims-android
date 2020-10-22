@@ -128,7 +128,7 @@ class WhispersFragment : Fragment() {
             viewHolder.itemView.setOnClickListener {
                 CurrentUser.tempWhisperUser = nick
                 parentFragmentManager.beginTransaction()
-                    .replace(R.id.nav_host_fragment, WhispersUserFragment(), "WhispersUserFragment")
+                    .add(R.id.nav_host_fragment, WhispersUserFragment(), "WhispersUserFragment")
                     .addToBackStack("WhispersUserFragment").commit()
             }
         }

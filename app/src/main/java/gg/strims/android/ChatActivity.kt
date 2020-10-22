@@ -823,7 +823,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         when (item.itemId) {
             R.id.optionsLogIn -> {
                 supportFragmentManager.beginTransaction()
-                    .replace(R.id.nav_host_fragment, LoginFragment(), "LoginFragment")
+                    .add(R.id.nav_host_fragment, LoginFragment(), "LoginFragment")
                     .addToBackStack("LoginFragment").commit()
             }
         }
@@ -836,18 +836,15 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
 
-    private var recentFragment: Fragment? = null
-
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.nav_Streams -> {
                 supportFragmentManager.beginTransaction()
-                    .replace(R.id.nav_host_fragment, StreamsFragment(), "StreamsFragment")
+                    .add(R.id.nav_host_fragment, StreamsFragment(), "StreamsFragment")
                     .addToBackStack("StreamsFragment").commit()
             }
 
             R.id.nav_Chat -> {
-                recentFragment = supportFragmentManager.fragments[supportFragmentManager.backStackEntryCount + 5]
                 supportFragmentManager.fragments.forEach {
                     if (it.tag == "StreamsFragment" ||
                         it.tag == "ProfileFragment" ||
@@ -863,19 +860,19 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
             R.id.nav_Profile -> {
                 supportFragmentManager.beginTransaction()
-                    .replace(R.id.nav_host_fragment, ProfileFragment(), "ProfileFragment")
+                    .add(R.id.nav_host_fragment, ProfileFragment(), "ProfileFragment")
                     .addToBackStack("ProfileFragment").commit()
             }
 
             R.id.nav_Whispers -> {
                 supportFragmentManager.beginTransaction()
-                    .replace(R.id.nav_host_fragment, WhispersFragment(), "WhispersFragment")
+                    .add(R.id.nav_host_fragment, WhispersFragment(), "WhispersFragment")
                     .addToBackStack("WhispersFragment").commit()
             }
 
             R.id.nav_Settings -> {
                 supportFragmentManager.beginTransaction()
-                    .replace(R.id.nav_host_fragment, OptionsFragment(), "OptionsFragment")
+                    .add(R.id.nav_host_fragment, OptionsFragment(), "OptionsFragment")
                     .addToBackStack("OptionsFragment").commit()
             }
         }

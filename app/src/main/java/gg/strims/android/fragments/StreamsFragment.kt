@@ -140,17 +140,10 @@ class StreamsFragment : Fragment() {
             }
 
             viewHolder.itemView.setOnClickListener {
-                parentFragmentManager.fragments.forEach {
-                    if (it.tag == "StreamsFragment" ||
-                        it.tag == "ProfileFragment" ||
-                        it.tag == "OptionsFragment" ||
-                        it.tag == "WhispersFragment" ||
-                        it.tag == "WhispersUserFragment"
-                    ) {
-                        parentFragmentManager.beginTransaction().remove(it).commit()
-                        parentFragmentManager.popBackStack()
-                    }
+                for (i in 0..parentFragmentManager.backStackEntryCount) {
+                    parentFragmentManager.popBackStack()
                 }
+
                 hideFragment(activity!!, parentFragmentManager.findFragmentById(R.id.angelthump_fragment)!!)
                 hideFragment(activity!!, parentFragmentManager.findFragmentById(R.id.twitch_fragment)!!)
                 hideFragment(activity!!, parentFragmentManager.findFragmentById(R.id.youtube_fragment)!!)
