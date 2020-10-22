@@ -25,6 +25,13 @@ class AngelThumpFragment: Fragment() {
         return inflater.inflate(R.layout.fragment_angelthump, container, false)
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (CurrentUser.tempStream != null && !angelThumpVideoView.isPlaying) {
+            angelThumpVideoView.start()
+        }
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         hideFragment(requireActivity(), this)
 
