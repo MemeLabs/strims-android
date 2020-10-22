@@ -37,11 +37,14 @@ class LoginFragment: Fragment() {
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                 if (url == "https://strims.gg/" || url == "https://chat.strims.gg/") {
                     val activity = requireActivity() as ChatActivity
-                    requireActivity().stopService(activity.chatSocketIntent)
-                    requireActivity().startService(activity.chatSocketIntent)
+                    activity.stopService(activity.chatSocketIntent)
+                    activity.startService(activity.chatSocketIntent)
+                    parentFragmentManager.beginTransaction()
+                        .remove(this@LoginFragment)
+                        .commit()
                     parentFragmentManager.popBackStack()
-                    requireActivity().toolbar.title = "Chat"
-                    requireActivity().progressBar.visibility = View.VISIBLE
+                    activity.toolbar.title = "Chat"
+                    activity.progressBar.visibility = View.VISIBLE
                 }
             }
         }

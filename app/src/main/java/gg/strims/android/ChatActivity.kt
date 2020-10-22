@@ -324,6 +324,18 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         chatViewModel?.streamsSocketIntent = streamsSocketIntent
         chatViewModel?.chatSocketIntent = chatSocketIntent
 
+        if (CurrentUser.tempStream == null) {
+            chatViewModel?.visibleStream = null
+        }
+
+        if (CurrentUser.tempTwitchVod == null || CurrentUser.tempTwitchUrl != null) {
+            chatViewModel?.visibleStream = null
+        }
+
+        if (CurrentUser.tempYouTubeId == null) {
+            chatViewModel?.visibleStream = null
+        }
+
         if (CurrentUser.tempStream != null) {
             chatViewModel?.visibleStream = "angelthump"
         } else if (CurrentUser.tempTwitchVod != null || CurrentUser.tempTwitchUrl != null) {
@@ -381,11 +393,13 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             if (chatViewModel != null && chatViewModel!!.chatAdapter != null) {
                 adapter = chatViewModel!!.chatAdapter!!
 
-                sendMessageText.hint = "Write something ${CurrentUser.user!!.username} ..."
-                val header = navView.getHeaderView(0)
-                header.navHeaderUsername.text = CurrentUser.user!!.username
-                nav_view.menu.findItem(R.id.nav_Profile).isVisible = true
-                nav_view.menu.findItem(R.id.nav_Whispers).isVisible = true
+                if (CurrentUser.user != null) {
+                    sendMessageText.hint = "Write something ${CurrentUser.user!!.username} ..."
+                    nav_view.menu.findItem(R.id.nav_Profile).isVisible = true
+                    nav_view.menu.findItem(R.id.nav_Whispers).isVisible = true
+                    val header = navView.getHeaderView(0)
+                    header.navHeaderUsername.text = CurrentUser.user!!.username
+                }
                 nav_view.setCheckedItem(R.id.nav_Chat)
 
                 streamsSocketIntent = chatViewModel?.streamsSocketIntent
@@ -812,9 +826,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     .replace(R.id.nav_host_fragment, LoginFragment(), "LoginFragment")
                     .addToBackStack("LoginFragment").commit()
             }
-            android.R.id.home -> {
-
-            }
         }
         return super.onOptionsItemSelected(item)
     }
@@ -831,12 +842,12 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         when (item.itemId) {
             R.id.nav_Streams -> {
                 supportFragmentManager.beginTransaction()
-                    .add(R.id.nav_host_fragment, StreamsFragment(), "StreamsFragment")
+                    .replace(R.id.nav_host_fragment, StreamsFragment(), "StreamsFragment")
                     .addToBackStack("StreamsFragment").commit()
             }
 
             R.id.nav_Chat -> {
-                recentFragment = supportFragmentManager.fragments[supportFragmentManager.backStackEntryCount + 4]
+                recentFragment = supportFragmentManager.fragments[supportFragmentManager.backStackEntryCount + 5]
                 supportFragmentManager.fragments.forEach {
                     if (it.tag == "StreamsFragment" ||
                         it.tag == "ProfileFragment" ||
@@ -873,19 +884,14 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     override fun onBackPressed() {
-        if (supportFragmentManager.backStackEntryCount == 0) {
+        if (nav_view.checkedItem?.title == "Chat" || toolbar.title == "Chat") {
             return
         } else {
-            if (supportFragmentManager.fragments[supportFragmentManager.backStackEntryCount] != null && nav_view.checkedItem?.title == "Chat") {
-                supportFragmentManager.beginTransaction()
-                    .replace(R.id.nav_host_fragment, recentFragment!!).commit()
-            } else {
-                supportFragmentManager.popBackStack()
+            supportFragmentManager.popBackStack()
 
-                if (supportFragmentManager.backStackEntryCount <= 1) {
-                    nav_view.setCheckedItem(R.id.nav_Chat)
-                    toolbar.title = "Chat"
-                }
+            if (supportFragmentManager.backStackEntryCount <= 1) {
+                nav_view.setCheckedItem(R.id.nav_Chat)
+                toolbar.title = "Chat"
             }
         }
     }

@@ -6,22 +6,24 @@
     android:id="@+id/constraintLayoutContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#515151">
+    android:background="#111111">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraintLayoutStream"
-        android:layout_width="450dp"
+        android:layout_width="500dp"
         android:layout_height="match_parent"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="visible">
 
         <fragment
             android:id="@+id/angelthump_fragment"
             android:name="gg.strims.android.fragments.AngelThumpFragment"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -33,6 +35,7 @@
             android:name="gg.strims.android.fragments.TwitchFragment"
             android:layout_width="0dp"
             android:layout_height="300dp"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -44,6 +47,7 @@
             android:name="gg.strims.android.fragments.YouTubeFragment"
             android:layout_width="0dp"
             android:layout_height="300dp"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -55,6 +59,7 @@
         android:id="@+id/constraintLayoutChat"
         android:layout_width="0dp"
         android:layout_height="match_parent"
+        android:background="#515151"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/constraintLayoutStream"
@@ -216,7 +221,8 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:navGraph="@navigation/mobile_navigation" />
+        app:navGraph="@navigation/mobile_navigation"
+        tools:visibility="gone" />
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/nav_host_fragment2"
@@ -228,7 +234,8 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:navGraph="@navigation/mobile_navigation" />
+        app:navGraph="@navigation/mobile_navigation"
+        tools:visibility="gone" />
 
     <ProgressBar
         android:id="@+id/progressBar"

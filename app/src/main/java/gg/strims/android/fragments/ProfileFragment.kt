@@ -106,8 +106,6 @@ class ProfileFragment: Fragment() {
             activity.navHeaderUsername.text = resources.getString(R.string.anonymous)
             activity.nav_view.menu.findItem(R.id.nav_Profile).isVisible = false
             activity.nav_view.menu.findItem(R.id.nav_Whispers).isVisible = false
-            activity.nav_view.setCheckedItem(R.id.nav_Chat)
-            activity.toolbar.title = "Chat"
             activity.sendMessageText.hint = "Log in to send messages"
             requireActivity().progressBar.visibility = View.VISIBLE
         }

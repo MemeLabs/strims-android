@@ -148,6 +148,7 @@ class StreamsFragment : Fragment() {
                         it.tag == "WhispersUserFragment"
                     ) {
                         parentFragmentManager.beginTransaction().remove(it).commit()
+                        parentFragmentManager.popBackStack()
                     }
                 }
                 hideFragment(activity!!, parentFragmentManager.findFragmentById(R.id.angelthump_fragment)!!)
