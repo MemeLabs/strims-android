@@ -1,5 +1,6 @@
 package gg.strims.android.fragments
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,6 +11,7 @@ import gg.strims.android.CurrentUser
 import gg.strims.android.R
 import gg.strims.android.hideFragment
 import io.ktor.util.*
+import kotlinx.android.synthetic.main.activity_chat.*
 import kotlinx.android.synthetic.main.fragment_angelthump.*
 
 @KtorExperimentalAPI
@@ -25,13 +27,19 @@ class AngelThumpFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         hideFragment(requireActivity(), this)
+
         view.setOnTouchListener { view, motionEvent -> return@setOnTouchListener true }
+
         angelThumpClose.setOnClickListener {
             angelThumpVideoView.stopPlayback()
             CurrentUser.tempStream = null
             parentFragmentManager.beginTransaction()
                 .hide(this)
                 .commit()
+
+            if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                requireActivity().constraintLayoutStream.visibility = View.GONE
+            }
         }
     }
 

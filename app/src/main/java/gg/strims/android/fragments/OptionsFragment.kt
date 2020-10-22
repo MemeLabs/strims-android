@@ -56,27 +56,27 @@ class OptionsFragment : Fragment() {
             recycler.adapter!!.notifyDataSetChanged()
         }
 
-        checkBoxTimestamp.setOnCheckedChangeListener { buttonView, isChecked ->
+        checkBoxTimestamp.setOnCheckedChangeListener { _, isChecked ->
             CurrentUser.options!!.showTime = isChecked
         }
 
-        checkBoxGreentext.setOnCheckedChangeListener { buttonView, isChecked ->
+        checkBoxGreentext.setOnCheckedChangeListener { _, isChecked ->
             CurrentUser.options!!.greentext = isChecked
         }
 
-        checkBoxHarshIgnore.setOnCheckedChangeListener { buttonView, isChecked ->
+        checkBoxHarshIgnore.setOnCheckedChangeListener { _, isChecked ->
             CurrentUser.options!!.harshIgnore = isChecked
         }
 
-        checkBoxHideNsfw.setOnCheckedChangeListener { buttonView, isChecked ->
+        checkBoxHideNsfw.setOnCheckedChangeListener { _, isChecked ->
             CurrentUser.options!!.hideNsfw = isChecked
         }
 
-        checkBoxNotifications.setOnCheckedChangeListener { buttonView, isChecked ->
+        checkBoxNotifications.setOnCheckedChangeListener { _, isChecked ->
             CurrentUser.options!!.notifications = isChecked
         }
 
-        checkBoxEmotes.setOnCheckedChangeListener { buttonView, isChecked ->
+        checkBoxEmotes.setOnCheckedChangeListener { _, isChecked ->
             CurrentUser.options!!.emotes = isChecked
         }
     }

@@ -24,13 +24,13 @@ object CurrentUser {
     var tempTwitchUrl: String? = null // Currently playing Twitch URL
     var tempTwitchVod: Boolean? = null // True if selected stream is a Twitch VOD
     var tempYouTubeId: String? = null // Currently playing YouTube Video ID
-    var emotes: MutableList<Emote>? = null // Collection of all emotes
+    var emotes: MutableList<Emote>? = null // Collection of all emote models
     var jwt: String? = null // JSON Web Token of current user
     var privateMessageUsers: MutableList<String>? = null // List of users currently with private conversations
     var tempWhisperUser : String? = null // User to be passed to WhispersUserFragment
     var whispersDictionary = HashMap<String, MutableList<Message>>() // HashMap of users and their private conversations
-    lateinit var bitmapMemoryCache: HashMap<String, Bitmap>
-    lateinit var gifMemoryCache: LruCache<String, GifDrawable>
+    lateinit var bitmapMemoryCache: HashMap<String, Bitmap> // Collection of all emote Bitmaps
+    lateinit var gifMemoryCache: LruCache<String, GifDrawable> // Collection of all animated emote GifDrawables
 
     fun saveOptions(context: Context) {
         val userOptions = options

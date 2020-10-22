@@ -1,12 +1,15 @@
 package gg.strims.android.fragments
 
 import android.annotation.SuppressLint
+import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.navigation.NavigationView
 import com.google.gson.Gson
@@ -18,6 +21,7 @@ import com.xwray.groupie.Item
 import gg.strims.android.*
 import gg.strims.android.models.Stream
 import io.ktor.util.KtorExperimentalAPI
+import kotlinx.android.synthetic.main.activity_chat.*
 import kotlinx.android.synthetic.main.activity_navigation_drawer.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.fragment_streams.*
@@ -38,9 +42,13 @@ class StreamsFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val layoutManager = LinearLayoutManager(view.context)
-        layoutManager.stackFromEnd = true
-        recyclerViewStreams.layoutManager = layoutManager
+        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            val layoutManager = GridLayoutManager(view.context, 2)
+            recyclerViewStreams.layoutManager = layoutManager
+        } else {
+            val layoutManager = LinearLayoutManager(view.context)
+            recyclerViewStreams.layoutManager = layoutManager
+        }
         recyclerViewStreams.adapter = streamsAdapter
 
         requireActivity().toolbar.title = "Streams"
@@ -48,6 +56,19 @@ class StreamsFragment : Fragment() {
         requireActivity().nav_view.setCheckedItem(R.id.nav_Streams)
 
         displayStreams()
+
+        this.retainInstance = true
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            val layoutManager = GridLayoutManager(view?.context, 2)
+            recyclerViewStreams.layoutManager = layoutManager
+        } else {
+            val layoutManager = LinearLayoutManager(view?.context)
+            recyclerViewStreams.layoutManager = layoutManager
+        }
     }
 
     fun parseStream(input: String) {
@@ -103,9 +124,19 @@ class StreamsFragment : Fragment() {
             viewHolder.itemView.streamTitle.text = "${stream.channel} presents ${stream.title} via ${stream.service}"
             viewHolder.itemView.streamViewerCount.text = stream.rustlers.toString()
             if (stream.live) {
-                viewHolder.itemView.streamViewerCount.setTextColor(Color.parseColor("#FFFFFF"))
+                viewHolder.itemView.constraintLayoutStreamViewers.background =
+                    ResourcesCompat.getDrawable(
+                        resources,
+                        R.drawable.rounded_text_viewers_online,
+                        null
+                    )
             } else {
-                viewHolder.itemView.streamViewerCount.setTextColor(Color.parseColor("#F44336"))
+                viewHolder.itemView.constraintLayoutStreamViewers.background =
+                    ResourcesCompat.getDrawable(
+                        resources,
+                        R.drawable.rounded_text_viewers_offline,
+                        null
+                    )
             }
 
             viewHolder.itemView.setOnClickListener {
@@ -125,6 +156,11 @@ class StreamsFragment : Fragment() {
                 val navView = requireActivity().findViewById<NavigationView>(R.id.nav_view)
                 navView.setCheckedItem(R.id.nav_Chat)
                 requireActivity().toolbar.title = "Chat"
+
+                if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                    activity!!.constraintLayoutStream.visibility = View.VISIBLE
+                }
+
                 when (stream.service) {
                     "angelthump", "m3u8" -> {
                         CurrentUser.tempStream = stream

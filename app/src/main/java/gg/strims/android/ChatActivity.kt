@@ -10,6 +10,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
@@ -43,10 +44,12 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.RemoteInput
+import androidx.core.view.isVisible
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
+import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
@@ -67,7 +70,6 @@ import gg.strims.android.customspans.DrawableCallback
 import gg.strims.android.customspans.NoUnderlineClickableSpan
 import gg.strims.android.fragments.*
 import gg.strims.android.models.ChatUser
-import gg.strims.android.models.Emote
 import gg.strims.android.models.Message
 import gg.strims.android.models.NamesMessage
 import gg.strims.android.viewmodels.ChatViewModel
@@ -317,13 +319,20 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private var chatViewModel: ChatViewModel? = null
 
     override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-
-        unregisterReceiver(broadcastReceiver)
         chatViewModel?.chatAdapter = adapter
 
         chatViewModel?.streamsSocketIntent = streamsSocketIntent
         chatViewModel?.chatSocketIntent = chatSocketIntent
+
+        if (CurrentUser.tempStream != null) {
+            chatViewModel?.visibleStream = "angelthump"
+        } else if (CurrentUser.tempTwitchVod != null || CurrentUser.tempTwitchUrl != null) {
+            chatViewModel?.visibleStream = "twitch"
+        } else if (CurrentUser.tempYouTubeId != null) {
+            chatViewModel?.visibleStream = "youtube"
+        }
+
+        super.onSaveInstanceState(outState)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -334,7 +343,8 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         val drawerLayout: DrawerLayout = findViewById(R.id.drawer_layout)
         val navView: NavigationView = findViewById(R.id.nav_view)
-        val navController = findNavController(R.id.nav_host_fragment)
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment2) as NavHostFragment
+        val navController = navHostFragment.navController
         appBarConfiguration = AppBarConfiguration(
             setOf(
                 R.id.nav_Streams, R.id.nav_Profile, R.id.nav_Settings
@@ -345,6 +355,10 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         navView.setNavigationItemSelectedListener(this)
 
         toolbar.title = "Chat"
+
+        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            supportActionBar?.hide()
+        }
 
         navView.setCheckedItem(R.id.nav_Chat)
 
@@ -376,6 +390,24 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
                 streamsSocketIntent = chatViewModel?.streamsSocketIntent
                 chatSocketIntent = chatViewModel?.chatSocketIntent
+
+                if (chatViewModel?.visibleStream != null && resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                    constraintLayoutStream.visibility = View.VISIBLE
+                }
+
+                when (chatViewModel?.visibleStream) {
+                    "angelthump" -> {
+                        showFragment(this, supportFragmentManager.findFragmentById(R.id.angelthump_fragment)!!)
+                    }
+
+                    "twitch" -> {
+                        showFragment(this, supportFragmentManager.findFragmentById(R.id.twitch_fragment)!!)
+                    }
+
+                    "youtube" -> {
+                        showFragment(this, supportFragmentManager.findFragmentById(R.id.youtube_fragment)!!)
+                    }
+                }
             }
         } else {
             val maxMemory = (Runtime.getRuntime().maxMemory() / 1024).toInt()
@@ -423,9 +455,9 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                                 autofillAdapter.add(AutofillItemUser(it))
                             }
                         }
-                        CurrentUser.emotes!!.forEach {
-                            if (it.name.contains(currentWord, true)) {
-                                autofillAdapter.add(AutofillItemEmote(it))
+                        CurrentUser.bitmapMemoryCache.forEach {
+                            if (it.key.contains(currentWord, true)) {
+                                autofillAdapter.add(AutofillItemEmote(it.key))
                             }
                         }
                     }
@@ -788,7 +820,8 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     override fun onSupportNavigateUp(): Boolean {
-        val navController = findNavController(R.id.nav_host_fragment)
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment2) as NavHostFragment
+        val navController = navHostFragment.navController
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
 
@@ -798,7 +831,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         when (item.itemId) {
             R.id.nav_Streams -> {
                 supportFragmentManager.beginTransaction()
-                    .replace(R.id.nav_host_fragment, StreamsFragment(), "StreamsFragment")
+                    .add(R.id.nav_host_fragment, StreamsFragment(), "StreamsFragment")
                     .addToBackStack("StreamsFragment").commit()
             }
 
@@ -1009,41 +1042,51 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 }
             }
 
-            if (messageData.data.contains("nsfl")) {
-                messageData.entities.links!!.forEach {
-                    ssb.setSpan(
-                        ColouredUnderlineSpan(Color.parseColor("#FFFF00")),
-                        it.bounds[0],
-                        it.bounds[1],
-                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                    )
-                }
-            } else if (messageData.data.contains("nsfw")) {
-                messageData.entities.links!!.forEach {
-                    ssb.setSpan(
-                        ColouredUnderlineSpan(Color.parseColor("#FF2D00")),
-                        it.bounds[0],
-                        it.bounds[1],
-                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                    )
-                }
-            } else if (messageData.data.contains("weeb")) {
-                messageData.entities.links!!.forEach {
-                    ssb.setSpan(
-                        ColouredUnderlineSpan(Color.parseColor("#FF00EE")),
-                        it.bounds[0],
-                        it.bounds[1],
-                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                    )
-                }
-            } else if (messageData.data.contains("loud")) {
-                messageData.entities.links!!.forEach {
-                    ssb.setSpan(
-                        ColouredUnderlineSpan(Color.parseColor("#0022FF")),
-                        it.bounds[0],
-                        it.bounds[1],
-                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                    )
+            with (messageData.data) {
+                when {
+                    contains("nsfl") -> {
+                        messageData.entities.links!!.forEach {
+                            ssb.setSpan(
+                                ColouredUnderlineSpan(Color.parseColor("#FFFF00")),
+                                it.bounds[0],
+                                it.bounds[1],
+                                Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                            )
+                        }
+                    }
+
+                    contains("nsfw") -> {
+                        messageData.entities.links!!.forEach {
+                            ssb.setSpan(
+                                ColouredUnderlineSpan(Color.parseColor("#FF2D00")),
+                                it.bounds[0],
+                                it.bounds[1],
+                                Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                            )
+                        }
+                    }
+
+                    contains("weeb") -> {
+                        messageData.entities.links!!.forEach {
+                            ssb.setSpan(
+                                ColouredUnderlineSpan(Color.parseColor("#FF00EE")),
+                                it.bounds[0],
+                                it.bounds[1],
+                                Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                            )
+                        }
+                    }
+
+                    contains("loud") -> {
+                        messageData.entities.links!!.forEach {
+                            ssb.setSpan(
+                                ColouredUnderlineSpan(Color.parseColor("#0022FF")),
+                                it.bounds[0],
+                                it.bounds[1],
+                                Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -1102,7 +1145,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         if (messageData.entities.spoilers!!.isNotEmpty() && spoilers) {
             messageData.entities.spoilers!!.forEach {
 
-                if (messageData.entities.emotes!!.isNotEmpty()) {
+                if (messageData.entities.emotes!!.isNotEmpty() && CurrentUser.options!!.emotes) {
                     messageData.entities.emotes!!.forEach { emote ->
                         if (emote.bounds[0] >= it.bounds[0] && emote.bounds[1] <= it.bounds[1]) {
                             val emoteSpan = ssb.getSpans(
@@ -1110,7 +1153,9 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                                 ImageSpan::class.java
                             )
 
-                            emoteSpan[0].drawable.alpha = 0
+                            if (emoteSpan.isNotEmpty()) {
+                                emoteSpan[0].drawable.alpha = 0
+                            }
                         }
                     }
                 }
@@ -1118,7 +1163,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 val span1: NoUnderlineClickableSpan = object : NoUnderlineClickableSpan() {
                     override fun onClick(widget: View) {
 
-                        if (messageData.entities.emotes!!.isNotEmpty()) {
+                        if (messageData.entities.emotes!!.isNotEmpty() && CurrentUser.options!!.emotes) {
                             messageData.entities.emotes!!.forEach { emote ->
                                 if (emote.bounds[0] >= it.bounds[0] && emote.bounds[1] <= it.bounds[1]) {
                                     val emoteSpan = ssb.getSpans(
@@ -1152,34 +1197,42 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                                             Spannable.SPAN_INCLUSIVE_INCLUSIVE
                                         )
                                         messageData.entities.tags!!.forEach { it3 ->
-                                            if (it3.name == "nsfl") {
-                                                ssb.setSpan(
-                                                    ColouredUnderlineSpan(Color.parseColor("#FFFF00")),
-                                                    it2.bounds[0],
-                                                    it2.bounds[1],
-                                                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                                                )
-                                            } else if (it3.name == "nsfw") {
-                                                ssb.setSpan(
-                                                    ColouredUnderlineSpan(Color.parseColor("#FF2D00")),
-                                                    it2.bounds[0],
-                                                    it2.bounds[1],
-                                                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                                                )
-                                            } else if (it3.name == "weeb") {
-                                                ssb.setSpan(
-                                                    ColouredUnderlineSpan(Color.parseColor("#FF00EE")),
-                                                    it2.bounds[0],
-                                                    it2.bounds[1],
-                                                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                                                )
-                                            } else if (it3.name == "loud") {
-                                                ssb.setSpan(
-                                                    ColouredUnderlineSpan(Color.parseColor("#0022FF")),
-                                                    it2.bounds[0],
-                                                    it2.bounds[1],
-                                                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                                                )
+                                            when (it3.name) {
+                                                "nsfl" -> {
+                                                    ssb.setSpan(
+                                                        ColouredUnderlineSpan(Color.parseColor("#FFFF00")),
+                                                        it2.bounds[0],
+                                                        it2.bounds[1],
+                                                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                                                    )
+                                                }
+
+                                                "nsfw" -> {
+                                                    ssb.setSpan(
+                                                        ColouredUnderlineSpan(Color.parseColor("#FF2D00")),
+                                                        it2.bounds[0],
+                                                        it2.bounds[1],
+                                                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                                                    )
+                                                }
+
+                                                "weeb" -> {
+                                                    ssb.setSpan(
+                                                        ColouredUnderlineSpan(Color.parseColor("#FF00EE")),
+                                                        it2.bounds[0],
+                                                        it2.bounds[1],
+                                                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                                                    )
+                                                }
+
+                                                "loud" -> {
+                                                    ssb.setSpan(
+                                                        ColouredUnderlineSpan(Color.parseColor("#0022FF")),
+                                                        it2.bounds[0],
+                                                        it2.bounds[1],
+                                                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                                                    )
+                                                }
                                             }
                                         }
                                     }
@@ -1195,7 +1248,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                                 Spannable.SPAN_INCLUSIVE_INCLUSIVE
                             )
 
-                            if (messageData.entities.emotes!!.isNotEmpty()) {
+                            if (messageData.entities.emotes!!.isNotEmpty() && CurrentUser.options!!.emotes) {
                                 messageData.entities.emotes!!.forEach { emote ->
                                     if (emote.bounds[0] >= it.bounds[0] && emote.bounds[1] <= it.bounds[1]) {
                                         val emoteSpan = ssb.getSpans(
@@ -1331,17 +1384,17 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    inner class AutofillItemEmote(private val emote: Emote) : Item<GroupieViewHolder>() {
+    inner class AutofillItemEmote(private val emote: String) : Item<GroupieViewHolder>() {
         override fun getLayout(): Int {
             return R.layout.autofill_item
         }
 
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
-            viewHolder.itemView.usernameAutofill.text = emote.name
+            viewHolder.itemView.usernameAutofill.text = emote
             viewHolder.itemView.usernameAutofill.setOnClickListener {
                 val currentWord = sendMessageText.text.toString().substringAfterLast(' ')
                 val currentMessage = sendMessageText.text.toString().substringBefore(currentWord)
-                sendMessageText.setText("${currentMessage}${emote.name} ")
+                sendMessageText.setText("${currentMessage}${emote} ")
                 sendMessageText.setSelection(sendMessageText.length())
                 recyclerViewAutofill.visibility = View.GONE
             }
@@ -1387,6 +1440,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onDestroy() {
         Log.d("TAG", "DESTROYED")
+        unregisterReceiver(broadcastReceiver)
         super.onDestroy()
     }
 
@@ -1960,7 +2014,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
             createMessageTextView(messageData, viewHolder.itemView.messageChatMessage)
 
-
             viewHolder.itemView.usernameChatMessage.setOnClickListener {
                 for (i in 0 until adapter.itemCount) {
                     if (adapter.getItem(i).layout == R.layout.chat_message_item || adapter.getItem(i).layout == R.layout.chat_message_item_consecutive_nick) {
@@ -2090,10 +2143,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         fun isNickSame(nick: String): Boolean {
             return messageData.nick == nick
-        }
-
-        fun isFeaturesEmpty(): Boolean {
-            return messageData.features.isEmpty()
         }
 
         fun getNick(): String {
@@ -2257,19 +2306,16 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 CurrentUser.tempHighlightNick = null
                 for (i in 0 until adapter.itemCount) {
                     if (adapter.getItem(i).layout == R.layout.chat_message_item || adapter.getItem(i).layout == R.layout.chat_message_item_consecutive_nick) {
-                        val item = adapter.getItem(i) as ChatMessage
                         val adapterItem =
                             recyclerViewChat.findViewHolderForAdapterPosition(i)
                         adapterItem?.itemView?.alpha = 1f
 
                     } else if (adapter.getItem(i).layout == R.layout.private_chat_message_item) {
-                        val item = adapter.getItem(i) as PrivateChatMessage
                         val adapterItem =
                             recyclerViewChat.findViewHolderForAdapterPosition(i)
                         adapterItem?.itemView?.alpha = 1f
 
                     } else {
-                        val item = adapter.getItem(i) as ErrorChatMessage
                         val adapterItem =
                             recyclerViewChat.findViewHolderForAdapterPosition(i)
                         adapterItem?.itemView?.alpha = 1f
@@ -2281,10 +2327,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         fun isNickSame(nick: String): Boolean {
             return nick == messageData.nick
-        }
-
-        fun isFeaturesEmpty(): Boolean {
-            return messageData.features.isEmpty()
         }
 
         fun getNick(): String {
