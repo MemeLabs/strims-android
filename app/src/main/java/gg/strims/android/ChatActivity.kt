@@ -15,8 +15,6 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.Typeface
-import android.graphics.drawable.LayerDrawable
-import android.graphics.drawable.ShapeDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
@@ -46,12 +44,8 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.RemoteInput
-import androidx.core.graphics.drawable.toDrawable
-import androidx.core.view.isVisible
 import androidx.drawerlayout.widget.DrawerLayout
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
@@ -271,7 +265,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             )
                         )
                     )
-                    Thread.sleep(3000)
                     stopService(chatSocketIntent)
                     startService(chatSocketIntent)
                 } else if (intent.action == "gg.strims.android.STREAMS_SOCKET_CLOSE") {

@@ -1,5 +1,6 @@
 package gg.strims.android.fragments
 
+import android.app.PictureInPictureParams
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -34,6 +35,17 @@ class AngelThumpFragment: Fragment() {
         if (CurrentUser.tempStream != null && !player!!.isPlaying) {
             player?.play()
         }
+
+        angelThumpStreamTitle.visibility = View.VISIBLE
+        angelThumpSeparator.visibility = View.VISIBLE
+        angelThumpClose.visibility = View.VISIBLE
+    }
+
+    override fun onPause() {
+        if (CurrentUser.tempStream != null && !requireActivity().isChangingConfigurations) {
+            enterPIPMode()
+        }
+        super.onPause()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -56,6 +68,15 @@ class AngelThumpFragment: Fragment() {
                 requireActivity().constraintLayoutStream.visibility = View.GONE
             }
         }
+    }
+
+    private fun enterPIPMode() {
+        angelThumpVideoView.useController = false
+        val params = PictureInPictureParams.Builder()
+        requireActivity().enterPictureInPictureMode(params.build())
+        angelThumpStreamTitle.visibility = View.GONE
+        angelThumpSeparator.visibility = View.GONE
+        angelThumpClose.visibility = View.GONE
     }
 
     override fun onHiddenChanged(hidden: Boolean) {

@@ -16,6 +16,7 @@
         <activity
             android:name=".ChatActivity"
             android:launchMode="singleTop"
+            android:supportsPictureInPicture="true"
             >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
