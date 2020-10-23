@@ -13,7 +13,8 @@
         android:background="@drawable/rounded_whisper_message_right"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:paddingStart="4dp">
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp">
 
         <TextView
 
@@ -21,7 +22,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
-            android:layout_marginEnd="4dp"
             android:layout_marginBottom="4dp"
             android:gravity="center_vertical"
             android:lineSpacingExtra="6dp"
@@ -30,7 +30,6 @@
             android:text="@string/message"
             android:textColor="#AAAAAA"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/timestampWhisperMessageItemRight" />
 
@@ -39,7 +38,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:layout_marginEnd="4dp"
             android:textColor="#737373"
             android:textSize="12sp"
             app:layout_constraintEnd_toEndOf="parent"
