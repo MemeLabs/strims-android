@@ -92,6 +92,7 @@ class AngelThumpFragment: Fragment() {
             angelThumpVideoView.hideController()
         } else {
             player?.stop()
+            player?.removeMediaItems(0, player?.mediaItemCount!!)
         }
     }
 }

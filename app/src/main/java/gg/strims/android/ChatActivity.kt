@@ -979,7 +979,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                                         ForegroundColorSpan::class.java
                                     )
                                     if (span3[span3.size - 1].foregroundColor == Color.parseColor(
-                                            "#FFFFFF"
+                                            "#AAAAAA"
                                         ) ||
                                         span3[span3.size - 1].foregroundColor == Color.parseColor(
                                             "#03DAC5"
@@ -987,7 +987,19 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                                     ) {
                                         var webpage = Uri.parse(it.url)
 
-                                        if (!it.url!!.startsWith("http://") && !it.url!!.startsWith(
+                                        if (it.url!!.startsWith("strims.gg/")) {
+                                            var channel = it.url!!.substringAfter("strims.gg/")
+                                            if (channel.startsWith("angelthump")) {
+                                                channel = channel.substringAfter("angelthump/")
+                                            }
+                                            CurrentUser.streams?.forEach { stream ->
+                                                if (stream.channel == channel && (stream.service == "angelthump" || stream.service == "m3u8")) {
+                                                    CurrentUser.tempStream = stream
+                                                    val fragment = supportFragmentManager.findFragmentById(R.id.angelthump_fragment)
+                                                    showFragment(this@ChatActivity, fragment!!)
+                                                }
+                                            }
+                                        } else if (!it.url!!.startsWith("http://") && !it.url!!.startsWith(
                                                 "https://"
                                             )
                                         ) {
@@ -1004,7 +1016,19 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         } else {
                             var webpage = Uri.parse(it.url)
 
-                            if (!it.url!!.startsWith("http://") && !it.url!!.startsWith(
+                            if (it.url!!.startsWith("strims.gg/")) {
+                                var channel = it.url!!.substringAfter("strims.gg/")
+                                if (channel.startsWith("angelthump")) {
+                                    channel = channel.substringAfter("angelthump/")
+                                }
+                                CurrentUser.streams?.forEach { stream ->
+                                    if (stream.channel == channel && (stream.service == "angelthump" || stream.service == "m3u8")) {
+                                        CurrentUser.tempStream = stream
+                                        val fragment = supportFragmentManager.findFragmentById(R.id.angelthump_fragment)
+                                        showFragment(this@ChatActivity, fragment!!)
+                                    }
+                                }
+                            } else if (!it.url!!.startsWith("http://") && !it.url!!.startsWith(
                                     "https://"
                                 )
                             ) {
@@ -1181,7 +1205,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         )
                         if (span[span.size - 1].foregroundColor == Color.parseColor("#00000000")) {
                             ssb.setSpan(
-                                ForegroundColorSpan(Color.parseColor("#FFFFFF")),
+                                ForegroundColorSpan(Color.parseColor("#AAAAAA")),
                                 it.bounds[0] + 2,
                                 it.bounds[1] - 2,
                                 Spannable.SPAN_INCLUSIVE_INCLUSIVE
@@ -1237,7 +1261,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                                     }
                                 }
                             }
-                        } else if (span[span.size - 1].foregroundColor == Color.parseColor("#FFFFFF") ||
+                        } else if (span[span.size - 1].foregroundColor == Color.parseColor("#AAAAAA") ||
                             span[span.size - 1].foregroundColor == Color.parseColor("#03DAC5")
                         ) {
                             ssb.setSpan(
