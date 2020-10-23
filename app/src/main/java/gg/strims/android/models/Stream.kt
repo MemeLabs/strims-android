@@ -37,5 +37,5 @@ class Stream(
     )
 
     private val random = Random
-    val colour = Color.argb(255, random.nextInt(256), random.nextInt(256), random.nextInt(256));
+    val colour = Color.argb(255, random.nextInt(256), random.nextInt(256), random.nextInt(256))
 }

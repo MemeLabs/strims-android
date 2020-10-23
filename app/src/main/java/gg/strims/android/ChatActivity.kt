@@ -77,7 +77,6 @@ import kotlinx.android.synthetic.main.activity_chat.*
 import kotlinx.android.synthetic.main.activity_navigation_drawer.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.autofill_item.view.*
-import kotlinx.android.synthetic.main.chat_message_item.*
 import kotlinx.android.synthetic.main.chat_message_item.view.*
 import kotlinx.android.synthetic.main.chat_message_item_emote_combo.view.*
 import kotlinx.android.synthetic.main.error_chat_message_item.view.*
@@ -989,7 +988,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                                     ) {
                                         var webpage = Uri.parse(it.url)
 
-                                        if (it.url!!.startsWith("strims.gg/")) {
+                                        if (it.url!!.startsWith("strims.gg/") && !it.url!!.startsWith("strims.gg/m3u8")) {
                                             var channel = it.url!!.substringAfter("strims.gg/")
                                             if (channel.startsWith("angelthump")) {
                                                 channel = channel.substringAfter("angelthump/")
@@ -1018,7 +1017,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         } else {
                             var webpage = Uri.parse(it.url)
 
-                            if (it.url!!.startsWith("strims.gg/")) {
+                            if (it.url!!.startsWith("strims.gg/") && !it.url!!.startsWith("strims.gg/m3u8")) {
                                 var channel = it.url!!.substringAfter("strims.gg/")
                                 if (channel.startsWith("angelthump")) {
                                     channel = channel.substringAfter("angelthump/")
