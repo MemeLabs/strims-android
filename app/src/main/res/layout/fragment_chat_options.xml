@@ -68,12 +68,22 @@
         app:layout_constraintStart_toStartOf="@+id/checkBoxNotifications"
         app:layout_constraintTop_toBottomOf="@+id/checkBoxNotifications" />
 
+    <CheckBox
+        android:id="@+id/checkBoxViewerState"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:buttonTint="#FF5722"
+        android:text="@string/show_stream_viewer_indicators"
+        android:textColor="#BBBBBB"
+        app:layout_constraintStart_toStartOf="@+id/checkBoxEmotes"
+        app:layout_constraintTop_toBottomOf="@+id/checkBoxEmotes" />
+
     <TextView
         android:id="@+id/ignoredUsers"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="6dp"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="40dp"
         android:text="@string/ignored_users"
         android:textColor="#BBBBBB"
         app:layout_constraintStart_toStartOf="@+id/checkBoxEmotes"

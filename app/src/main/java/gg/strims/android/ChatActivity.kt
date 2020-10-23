@@ -1966,7 +1966,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
 
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
-            if (CurrentUser.viewerStates != null && layout == R.layout.chat_message_item) {
+            if (CurrentUser.viewerStates != null && layout == R.layout.chat_message_item && CurrentUser.options!!.showViewerState) {
                 var changed = false
                 CurrentUser.viewerStates!!.forEach {
                     if (it.nick == messageData.nick) {
@@ -1983,6 +1983,8 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 if (!changed) {
                     viewHolder.itemView.viewerStateChatMessage.visibility = View.GONE
                 }
+            } else if (layout == R.layout.chat_message_item && !CurrentUser.options!!.showViewerState) {
+                viewHolder.itemView.viewerStateChatMessage.visibility = View.GONE
             }
 
             if (CurrentUser.options!!.showTime) {

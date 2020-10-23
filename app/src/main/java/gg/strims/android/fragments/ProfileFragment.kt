@@ -42,7 +42,7 @@ class ProfileFragment: Fragment() {
             usernameEditTextProfile.text = CurrentUser.user!!.username
             streamPathEditTextProfile.setText(CurrentUser.user!!.stream_path)
             channelEditTextProfile.setText(CurrentUser.user!!.channel)
-            checkBoxViewerState.isChecked = CurrentUser.user!!.enable_public_state
+            checkBoxUserViewerState.isChecked = CurrentUser.user!!.enable_public_state
 
             val array = resources.getStringArray(R.array.streaming_service_spinner_names)
             array.forEach {
@@ -79,7 +79,7 @@ class ProfileFragment: Fragment() {
                 GlobalScope.launch {
                     CurrentUser.user!!.stream_path = streamPathEditTextProfile.text.toString()
                     CurrentUser.user!!.channel = channelEditTextProfile.text.toString()
-                    CurrentUser.user!!.enable_public_state = checkBoxViewerState.isChecked
+                    CurrentUser.user!!.enable_public_state = checkBoxUserViewerState.isChecked
                     val id = resources.getStringArray(R.array.streaming_service_spinner_names)[streamingServiceSpinnerProfile.selectedItemPosition]
                     CurrentUser.user!!.service = id
 

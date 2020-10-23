@@ -32,6 +32,7 @@ class OptionsFragment : Fragment() {
             checkBoxHideNsfw.isChecked = CurrentUser.options!!.hideNsfw
             checkBoxNotifications.isChecked = CurrentUser.options!!.notifications
             checkBoxEmotes.isChecked = CurrentUser.options!!.emotes
+            checkBoxViewerState.isChecked = CurrentUser.options!!.showViewerState
 
             ignoredUsersTextViewOptions.text =
                 CurrentUser.options!!.ignoreList.toString()
@@ -78,6 +79,10 @@ class OptionsFragment : Fragment() {
 
         checkBoxEmotes.setOnCheckedChangeListener { _, isChecked ->
             CurrentUser.options!!.emotes = isChecked
+        }
+
+        checkBoxViewerState.setOnCheckedChangeListener { _, isChecked ->
+            CurrentUser.options!!.showViewerState = isChecked
         }
     }
 }

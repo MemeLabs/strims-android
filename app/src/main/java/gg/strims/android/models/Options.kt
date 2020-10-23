@@ -8,7 +8,8 @@ class Options(
     var notifications: Boolean,
     var greentext: Boolean = true,
     var emotes: Boolean = true,
-    var customHighlights: MutableList<String>
+    var customHighlights: MutableList<String>,
+    var showViewerState: Boolean = true
 ) {
-    constructor(): this(false, mutableListOf(), false, false , false, true, true, mutableListOf())
+    constructor(): this(false, mutableListOf(), false, false , false, true, true, mutableListOf(), true)
 }
