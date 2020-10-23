@@ -11,11 +11,11 @@
         android:id="@+id/usernameChatMessage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="4dp"
+        android:layout_marginStart="2dp"
         android:text="@string/username"
         android:textColor="#FFFFFF"
         android:textStyle="bold"
-        app:layout_constraintStart_toEndOf="@+id/botFlairChatMessage"
+        app:layout_constraintStart_toEndOf="@+id/viewerStateChatMessage"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
@@ -58,5 +58,15 @@
         app:layout_constraintTop_toTopOf="@id/timestampChatMessage"
         app:srcCompat="@drawable/ic_android_bot_24dp"
         tools:visibility="visible" />
+
+    <ImageView
+        android:id="@+id/viewerStateChatMessage"
+        android:layout_width="10dp"
+        android:layout_height="10dp"
+        android:layout_marginStart="2dp"
+        app:layout_constraintBottom_toBottomOf="@+id/botFlairChatMessage"
+        app:layout_constraintStart_toEndOf="@+id/botFlairChatMessage"
+        app:layout_constraintTop_toTopOf="@+id/botFlairChatMessage"
+        app:srcCompat="@drawable/ic_baseline_fiber_manual_record_24" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

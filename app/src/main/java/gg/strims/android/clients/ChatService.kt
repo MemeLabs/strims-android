@@ -19,6 +19,7 @@ import gg.strims.android.CurrentUser
 import gg.strims.android.R
 import gg.strims.android.models.EmotesParsed
 import gg.strims.android.models.Options
+import gg.strims.android.models.ViewerState
 import io.ktor.client.*
 import io.ktor.client.features.websocket.*
 import io.ktor.client.request.get
@@ -107,6 +108,9 @@ class ChatService: Service() {
         private fun retrieveHistory() {
             val messageHistory =
                 Klaxon().parseArray<String>(URL("https://chat.strims.gg/api/chat/history").readText())
+            CurrentUser.viewerStates =
+                Klaxon().parseArray<ViewerState>(URL("https://chat.strims.gg/api/chat/viewer-states").readText())
+                    ?.toMutableList()
             val intent = Intent("gg.strims.android.MESSAGE_HISTORY")
             val arrayList = arrayListOf<String>()
             if (messageHistory != null) {
@@ -149,9 +153,9 @@ class ChatService: Service() {
         }
 
         private fun retrieveOptions() {
-            val file = baseContext.getFileStreamPath("filename.txt")
+            val file = baseContext.getFileStreamPath("options.txt")
             if (file.exists()) {
-                val fileInputStream = openFileInput("filename.txt")
+                val fileInputStream = openFileInput("options.txt")
                 val inputStreamReader = InputStreamReader(fileInputStream)
                 val bufferedReader = BufferedReader(inputStreamReader)
                 val stringBuilder = StringBuilder()

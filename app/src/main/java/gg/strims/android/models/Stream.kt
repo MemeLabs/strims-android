@@ -1,5 +1,8 @@
 package gg.strims.android.models
 
+import android.graphics.Color
+import kotlin.random.Random
+
 class Stream(
     val afk: Boolean,
     var afk_rustlers: Int,
@@ -16,7 +19,6 @@ class Stream(
     val title: String,
     val viewers: Int
 ) {
-
     constructor() : this(
         false,
         0,
@@ -33,4 +35,7 @@ class Stream(
         "test_title",
         789
     )
+
+    private val random = Random
+    val colour = Color.argb(255, random.nextInt(256), random.nextInt(256), random.nextInt(256));
 }

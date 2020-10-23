@@ -94,7 +94,7 @@ class ProfileFragment: Fragment() {
         logOutProfile.setOnClickListener {
             CurrentUser.user = null
             CurrentUser.tempWhisperUser = null
-            CurrentUser.whispersDictionary = HashMap<String, MutableList<Message>>()
+            CurrentUser.whispersMap = HashMap<String, MutableList<Message>>()
             CurrentUser.privateMessageUsers = null
 
             deleteCookie()

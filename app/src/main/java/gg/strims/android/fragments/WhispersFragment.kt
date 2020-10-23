@@ -123,7 +123,7 @@ class WhispersFragment : Fragment() {
                 viewHolder.itemView.onlineWhisperUser.visibility = View.GONE
             }
             val parentActivity = requireActivity() as ChatActivity
-            parentActivity.createMessageTextView(CurrentUser.whispersDictionary[nick]!!.last(), viewHolder.itemView.latestMessageWhisperUser)
+            parentActivity.createMessageTextView(CurrentUser.whispersMap[nick]!!.last(), viewHolder.itemView.latestMessageWhisperUser)
 
             viewHolder.itemView.setOnClickListener {
                 CurrentUser.tempWhisperUser = nick

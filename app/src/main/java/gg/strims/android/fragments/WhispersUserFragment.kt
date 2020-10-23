@@ -40,7 +40,7 @@ class WhispersUserFragment : Fragment() {
             if (intent != null) {
                 if (intent.action == "gg.strims.android.PRIVATE_MESSAGE") {
                     // Add new message
-                    whispersUserAdapter.add(WhisperMessageItem(CurrentUser.whispersDictionary[CurrentUser.tempWhisperUser]!!.last()))
+                    whispersUserAdapter.add(WhisperMessageItem(CurrentUser.whispersMap[CurrentUser.tempWhisperUser]!!.last()))
                     recyclerViewWhispersUser.scrollToPosition(whispersUserAdapter.itemCount - 1)
                 }
             }
@@ -127,7 +127,7 @@ class WhispersUserFragment : Fragment() {
     }
 
     private fun fetchPrivateMessages() {
-        CurrentUser.whispersDictionary[CurrentUser.tempWhisperUser]?.forEach {
+        CurrentUser.whispersMap[CurrentUser.tempWhisperUser]?.forEach {
             whispersUserAdapter.add(WhisperMessageItem(it))
         }
     }

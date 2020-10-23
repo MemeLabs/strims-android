@@ -69,6 +69,7 @@ import gg.strims.android.fragments.*
 import gg.strims.android.models.ChatUser
 import gg.strims.android.models.Message
 import gg.strims.android.models.NamesMessage
+import gg.strims.android.models.ViewerState
 import gg.strims.android.viewmodels.ChatViewModel
 import io.ktor.util.*
 import io.ktor.utils.io.errors.*
@@ -76,6 +77,7 @@ import kotlinx.android.synthetic.main.activity_chat.*
 import kotlinx.android.synthetic.main.activity_navigation_drawer.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.autofill_item.view.*
+import kotlinx.android.synthetic.main.chat_message_item.*
 import kotlinx.android.synthetic.main.chat_message_item.view.*
 import kotlinx.android.synthetic.main.chat_message_item_emote_combo.view.*
 import kotlinx.android.synthetic.main.error_chat_message_item.view.*
@@ -796,8 +798,8 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         messagesArray.add(curPMessage)
                     }
                     bufferedReader.close()
-                    CurrentUser.whispersDictionary[it] = messagesArray
-                    CurrentUser.whispersDictionary[it]?.sortBy { message ->
+                    CurrentUser.whispersMap[it] = messagesArray
+                    CurrentUser.whispersMap[it]?.sortBy { message ->
                         message.timestamp
                     }
                 }
@@ -1458,7 +1460,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
         }
 
-        CurrentUser.whispersDictionary[otherUser]?.add(message)
+        CurrentUser.whispersMap[otherUser]?.add(message)
     }
 
     override fun onDestroy() {
@@ -1964,6 +1966,25 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
 
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
+            if (CurrentUser.viewerStates != null && layout == R.layout.chat_message_item) {
+                var changed = false
+                CurrentUser.viewerStates!!.forEach {
+                    if (it.nick == messageData.nick) {
+                        CurrentUser.streams?.forEach { stream ->
+                            if (it.channel?.channel == stream.channel) {
+                                viewHolder.itemView.viewerStateChatMessage.visibility = View.VISIBLE
+                                viewHolder.itemView.viewerStateChatMessage.setColorFilter(stream.colour)
+                                changed = true
+                                return@forEach
+                            }
+                        }
+                    }
+                }
+                if (!changed) {
+                    viewHolder.itemView.viewerStateChatMessage.visibility = View.GONE
+                }
+            }
+
             if (CurrentUser.options!!.showTime) {
                 val dateFormat = SimpleDateFormat("HH:mm")
                 val time = dateFormat.format(messageData.timestamp)
@@ -2476,6 +2497,15 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 val lastItem = layoutTest.findLastVisibleItemPosition()
                 if (lastItem >= recyclerViewChat.adapter!!.itemCount - 3) {
                     recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
+                }
+            }
+            "VIEWERSTATE" -> {
+                val state = Klaxon().parse<ViewerState>(msg[1])
+                CurrentUser.viewerStates?.forEach {
+                    if (it.nick == state?.nick) {
+                        CurrentUser.viewerStates!![CurrentUser.viewerStates!!.indexOf(it)] = state
+                        return null
+                    }
                 }
             }
         }

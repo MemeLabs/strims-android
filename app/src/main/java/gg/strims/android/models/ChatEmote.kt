@@ -6,6 +6,5 @@ class ChatEmote(
     var modifiers: List<String>,
     var combo: Int
 ) {
-
     constructor() : this("", listOf(), listOf(), 0)
 }

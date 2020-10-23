@@ -123,6 +123,7 @@ class StreamsFragment : Fragment() {
             }
             viewHolder.itemView.streamTitle.text = "${stream.channel} presents ${stream.title} via ${stream.service}"
             viewHolder.itemView.streamViewerCount.text = stream.rustlers.toString()
+            viewHolder.itemView.streamViewerState.setColorFilter(stream.colour)
             if (stream.live) {
                 viewHolder.itemView.constraintLayoutStreamViewers.background =
                     ResourcesCompat.getDrawable(
