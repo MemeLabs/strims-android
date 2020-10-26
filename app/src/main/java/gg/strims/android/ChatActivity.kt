@@ -66,7 +66,6 @@ import gg.strims.android.customspans.ColouredUnderlineSpan
 import gg.strims.android.customspans.DrawableCallback
 import gg.strims.android.customspans.NoUnderlineClickableSpan
 import gg.strims.android.fragments.*
-import gg.strims.android.models.ChatUser
 import gg.strims.android.models.Message
 import gg.strims.android.models.NamesMessage
 import gg.strims.android.models.ViewerState
@@ -76,7 +75,8 @@ import io.ktor.utils.io.errors.*
 import kotlinx.android.synthetic.main.activity_chat.*
 import kotlinx.android.synthetic.main.activity_navigation_drawer.*
 import kotlinx.android.synthetic.main.app_bar_main.*
-import kotlinx.android.synthetic.main.autofill_item.view.*
+import kotlinx.android.synthetic.main.autofill_item.view.textViewAutofill
+import kotlinx.android.synthetic.main.autofill_item_emote.view.*
 import kotlinx.android.synthetic.main.chat_message_item.view.*
 import kotlinx.android.synthetic.main.chat_message_item_emote_combo.view.*
 import kotlinx.android.synthetic.main.error_chat_message_item.view.*
@@ -486,17 +486,19 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             }
                         }
 
-                        CurrentUser.users!!.sortByDescending {
-                            it.nick
+                        CurrentUser.users.sortByDescending {
+                            it
                         }
-                        CurrentUser.users!!.forEach {
-                            if (it.nick.contains(currentWord, true)) {
+
+                        CurrentUser.users.forEach {
+                            if (it.contains(currentWord, true)) {
                                 autofillAdapter.add(AutofillItemUser(it))
                             }
                         }
+
                         CurrentUser.bitmapMemoryCache.forEach {
                             if (it.key.contains(currentWord, true)) {
-                                autofillAdapter.add(AutofillItemEmote(it.key))
+                                autofillAdapter.add(AutofillItemEmote(it.key, it.value))
                             }
                         }
                     }
@@ -1402,9 +1404,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     inner class AutofillItemCommand(private val command: String) : Item<GroupieViewHolder>() {
-        override fun getLayout(): Int {
-            return R.layout.autofill_item
-        }
+        override fun getLayout(): Int = R.layout.autofill_item
 
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
             viewHolder.itemView.textViewAutofill.text = "/$command"
@@ -1418,31 +1418,28 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    inner class AutofillItemUser(private val user: ChatUser) : Item<GroupieViewHolder>() {
-        override fun getLayout(): Int {
-            return R.layout.autofill_item
-        }
+    inner class AutofillItemUser(private val user: String) : Item<GroupieViewHolder>() {
+        override fun getLayout(): Int = R.layout.autofill_item
 
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
-            viewHolder.itemView.textViewAutofill.text = user.nick
+            viewHolder.itemView.textViewAutofill.text = user
 
             viewHolder.itemView.textViewAutofill.setOnClickListener {
                 val currentWord = sendMessageText.text.toString().substringAfterLast(' ')
                 val currentMessage = sendMessageText.text.toString().substringBefore(currentWord)
-                sendMessageText.setText("${currentMessage}${user.nick} ")
+                sendMessageText.setText("${currentMessage}${user} ")
                 sendMessageText.setSelection(sendMessageText.length())
                 recyclerViewAutofill.visibility = View.GONE
             }
         }
     }
 
-    inner class AutofillItemEmote(private val emote: String) : Item<GroupieViewHolder>() {
-        override fun getLayout(): Int {
-            return R.layout.autofill_item
-        }
+    inner class AutofillItemEmote(private val emote: String, private val bitmap: Bitmap) : Item<GroupieViewHolder>() {
+        override fun getLayout(): Int = R.layout.autofill_item_emote
 
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
             viewHolder.itemView.textViewAutofill.text = emote
+            viewHolder.itemView.imageViewEmoteAutofill.setImageBitmap(bitmap)
             viewHolder.itemView.textViewAutofill.setOnClickListener {
                 val currentWord = sendMessageText.text.toString().substringAfterLast(' ')
                 val currentMessage = sendMessageText.text.toString().substringBefore(currentWord)
@@ -1454,6 +1451,8 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     inner class AutofillItemModifier(private val modifier: String) : Item<GroupieViewHolder>() {
+        override fun getLayout(): Int = R.layout.autofill_item
+
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
             viewHolder.itemView.textViewAutofill.text = modifier
 
@@ -1476,8 +1475,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 recyclerViewAutofill.visibility = View.GONE
             }
         }
-
-        override fun getLayout(): Int = R.layout.autofill_item
     }
 
     private fun savePrivateMessage(messageJson: String, message: Message) {
@@ -2439,7 +2436,9 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         when (msg[0]) {
             "NAMES" -> {
                 val names: NamesMessage = Klaxon().parse(msg[1])!!
-                CurrentUser.users = names.users.toMutableList()
+                names.users.forEach {
+                    CurrentUser.users!!.add(it.nick)
+                }
                 CurrentUser.connectionCount = names.connectioncount
                 runOnUiThread {
                     if (adapter.itemCount > 0 && adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item_emote_combo) {
@@ -2462,13 +2461,13 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 }
             }
             "JOIN" -> {
-                val userJoin = Klaxon().parse<ChatUser>(msg[1])
+                val userJoin = Klaxon().parse<String>(msg[1])
                 if (!CurrentUser.users!!.contains(userJoin)) {
                     CurrentUser.users!!.add(userJoin!!)
                 }
             }
             "QUIT" -> {
-                val userQuit = Klaxon().parse<ChatUser>(msg[1])
+                val userQuit = Klaxon().parse<String>(msg[1])
                 if (CurrentUser.users!!.contains(userQuit)) {
                     CurrentUser.users!!.remove(userQuit)
                 }

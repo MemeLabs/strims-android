@@ -17,7 +17,7 @@ object CurrentUser {
     var user: User? = null // Current user
     var options: Options? = null // Loaded options file
     var tempHighlightNick: MutableList<String>? = null // List of nicks to highlight in chat when a user clicks on them
-    var users: MutableList<ChatUser>? = null // List of all users in chat
+    var users = mutableListOf<String>() // List of all users in chat
     var connectionCount: Int? = null // Connection count
     var streams: MutableList<Stream>? = null // List of all active streams from STREAMS_SET
     var tempStream: Stream? = null // Currently playing AngelThump stream object

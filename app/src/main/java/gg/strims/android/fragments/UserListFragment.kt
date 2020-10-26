@@ -17,11 +17,11 @@ import gg.strims.android.CurrentUser
 import gg.strims.android.R
 import gg.strims.android.hideFragment
 import gg.strims.android.keyRequestFocus
-import gg.strims.android.models.ChatUser
 import io.ktor.util.*
 import kotlinx.android.synthetic.main.activity_chat.*
 import kotlinx.android.synthetic.main.fragment_user_list.*
 import kotlinx.android.synthetic.main.chat_user_item.view.*
+import java.util.*
 
 @KtorExperimentalAPI
 class UserListFragment : Fragment() {
@@ -38,13 +38,13 @@ class UserListFragment : Fragment() {
 
     override fun onHiddenChanged(hidden: Boolean) {
         userListAdapter.clear()
-        if (CurrentUser.users != null) {
-            CurrentUser.users!!.sortBy { it.nick }
-            CurrentUser.users!!.forEach {
+        CurrentUser.users.sortBy { it }
+        CurrentUser.users.forEach {
+            if (it.isNotEmpty()) {
                 userListAdapter.add(UserListItem(it))
             }
-            recyclerViewUserList.scrollToPosition(1)
         }
+        recyclerViewUserList.scrollToPosition(1)
 
         userListSearch.addTextChangedListener(object :
             TextWatcher {
@@ -61,26 +61,18 @@ class UserListFragment : Fragment() {
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 userListAdapter.clear()
-                val list = mutableListOf<ChatUser>()
-                CurrentUser.users!!.sortBy { it.nick }
-                CurrentUser.users!!.forEach {
-                    userListAdapter.add(UserListItem(it))
-                }
-                recyclerViewUserList.scrollToPosition(1)
-                for (i in 0 until userListAdapter.itemCount) {
-                    val item = userListAdapter.getItem(i) as UserListItem
-                    if (item.user.nick.contains(userListSearch.text.toString())) {
-                        list.add(item.user)
-                    }
-                }
-
-                userListAdapter.clear()
-                list.forEach {
-                    for (i in 0 until userListAdapter.itemCount) {
-                        val item = userListAdapter.getItem(i) as UserListItem
-                        if (item.user.nick != it.nick) {
+                CurrentUser.users.forEach {
+                    if (userListSearch.text.isNotEmpty()) {
+                        if (it.toLowerCase(Locale.ROOT).contains(
+                                userListSearch.text.toString().toLowerCase(
+                                    Locale.ROOT
+                                )
+                            )
+                        ) {
                             userListAdapter.add(UserListItem(it))
                         }
+                    } else {
+                        userListAdapter.add(UserListItem(it))
                     }
                 }
             }
@@ -104,30 +96,22 @@ class UserListFragment : Fragment() {
         }
     }
 
-    inner class UserListItem(val user: ChatUser) : Item<GroupieViewHolder>() {
+    inner class UserListItem(val user: String) : Item<GroupieViewHolder>() {
         override fun getLayout(): Int {
             return R.layout.chat_user_item
         }
 
         @SuppressLint("SetTextI18n")
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
-            viewHolder.itemView.chatUserUsername.text = user.nick
-            if (user.features.contains("bot")) {
-                viewHolder.itemView.chatUserUsername.setTextColor(
-                    Color.parseColor(
-                        "#FF2196F3"
-                    )
+            viewHolder.itemView.chatUserUsername.text = user
+            viewHolder.itemView.chatUserUsername.setTextColor(
+                Color.parseColor(
+                    "#FFFFFF"
                 )
-            } else {
-                viewHolder.itemView.chatUserUsername.setTextColor(
-                    Color.parseColor(
-                        "#FFFFFF"
-                    )
-                )
-            }
+            )
 
             viewHolder.itemView.chatUserUsername.setOnClickListener {
-                activity!!.sendMessageText.setText("/w ${user.nick} ")
+                activity!!.sendMessageText.setText("/w ${user} ")
                 keyRequestFocus(
                     activity!!.sendMessageText,
                     context!!

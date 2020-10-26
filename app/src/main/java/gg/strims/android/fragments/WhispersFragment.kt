@@ -110,7 +110,7 @@ class WhispersFragment : Fragment() {
             if (CurrentUser.users != null) {
                 var online = false
                 CurrentUser.users!!.forEach { user ->
-                    if (user.nick == nick) {
+                    if (user == nick) {
                         viewHolder.itemView.onlineWhisperUser.visibility = View.VISIBLE
                         online = true
                         return@forEach
