@@ -117,6 +117,26 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     private var privateMessageArray = arrayOf("w", "whisper", "msg", "tell", "t", "notify")
 
+    private var modifiersArray = arrayOf(
+        "banned",
+        "dank",
+        "fast",
+        "flip",
+        "hyper",
+        "lag",
+        "love",
+        "mirror",
+        "rain",
+        "rustle",
+        "slow",
+        "smol",
+        "snow",
+        "spin",
+        "virus",
+        "wide",
+        "worth"
+    )
+
     private val autofillAdapter = GroupAdapter<GroupieViewHolder>()
 
     private val broadcastReceiver = object : BroadcastReceiver() {
@@ -456,8 +476,16 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             }
                         }
                     } else {
-
                         val currentWord = sendMessageText.text.toString().substringAfterLast(' ')
+
+                        if (currentWord.contains(':')) {
+                            modifiersArray.forEach {
+                                if (it.contains(currentWord.substringAfterLast(':'))) {
+                                    autofillAdapter.add(AutofillItemModifier(it))
+                                }
+                            }
+                        }
+
                         CurrentUser.users!!.sortByDescending {
                             it.nick
                         }
@@ -1379,9 +1407,9 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
 
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
-            viewHolder.itemView.usernameAutofill.text = "/$command"
+            viewHolder.itemView.textViewAutofill.text = "/$command"
 
-            viewHolder.itemView.usernameAutofill.setOnClickListener {
+            viewHolder.itemView.textViewAutofill.setOnClickListener {
 
                 sendMessageText.setText("/$command ")
                 sendMessageText.setSelection(sendMessageText.length())
@@ -1396,9 +1424,9 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
 
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
-            viewHolder.itemView.usernameAutofill.text = user.nick
+            viewHolder.itemView.textViewAutofill.text = user.nick
 
-            viewHolder.itemView.usernameAutofill.setOnClickListener {
+            viewHolder.itemView.textViewAutofill.setOnClickListener {
                 val currentWord = sendMessageText.text.toString().substringAfterLast(' ')
                 val currentMessage = sendMessageText.text.toString().substringBefore(currentWord)
                 sendMessageText.setText("${currentMessage}${user.nick} ")
@@ -1414,8 +1442,8 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
 
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
-            viewHolder.itemView.usernameAutofill.text = emote
-            viewHolder.itemView.usernameAutofill.setOnClickListener {
+            viewHolder.itemView.textViewAutofill.text = emote
+            viewHolder.itemView.textViewAutofill.setOnClickListener {
                 val currentWord = sendMessageText.text.toString().substringAfterLast(' ')
                 val currentMessage = sendMessageText.text.toString().substringBefore(currentWord)
                 sendMessageText.setText("${currentMessage}${emote} ")
@@ -1423,6 +1451,33 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 recyclerViewAutofill.visibility = View.GONE
             }
         }
+    }
+
+    inner class AutofillItemModifier(private val modifier: String) : Item<GroupieViewHolder>() {
+        override fun bind(viewHolder: GroupieViewHolder, position: Int) {
+            viewHolder.itemView.textViewAutofill.text = modifier
+
+            viewHolder.itemView.textViewAutofill.setOnClickListener {
+                var currentWord = sendMessageText.text.toString().substringAfterLast(':')
+                if (currentWord.isEmpty()) {
+                    currentWord = ":"
+                }
+                var currentMessage = sendMessageText.text.toString().substringBeforeLast(currentWord)
+
+                if (currentMessage.last() == ' ') {
+                    currentMessage = currentMessage.trimEnd(' ')
+                }
+
+                if (currentMessage.last() != ':') {
+                    currentMessage = currentMessage.plus(':')
+                }
+                sendMessageText.setText("${currentMessage}${modifier} ")
+                sendMessageText.setSelection(sendMessageText.length())
+                recyclerViewAutofill.visibility = View.GONE
+            }
+        }
+
+        override fun getLayout(): Int = R.layout.autofill_item
     }
 
     private fun savePrivateMessage(messageJson: String, message: Message) {

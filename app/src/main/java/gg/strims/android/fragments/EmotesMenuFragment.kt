@@ -40,6 +40,10 @@ class EmotesMenuFragment : Fragment() {
         recyclerViewEmoteMenu.layoutManager = GridLayoutManager(view.context, 5)
         recyclerViewEmoteMenu.adapter = emoteMenuAdapter
 
+        closeEmoteMenuButton.setOnClickListener {
+            hideFragment(requireActivity(), this@EmotesMenuFragment)
+        }
+
         emoteMenuSearch.addTextChangedListener(object :
             TextWatcher {
             override fun afterTextChanged(s: Editable?) {
