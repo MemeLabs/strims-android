@@ -105,6 +105,7 @@ dependencies {
     implementation 'com.google.android.exoplayer:exoplayer-hls:2.12.1'
     implementation 'com.google.android.exoplayer:exoplayer-smoothstreaming:2.12.1'
     implementation 'com.google.android.exoplayer:extension-mediasession:2.12.1'
+    debugImplementation 'com.melegy.redscreenofdeath:red-screen-of-death:0.1.1'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.11.0'
     testImplementation 'junit:junit:4.13'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'

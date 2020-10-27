@@ -56,6 +56,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.beust.klaxon.Klaxon
 import com.google.android.material.navigation.NavigationView
 import com.google.gson.Gson
+import com.melegy.redscreenofdeath.RedScreenOfDeath
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
@@ -383,6 +384,8 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         navView.setupWithNavController(navController)
         navView.setNavigationItemSelectedListener(this)
 
+        RedScreenOfDeath.init(this.application)
+
         toolbar.title = "Chat"
 
         if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
@@ -479,7 +482,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         val currentWord = sendMessageText.text.toString().substringAfterLast(' ')
 
                         if (currentWord.contains(':')) {
-                            CurrentUser.emotes!!.forEach {emote ->
+                            CurrentUser.emotes!!.forEach { emote ->
                                 if (sendMessageText.text.contains(emote.name)) {
                                     modifiersArray.forEach {
                                         if (it.contains(currentWord.substringAfterLast(':'))) {
