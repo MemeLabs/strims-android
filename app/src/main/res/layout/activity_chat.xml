@@ -42,7 +42,7 @@
         android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/userListButton" />
+        app:layout_constraintStart_toEndOf="@+id/emoteMenuButton" />
 
     <Button
         android:id="@+id/sendMessageButton"
@@ -56,24 +56,24 @@
         app:layout_constraintTop_toTopOf="@+id/sendMessageText" />
 
     <ImageView
-        android:id="@+id/userListButton"
+        android:id="@+id/emoteMenuButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/sendMessageText"
-        app:srcCompat="@drawable/ic_person_orange_24dp" />
+        app:srcCompat="@drawable/ic_sentiment_satisfied_orange_24dp" />
 
     <ImageView
-        android:id="@+id/emoteMenuButton"
+        android:id="@+id/userListButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="@+id/sendMessageText"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/sendMessageText"
         app:layout_constraintTop_toTopOf="@+id/sendMessageText"
-        app:srcCompat="@drawable/ic_sentiment_satisfied_orange_24dp" />
+        app:srcCompat="@drawable/ic_person_orange_24dp" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/goToBottomLayout"

@@ -151,11 +151,11 @@ class WhispersUserFragment : Fragment() {
             if (layout == R.layout.whisper_message_item_left) {
                 viewHolder.itemView.usernameWhisperMessageItemLeft.text = message.nick
 
-                val dateFormat = SimpleDateFormat("HH:mm yy-MM-dd")
+                val dateFormat = SimpleDateFormat("HH:mm yyyy-MM-dd")
                 val time = dateFormat.format(message.timestamp)
                 viewHolder.itemView.timestampWhisperMessageItemLeft.text = time
             } else if (layout == R.layout.whisper_message_item_right) {
-                val dateFormat = SimpleDateFormat("HH:mm yy-MM-dd")
+                val dateFormat = SimpleDateFormat("HH:mm yyyy-MM-dd")
                 val time = dateFormat.format(message.timestamp)
                 viewHolder.itemView.timestampWhisperMessageItemRight.text = time
             }

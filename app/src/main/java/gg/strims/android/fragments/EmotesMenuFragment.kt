@@ -1,5 +1,6 @@
 package gg.strims.android.fragments
 
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.text.Editable
@@ -37,7 +38,10 @@ class EmotesMenuFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         hideFragment(requireActivity(), this)
-        recyclerViewEmoteMenu.layoutManager = GridLayoutManager(view.context, 5)
+        recyclerViewEmoteMenu.layoutManager = GridLayoutManager(
+            view.context,
+            if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) 8 else 5
+        )
         recyclerViewEmoteMenu.adapter = emoteMenuAdapter
 
         closeEmoteMenuButton.setOnClickListener {
@@ -86,7 +90,8 @@ class EmotesMenuFragment : Fragment() {
         }
     }
 
-    inner class EmoteMenuItem(val name: String, private val bitmap: Bitmap) : Item<GroupieViewHolder>() {
+    inner class EmoteMenuItem(val name: String, private val bitmap: Bitmap) :
+        Item<GroupieViewHolder>() {
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
             viewHolder.itemView.imageViewEmote.setImageBitmap(bitmap)
 
