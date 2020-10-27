@@ -464,7 +464,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 sendMessageButton.isEnabled = sendMessageText.text.isNotEmpty()
                 autofillAdapter.clear()
-                if (sendMessageText.text.isNotEmpty()) {
+                if (sendMessageText.text.isNotEmpty() && sendMessageText.text.last() != ' ') {
                     recyclerViewAutofill.visibility = View.VISIBLE
 //                    goToBottomLayout.visibility = View.GONE
                     if (sendMessageText.text.first() == '/' && !sendMessageText.text.contains(' ')) {
@@ -502,7 +502,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             }
                         }
                     }
-                } else if (sendMessageText.text.isEmpty() || sendMessageText.text.last() == ' ') {
+                } else if (sendMessageText.text.isEmpty()) {
                     recyclerViewAutofill.visibility = View.GONE
                 }
             }
@@ -526,14 +526,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         layoutManager.stackFromEnd = true
         recyclerViewChat.layoutManager = layoutManager
         recyclerViewChat.adapter = adapter
-
-//        chatViewModel.getChatData()?.observe(this, object : Observer<GroupAdapter<GroupieViewHolder>> {
-//            override fun onChanged(t: GroupAdapter<GroupieViewHolder>?) {
-//                if (t != null) {
-//                    adapter = t
-//                }
-//            }
-//        })
 
         recyclerViewChat.setOnScrollChangeListener { _, _, _, _, _ ->
             val layoutTest = recyclerViewChat.layoutManager as LinearLayoutManager
@@ -1426,8 +1418,12 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
             viewHolder.itemView.textViewAutofill.setOnClickListener {
                 val currentWord = sendMessageText.text.toString().substringAfterLast(' ')
-                val currentMessage = sendMessageText.text.toString().substringBefore(currentWord)
-                sendMessageText.setText("${currentMessage}${user} ")
+                val currentMessage = sendMessageText.text.toString().substringBeforeLast(" $currentWord")
+                if (!user.toLowerCase(Locale.ROOT).contains(currentMessage.toLowerCase(Locale.ROOT))) {
+                    sendMessageText.setText("$currentMessage $user ")
+                } else {
+                    sendMessageText.setText("$user ")
+                }
                 sendMessageText.setSelection(sendMessageText.length())
                 recyclerViewAutofill.visibility = View.GONE
             }
@@ -1442,8 +1438,12 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             viewHolder.itemView.imageViewEmoteAutofill.setImageBitmap(bitmap)
             viewHolder.itemView.textViewAutofill.setOnClickListener {
                 val currentWord = sendMessageText.text.toString().substringAfterLast(' ')
-                val currentMessage = sendMessageText.text.toString().substringBefore(currentWord)
-                sendMessageText.setText("${currentMessage}${emote} ")
+                val currentMessage = sendMessageText.text.toString().substringBeforeLast(" $currentWord")
+                if (!emote.toLowerCase(Locale.ROOT).contains(currentMessage.toLowerCase(Locale.ROOT))) {
+                    sendMessageText.setText("$currentMessage $emote ")
+                } else {
+                    sendMessageText.setText("$emote ")
+                }
                 sendMessageText.setSelection(sendMessageText.length())
                 recyclerViewAutofill.visibility = View.GONE
             }
@@ -2437,7 +2437,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             "NAMES" -> {
                 val names: NamesMessage = Klaxon().parse(msg[1])!!
                 names.users.forEach {
-                    CurrentUser.users!!.add(it.nick)
+                    CurrentUser.users.add(it.nick)
                 }
                 CurrentUser.connectionCount = names.connectioncount
                 runOnUiThread {
@@ -2462,14 +2462,14 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
             "JOIN" -> {
                 val userJoin = Klaxon().parse<String>(msg[1])
-                if (!CurrentUser.users!!.contains(userJoin)) {
-                    CurrentUser.users!!.add(userJoin!!)
+                if (!CurrentUser.users.contains(userJoin)) {
+                    CurrentUser.users.add(userJoin!!)
                 }
             }
             "QUIT" -> {
                 val userQuit = Klaxon().parse<String>(msg[1])
-                if (CurrentUser.users!!.contains(userQuit)) {
-                    CurrentUser.users!!.remove(userQuit)
+                if (CurrentUser.users.contains(userQuit)) {
+                    CurrentUser.users.remove(userQuit)
                 }
             }
             "PRIVMSG", "PRIVMSGSENT" -> {
@@ -2527,25 +2527,9 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             "ERR" -> {
                 val error = msg[1].replace("\"", "")
                 if (error == "throttled") {
-                    adapter.add(
-                        ChatMessage(
-                            Message(
-                                false,
-                                "Info",
-                                "Throttled! You were trying to send messages too fast."
-                            )
-                        )
-                    )
+                    adapter.add(ErrorChatMessage("Throttled! You were trying to send messages too fast."))
                 } else if (error == "duplicate") {
-                    adapter.add(
-                        ChatMessage(
-                            Message(
-                                false,
-                                "Info",
-                                "The message is identical to the last one you sent."
-                            )
-                        )
-                    )
+                    adapter.add(ErrorChatMessage("The message is identical to the last one you sent."))
                 }
                 val layoutTest =
                     recyclerViewChat.layoutManager as LinearLayoutManager

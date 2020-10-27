@@ -81,7 +81,6 @@ class UserListFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         hideFragment(requireActivity(), this)
-        view.setOnTouchListener { view, motionEvent -> return@setOnTouchListener true }
         val layoutManager =
             LinearLayoutManager(view.context)
         layoutManager.stackFromEnd = true
@@ -89,10 +88,7 @@ class UserListFragment : Fragment() {
         recyclerViewUserList.adapter = userListAdapter
 
         closeUserListButton.setOnClickListener {
-            parentFragmentManager.beginTransaction()
-                .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
-                .hide(this)
-                .commit()
+            hideFragment(requireActivity(), this@UserListFragment)
         }
     }
 
@@ -111,7 +107,7 @@ class UserListFragment : Fragment() {
             )
 
             viewHolder.itemView.chatUserUsername.setOnClickListener {
-                activity!!.sendMessageText.setText("/w ${user} ")
+                activity!!.sendMessageText.setText("/w $user ")
                 keyRequestFocus(
                     activity!!.sendMessageText,
                     context!!

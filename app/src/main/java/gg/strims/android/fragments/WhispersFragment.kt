@@ -107,19 +107,15 @@ class WhispersFragment : Fragment() {
 
             viewHolder.itemView.usernameWhisperUser.text = nick
 
-            if (CurrentUser.users != null) {
-                var online = false
-                CurrentUser.users!!.forEach { user ->
-                    if (user == nick) {
-                        viewHolder.itemView.onlineWhisperUser.visibility = View.VISIBLE
-                        online = true
-                        return@forEach
-                    }
+            var online = false
+            CurrentUser.users.forEach { user ->
+                if (user == nick) {
+                    viewHolder.itemView.onlineWhisperUser.visibility = View.VISIBLE
+                    online = true
+                    return@forEach
                 }
-                if (!online) {
-                    viewHolder.itemView.onlineWhisperUser.visibility = View.GONE
-                }
-            } else {
+            }
+            if (!online) {
                 viewHolder.itemView.onlineWhisperUser.visibility = View.GONE
             }
             val parentActivity = requireActivity() as ChatActivity

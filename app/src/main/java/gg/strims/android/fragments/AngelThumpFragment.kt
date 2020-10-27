@@ -54,8 +54,6 @@ class AngelThumpFragment: Fragment() {
         player = SimpleExoPlayer.Builder(view.context).build()
         angelThumpVideoView.player = player
 
-        view.setOnTouchListener { view, motionEvent -> return@setOnTouchListener true }
-
         angelThumpClose.setOnClickListener {
             player?.stop()
             player?.removeMediaItems(0, player?.mediaItemCount!!)

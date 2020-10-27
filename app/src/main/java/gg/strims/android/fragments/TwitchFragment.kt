@@ -29,8 +29,6 @@ class TwitchFragment: Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         hideFragment(requireActivity(), this)
 
-        view.setOnTouchListener { view, motionEvent -> return@setOnTouchListener true }
-
         webViewTwitch.settings.domStorageEnabled = true
         webViewTwitch.settings.javaScriptEnabled = true
 

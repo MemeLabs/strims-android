@@ -29,8 +29,6 @@ class YouTubeFragment: Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         hideFragment(requireActivity(), this)
 
-        view.setOnTouchListener { view, motionEvent -> return@setOnTouchListener true }
-
         youTubeClose.setOnClickListener {
             youTubeView.getYouTubePlayerWhenReady(object : YouTubePlayerCallback {
                 override fun onYouTubePlayer(youTubePlayer: YouTubePlayer) {
