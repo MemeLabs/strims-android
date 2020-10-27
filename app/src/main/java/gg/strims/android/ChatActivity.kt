@@ -479,9 +479,14 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         val currentWord = sendMessageText.text.toString().substringAfterLast(' ')
 
                         if (currentWord.contains(':')) {
-                            modifiersArray.forEach {
-                                if (it.contains(currentWord.substringAfterLast(':'))) {
-                                    autofillAdapter.add(AutofillItemModifier(it))
+                            CurrentUser.emotes!!.forEach {emote ->
+                                if (sendMessageText.text.contains(emote.name)) {
+                                    modifiersArray.forEach {
+                                        if (it.contains(currentWord.substringAfterLast(':'))) {
+                                            autofillAdapter.add(AutofillItemModifier(it))
+                                        }
+                                    }
+                                    return@forEach
                                 }
                             }
                         }
@@ -1988,15 +1993,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             //5-100% change to 120% text size : colour #FFF7F9 // 570ms
         }
 
-        fun isCombo(): Boolean {
-            if (messageData.entities.emotes != null) {
-                if (messageData.entities.emotes!![0].combo > 0) {
-                    return true
-                }
-            }
-            return false
-        }
-
         fun setCombo(comboCount: Int) {
             count = comboCount
         }
@@ -2227,15 +2223,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 viewHolder.itemView.usernameChatMessage.visibility = View.GONE
                 viewHolder.itemView.botFlairChatMessage.visibility = View.GONE
             }
-        }
-
-        fun isCombo(): Boolean {
-            if (messageData.entities.emotes != null) {
-                if (messageData.entities.emotes!![0].combo > 0) {
-                    return true
-                }
-            }
-            return false
         }
 
         fun isNickSame(nick: String): Boolean {
