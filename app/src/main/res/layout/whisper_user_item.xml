@@ -4,29 +4,20 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/constraintLayoutWhisperUserItem"
     android:layout_width="match_parent"
-    android:layout_height="48dp"
-    android:background="@drawable/rounded_whisper_user">
+    android:layout_height="wrap_content"
+    android:background="@drawable/rounded_whisper_user"
+    android:paddingEnd="4dp">
 
     <ImageView
         android:id="@+id/onlineWhisperUser"
         android:layout_width="20dp"
         android:layout_height="20dp"
+        android:layout_marginStart="4dp"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@+id/usernameWhisperUser"
-        app:layout_constraintStart_toEndOf="@id/offlineWhisperUser"
+        app:layout_constraintStart_toEndOf="@id/usernameWhisperUser"
         app:layout_constraintTop_toTopOf="@+id/usernameWhisperUser"
         app:srcCompat="@drawable/ic_online_green_24dp"
-        tools:visibility="gone" />
-
-    <ImageView
-        android:id="@+id/offlineWhisperUser"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="@+id/usernameWhisperUser"
-        app:layout_constraintStart_toEndOf="@+id/usernameWhisperUser"
-        app:layout_constraintTop_toTopOf="@+id/usernameWhisperUser"
-        app:srcCompat="@drawable/ic_offline_red_24dp"
         tools:visibility="gone" />
 
     <TextView
@@ -34,12 +25,25 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="4dp"
+        android:layout_marginTop="4dp"
         android:background="@drawable/whisper_received_username"
         android:text="@string/username"
         android:textColor="#FFFFFF"
         android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/latestMessageWhisperUser"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="4dp"
+        android:textColor="#AAAAAA"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/usernameWhisperUser"
+        tools:text="Message" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

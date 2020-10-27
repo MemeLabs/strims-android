@@ -8,7 +8,6 @@ import android.widget.EditText
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 
-
 fun keyRequestFocus(editText: EditText, context: Context) {
     editText.requestFocus()
     val imm: InputMethodManager =

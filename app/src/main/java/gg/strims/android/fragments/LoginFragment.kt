@@ -1,7 +1,6 @@
 package gg.strims.android.fragments
 
 import android.annotation.SuppressLint
-import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -12,6 +11,7 @@ import android.webkit.WebViewClient
 import androidx.fragment.app.Fragment
 import gg.strims.android.*
 import io.ktor.util.KtorExperimentalAPI
+import kotlinx.android.synthetic.main.activity_chat.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.fragment_login.*
 
@@ -36,8 +36,15 @@ class LoginFragment: Fragment() {
         loginWebView.webViewClient = object: WebViewClient() {
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                 if (url == "https://strims.gg/" || url == "https://chat.strims.gg/") {
-                    startActivity(Intent(context, ChatActivity::class.java))
-                    activity!!.finish()
+                    val activity = requireActivity() as ChatActivity
+                    activity.stopService(activity.chatSocketIntent)
+                    activity.startService(activity.chatSocketIntent)
+                    parentFragmentManager.beginTransaction()
+                        .remove(this@LoginFragment)
+                        .commit()
+                    parentFragmentManager.popBackStack()
+                    activity.toolbar.title = "Chat"
+                    activity.progressBar.visibility = View.VISIBLE
                 }
             }
         }

@@ -25,17 +25,17 @@ class CenteredImageSpan(
             // Centers the text with the ImageSpan
             if (rect.bottom - (fm.descent - fm.ascent) >= 0) {
                 // Stores the initial descent and computes the margin available
-                initialDescent = fm.descent;
-                extraSpace = rect.bottom - (fm.descent - fm.ascent);
+                initialDescent = fm.descent
+                extraSpace = rect.bottom - (fm.descent - fm.ascent)
             }
 
-            fm.descent = extraSpace / 2 + initialDescent;
-            fm.bottom = fm.descent;
+            fm.descent = extraSpace / 2 + initialDescent
+            fm.bottom = fm.descent
 
-            fm.ascent = -rect.bottom + fm.descent;
-            fm.top = fm.ascent;
+            fm.ascent = -rect.bottom + fm.descent
+            fm.top = fm.ascent
         }
 
-        return rect.right;
+        return rect.right
     }
 }

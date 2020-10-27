@@ -3,23 +3,48 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/constraintLayoutWhisperMessageItemLeft"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/rounded_whisper_message_left"
+    android:paddingEnd="4dp">
 
     <TextView
 
-        android:id="@+id/messageWhisperMessageItem"
-        android:layout_width="0dp"
+        android:id="@+id/messageWhisperMessageItemLeft"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/rounded_whisper_message_left"
+        android:layout_marginStart="4dp"
+        android:layout_marginBottom="4dp"
         android:gravity="center_vertical"
         android:lineSpacingExtra="6dp"
         android:lineSpacingMultiplier="1.2"
-        android:minHeight="48dp"
         android:padding="4dp"
-        android:text="@string/message"
-        android:textColor="#FFFFFF"
+        android:textColor="#AAAAAA"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/usernameWhisperMessageItemLeft"
+        tools:text="Message" />
+
+    <TextView
+        android:id="@+id/usernameWhisperMessageItemLeft"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="4dp"
+        android:textColor="#FFFFFF"
+        app:layout_constraintStart_toEndOf="@+id/timestampWhisperMessageItemLeft"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Username" />
+
+    <TextView
+        android:id="@+id/timestampWhisperMessageItemLeft"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:textColor="#737373"
+        android:textSize="12sp"
+        app:layout_constraintBottom_toBottomOf="@+id/usernameWhisperMessageItemLeft"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/usernameWhisperMessageItemLeft"
+        tools:text="Time" />
 </androidx.constraintlayout.widget.ConstraintLayout>

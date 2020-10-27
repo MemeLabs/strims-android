@@ -1,29 +1,30 @@
 package gg.strims.android.fragments
 
-import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.CookieManager
-import android.widget.AdapterView
-import android.widget.AdapterView.OnItemSelectedListener
-import android.widget.TextView
+import android.widget.ArrayAdapter
 import androidx.fragment.app.Fragment
 import com.google.gson.Gson
 import gg.strims.android.ChatActivity
 import gg.strims.android.CurrentUser
 import gg.strims.android.R
+import gg.strims.android.models.Message
 import io.ktor.client.HttpClient
 import io.ktor.client.features.websocket.WebSockets
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.util.KtorExperimentalAPI
+import kotlinx.android.synthetic.main.activity_chat.*
+import kotlinx.android.synthetic.main.activity_navigation_drawer.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.fragment_profile.*
+import kotlinx.android.synthetic.main.nav_header_main.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.util.HashMap
 
 @KtorExperimentalAPI
 class ProfileFragment: Fragment() {
@@ -41,7 +42,7 @@ class ProfileFragment: Fragment() {
             usernameEditTextProfile.text = CurrentUser.user!!.username
             streamPathEditTextProfile.setText(CurrentUser.user!!.stream_path)
             channelEditTextProfile.setText(CurrentUser.user!!.channel)
-            checkBoxViewerState.isChecked = CurrentUser.user!!.enable_public_state
+            checkBoxUserViewerState.isChecked = CurrentUser.user!!.enable_public_state
 
             val array = resources.getStringArray(R.array.streaming_service_spinner_names)
             array.forEach {
@@ -60,19 +61,14 @@ class ProfileFragment: Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         requireActivity().toolbar.title = "Profile"
 
-        streamingServiceSpinnerProfile.onItemSelectedListener = object : OnItemSelectedListener {
-            override fun onItemSelected(
-                parent: AdapterView<*>?,
-                view: View,
-                position: Int,
-                id: Long
-            ) {
-                (view as TextView).setTextColor(Color.WHITE)
-                view.textSize = 14f
-            }
+        requireActivity().nav_view.setCheckedItem(R.id.nav_Profile)
 
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
-        }
+        val spinnerArray = resources.getStringArray(R.array.streaming_service_spinner)
+
+        val arrayAdapter = ArrayAdapter(requireContext(), R.layout.spinner_item, spinnerArray)
+        arrayAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
+
+        streamingServiceSpinnerProfile.adapter = arrayAdapter
 
         saveProfile.setOnClickListener {
             if (CurrentUser.user != null) {
@@ -83,7 +79,7 @@ class ProfileFragment: Fragment() {
                 GlobalScope.launch {
                     CurrentUser.user!!.stream_path = streamPathEditTextProfile.text.toString()
                     CurrentUser.user!!.channel = channelEditTextProfile.text.toString()
-                    CurrentUser.user!!.enable_public_state = checkBoxViewerState.isChecked
+                    CurrentUser.user!!.enable_public_state = checkBoxUserViewerState.isChecked
                     val id = resources.getStringArray(R.array.streaming_service_spinner_names)[streamingServiceSpinnerProfile.selectedItemPosition]
                     CurrentUser.user!!.service = id
 
@@ -96,9 +92,22 @@ class ProfileFragment: Fragment() {
         }
 
         logOutProfile.setOnClickListener {
+            CurrentUser.user = null
+            CurrentUser.tempWhisperUser = null
+            CurrentUser.whispersMap = HashMap<String, MutableList<Message>>()
+            CurrentUser.privateMessageUsers = null
+
             deleteCookie()
-            requireActivity().invalidateOptionsMenu()
-            startActivity(Intent(context, ChatActivity::class.java))
+            val activity = requireActivity() as ChatActivity
+            requireActivity().stopService(activity.chatSocketIntent)
+            requireActivity().startService(activity.chatSocketIntent)
+            activity.onBackPressed()
+            activity.invalidateOptionsMenu()
+            activity.navHeaderUsername.text = resources.getString(R.string.anonymous)
+            activity.nav_view.menu.findItem(R.id.nav_Profile).isVisible = false
+            activity.nav_view.menu.findItem(R.id.nav_Whispers).isVisible = false
+            activity.sendMessageText.hint = "Log in to send messages"
+            requireActivity().progressBar.visibility = View.VISIBLE
         }
 
         fetchProfile()

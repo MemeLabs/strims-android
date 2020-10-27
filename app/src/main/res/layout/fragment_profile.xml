@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/constraintLayoutProfile"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -82,7 +81,6 @@
         android:background="@drawable/streaming_service_spinner"
         android:drawSelectorOnTop="true"
         android:ems="10"
-        android:entries="@array/streaming_service_spinner"
         android:spinnerMode="dialog"
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -118,7 +116,7 @@
         app:layout_constraintTop_toBottomOf="@+id/channelTextViewProfile" />
 
     <CheckBox
-        android:id="@+id/checkBoxViewerState"
+        android:id="@+id/checkBoxUserViewerState"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
@@ -137,7 +135,7 @@
         android:text="@string/save"
         android:textColor="#000000"
         app:layout_constraintEnd_toEndOf="@+id/channelEditTextProfile"
-        app:layout_constraintTop_toBottomOf="@+id/checkBoxViewerState" />
+        app:layout_constraintTop_toBottomOf="@+id/checkBoxUserViewerState" />
 
     <Button
         android:id="@+id/logOutProfile"

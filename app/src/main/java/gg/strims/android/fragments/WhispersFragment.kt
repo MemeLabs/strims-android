@@ -1,10 +1,12 @@
 package gg.strims.android.fragments
 
 import android.annotation.SuppressLint
-import android.graphics.Color
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Rect
 import android.os.Bundle
-import android.os.Message
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
@@ -12,41 +14,50 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.squareup.picasso.Picasso
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
 import gg.strims.android.*
-import gg.strims.android.models.Stream
 import io.ktor.util.KtorExperimentalAPI
+import kotlinx.android.synthetic.main.activity_navigation_drawer.*
+import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.fragment_whispers.*
-import kotlinx.android.synthetic.main.fragment_whispers.view.*
-import kotlinx.android.synthetic.main.private_chat_message_item.view.*
-import kotlinx.android.synthetic.main.whisper_message_item_right.*
 import kotlinx.android.synthetic.main.whisper_user_item.view.*
-import java.io.Serializable
 
 @SuppressLint("SetTextI18n")
 @KtorExperimentalAPI
 class WhispersFragment : Fragment() {
 
     private val whispersAdapter = GroupAdapter<GroupieViewHolder>()
+
+    private val broadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent != null) {
+                if (intent.action == "gg.strims.android.PRIVATE_MESSAGE") {
+                    whispersAdapter.notifyDataSetChanged()
+                }
+            }
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        val intentFilter = IntentFilter("gg.strims.android.PRIVATE_MESSAGE")
+        requireActivity().registerReceiver(broadcastReceiver, intentFilter)
         return inflater.inflate(R.layout.fragment_whispers, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        hideFragment(requireActivity(), this)
-        view.setOnTouchListener { _, _ -> return@setOnTouchListener true }
-        val layoutManager = LinearLayoutManager(view.context)
-        layoutManager.stackFromEnd = true
-        recyclerViewWhispers.layoutManager = layoutManager
+        recyclerViewWhispers.layoutManager = LinearLayoutManager(view.context)
         recyclerViewWhispers.adapter = whispersAdapter
+
+        requireActivity().toolbar.title = "Private Messages"
+
+        requireActivity().nav_view.setCheckedItem(R.id.nav_Whispers)
+
         class MarginItemDecoration(private val spaceHeight: Int) : RecyclerView.ItemDecoration() {
             override fun getItemOffsets(
                 outRect: Rect, view: View,
@@ -62,6 +73,7 @@ class WhispersFragment : Fragment() {
                 }
             }
         }
+
         recyclerViewWhispers.addItemDecoration(
             MarginItemDecoration(
                 (TypedValue.applyDimension(
@@ -72,94 +84,49 @@ class WhispersFragment : Fragment() {
             )
         )
 
+        displayPrivateMessages()
     }
 
-
-    override fun onHiddenChanged(hidden: Boolean) {
-        if (CurrentUser.privateMessages != null) {
-            whispersAdapter.clear()
-            CurrentUser.privateMessages!!.forEach {
-                var b = true
-                for (i in 0 until whispersAdapter.itemCount) {
-                    val item = whispersAdapter.getItem(i) as WhisperUserItem
-                    if (item.nick == it.getNick()) {
-                        item.replaceLatestMessage(it)
-                        b = false
-                        break
-                    }
-                }
-                if (b) {
-
-                    whispersAdapter.add(WhisperUserItem(it))
-
-                }
+    private fun displayPrivateMessages() {
+        whispersAdapter.clear()
+        if (CurrentUser.privateMessageUsers != null) {
+            CurrentUser.privateMessageUsers!!.forEach {
+                whispersAdapter.add(WhisperUserItem(it))
             }
         }
-        recyclerViewWhispers.scrollToPosition(whispersAdapter.itemCount - 1)
         whispersAdapter.notifyDataSetChanged()
     }
 
-    inner class WhisperUserItem(initialMessage: ChatActivity.WhisperMessageItem? = null) :
-        Item<GroupieViewHolder>(), Serializable {
+    inner class WhisperUserItem(var nick: String) : Item<GroupieViewHolder>() {
+
         override fun getLayout(): Int {
             return R.layout.whisper_user_item
-        }
-
-        private var latestMessage: ChatActivity.WhisperMessageItem? = null
-        var nick: String? = null
-
-        init {
-            if (initialMessage != null) {
-                latestMessage = initialMessage
-                nick = initialMessage.getNick()
-            }
-
-
-        }
-
-        fun replaceLatestMessage(newMessage: ChatActivity.WhisperMessageItem? = null) {
-            latestMessage = newMessage
         }
 
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
 
             viewHolder.itemView.usernameWhisperUser.text = nick
 
-            if (CurrentUser.users != null) {
-                var online = false
-                CurrentUser.users!!.forEach { user ->
-
-                    if (user.nick == nick) {
-                        viewHolder.itemView.onlineWhisperUser.visibility = View.VISIBLE
-                        viewHolder.itemView.offlineWhisperUser.visibility = View.GONE
-                        online = true
-                    }
+            var online = false
+            CurrentUser.users.forEach { user ->
+                if (user == nick) {
+                    viewHolder.itemView.onlineWhisperUser.visibility = View.VISIBLE
+                    online = true
+                    return@forEach
                 }
-                if (!online) {
-                    viewHolder.itemView.offlineWhisperUser.visibility = View.VISIBLE
-                    viewHolder.itemView.onlineWhisperUser.visibility = View.GONE
-                }
-            } else {
-                viewHolder.itemView.offlineWhisperUser.visibility = View.VISIBLE
+            }
+            if (!online) {
                 viewHolder.itemView.onlineWhisperUser.visibility = View.GONE
             }
+            val parentActivity = requireActivity() as ChatActivity
+            parentActivity.createMessageTextView(CurrentUser.whispersMap[nick]!!.last(), viewHolder.itemView.latestMessageWhisperUser)
+
             viewHolder.itemView.setOnClickListener {
-                if (activity != null) {
-                    val item = whispersAdapter.getItem(position) as WhisperUserItem
-                    CurrentUser.tempWhisperUser = item.nick
-                    showHideFragment(
-                        activity!!,
-                        activity!!.supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!
-                    )
-                    showHideFragment(
-                        activity!!,
-                        activity!!.supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!
-
-                    )
-
-                }
+                CurrentUser.tempWhisperUser = nick
+                parentFragmentManager.beginTransaction()
+                    .add(R.id.nav_host_fragment, WhispersUserFragment(), "WhispersUserFragment")
+                    .addToBackStack("WhispersUserFragment").commit()
             }
-            //return
         }
     }
 }

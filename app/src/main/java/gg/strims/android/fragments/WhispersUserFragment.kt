@@ -1,10 +1,14 @@
 package gg.strims.android.fragments
 
 import android.annotation.SuppressLint
-import android.graphics.Color
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Rect
 import android.os.Bundle
-import android.os.Message
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
@@ -12,62 +16,52 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.squareup.picasso.Picasso
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
 import gg.strims.android.*
-import gg.strims.android.models.Stream
+import gg.strims.android.models.Message
 import io.ktor.util.KtorExperimentalAPI
-import kotlinx.android.synthetic.main.activity_chat.*
+import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.fragment_user_whispers.*
-import kotlinx.android.synthetic.main.fragment_user_whispers.view.*
-import kotlinx.android.synthetic.main.fragment_user_whispers.view.recyclerViewWhispersUser
-import kotlinx.android.synthetic.main.fragment_whispers.*
-import kotlinx.android.synthetic.main.fragment_whispers.view.*
-import kotlinx.android.synthetic.main.private_chat_message_item.view.*
-import kotlinx.android.synthetic.main.whisper_message_item_right.*
-import kotlinx.android.synthetic.main.whisper_user_item.view.*
-import java.io.Serializable
+import kotlinx.android.synthetic.main.whisper_message_item_left.view.*
+import kotlinx.android.synthetic.main.whisper_message_item_right.view.*
+import kotlinx.android.synthetic.main.whisper_message_item_right.view.messageWhisperMessageItemLeft
+import java.text.SimpleDateFormat
 
-@SuppressLint("SetTextI18n")
+@SuppressLint("SetTextI18n", "SimpleDateFormat")
 @KtorExperimentalAPI
 class WhispersUserFragment : Fragment() {
 
     private val whispersUserAdapter = GroupAdapter<GroupieViewHolder>()
+
+    private val broadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent != null) {
+                if (intent.action == "gg.strims.android.PRIVATE_MESSAGE") {
+                    // Add new message
+                    whispersUserAdapter.add(WhisperMessageItem(CurrentUser.whispersMap[CurrentUser.tempWhisperUser]!!.last()))
+                    recyclerViewWhispersUser.scrollToPosition(whispersUserAdapter.itemCount - 1)
+                }
+            }
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        val intentFilter = IntentFilter("gg.strims.android.PRIVATE_MESSAGE")
+        requireActivity().registerReceiver(broadcastReceiver, intentFilter)
         return inflater.inflate(R.layout.fragment_user_whispers, container, false)
     }
 
-    fun addToAdapter(newMessage: ChatActivity.WhisperMessageItem) {
-        whispersUserAdapter.add(newMessage)
-    }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        hideFragment(requireActivity(), this)
-        view.setOnTouchListener { _, _ -> return@setOnTouchListener true }
-        view.backWhispersUser.setOnClickListener {
-            hideKeyboardFrom(requireContext(), requireActivity().sendMessageText)
-            showHideFragment(
-                requireActivity(),
-                requireActivity().supportFragmentManager.findFragmentById(R.id.whispers_user_fragment)!!
-
-            )
-            showHideFragment(
-                requireActivity(),
-                requireActivity().supportFragmentManager.findFragmentById(R.id.whispers_fragment)!!
-            )
-
-        }
-        val layoutManager = LinearLayoutManager(view.context)
-        layoutManager.stackFromEnd = true
-        recyclerViewWhispersUser.layoutManager = layoutManager
+        recyclerViewWhispersUser.layoutManager = LinearLayoutManager(view.context)
         recyclerViewWhispersUser.adapter = whispersUserAdapter
+
+        requireActivity().toolbar.title = CurrentUser.tempWhisperUser
 
         class MarginItemDecoration(private val spaceHeight: Int) : RecyclerView.ItemDecoration() {
             override fun getItemOffsets(
@@ -84,6 +78,7 @@ class WhispersUserFragment : Fragment() {
                 }
             }
         }
+
         recyclerViewWhispersUser.addItemDecoration(
             MarginItemDecoration(
                 (TypedValue.applyDimension(
@@ -93,31 +88,78 @@ class WhispersUserFragment : Fragment() {
                 )).toInt()
             )
         )
-    }
 
+        sendMessageTextWhisper.hint = "Write something ${CurrentUser.user?.username} ..."
 
-    override fun onHiddenChanged(hidden: Boolean) {
-        if (hidden) {
-            return
+        sendMessageButtonWhisper.setOnClickListener {
+            val intent = Intent("gg.strims.android.SEND_MESSAGE")
+            intent.putExtra(
+                "gg.strims.android.SEND_MESSAGE_TEXT",
+                "PRIVMSG {\"nick\":\"${CurrentUser.tempWhisperUser}\", \"data\":\"${sendMessageTextWhisper.text}\"}"
+            )
+            requireActivity().sendBroadcast(intent)
+            sendMessageTextWhisper.text.clear()
         }
-        if (CurrentUser.privateMessages != null && CurrentUser.tempWhisperUser != null) {
-            whispersUserAdapter.clear()
-            whispersUserAdapter.notifyDataSetChanged()
-            CurrentUser.privateMessages!!.forEach {
-                if (it.getNick() == CurrentUser.tempWhisperUser!!) {
-                    whispersUserAdapter.add(it)
-                }
 
+        sendMessageTextWhisper.addTextChangedListener(object :
+            TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                sendMessageButtonWhisper.isEnabled = sendMessageTextWhisper.text.isNotEmpty()
             }
 
-            // showWhispers()
-        }
-        recyclerViewWhispersUser.scrollToPosition(whispersUserAdapter.itemCount - 1)
-        whispersUserAdapter.notifyDataSetChanged()
-        usernameWhispersUser.text = CurrentUser.tempWhisperUser!!
+            override fun beforeTextChanged(
+                s: CharSequence?,
+                start: Int,
+                count: Int,
+                after: Int
+            ) {
+                sendMessageButtonWhisper.isEnabled = sendMessageTextWhisper.text.isNotEmpty()
+            }
 
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                sendMessageButtonWhisper.isEnabled = sendMessageTextWhisper.text.isNotEmpty()
+            }
+        })
+
+        fetchPrivateMessages()
+
+        recyclerViewWhispersUser.scrollToPosition(whispersUserAdapter.itemCount - 1)
     }
 
+    private fun fetchPrivateMessages() {
+        CurrentUser.whispersMap[CurrentUser.tempWhisperUser]?.forEach {
+            whispersUserAdapter.add(WhisperMessageItem(it))
+        }
+    }
 
+    inner class WhisperMessageItem(val message: Message) : Item<GroupieViewHolder>() {
+
+        override fun getLayout(): Int {
+            if (message.nick != CurrentUser.user?.username) {
+                return R.layout.whisper_message_item_left
+            }
+            return R.layout.whisper_message_item_right
+        }
+
+        override fun bind(viewHolder: GroupieViewHolder, position: Int) {
+            val parentActivity = requireActivity() as ChatActivity
+            parentActivity.createMessageTextView(
+                message,
+                viewHolder.itemView.messageWhisperMessageItemLeft
+            )
+
+            if (layout == R.layout.whisper_message_item_left) {
+                viewHolder.itemView.usernameWhisperMessageItemLeft.text = message.nick
+
+                val dateFormat = SimpleDateFormat("HH:mm yyyy-MM-dd")
+                val time = dateFormat.format(message.timestamp)
+                viewHolder.itemView.timestampWhisperMessageItemLeft.text = time
+            } else if (layout == R.layout.whisper_message_item_right) {
+                val dateFormat = SimpleDateFormat("HH:mm yyyy-MM-dd")
+                val time = dateFormat.format(message.timestamp)
+                viewHolder.itemView.timestampWhisperMessageItemRight.text = time
+            }
+        }
+    }
 }
 

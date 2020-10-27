@@ -1,15 +1,18 @@
 package gg.strims.android.fragments
 
 import android.annotation.SuppressLint
-import android.graphics.Color
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.navigation.NavigationView
+import com.google.gson.Gson
+import com.google.gson.JsonElement
 import com.squareup.picasso.Picasso
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
@@ -17,6 +20,7 @@ import com.xwray.groupie.Item
 import gg.strims.android.*
 import gg.strims.android.models.Stream
 import io.ktor.util.KtorExperimentalAPI
+import kotlinx.android.synthetic.main.activity_chat.*
 import kotlinx.android.synthetic.main.activity_navigation_drawer.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.fragment_streams.*
@@ -37,17 +41,56 @@ class StreamsFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val layoutManager = LinearLayoutManager(view.context)
-        layoutManager.stackFromEnd = true
-        recyclerViewStreams.layoutManager = layoutManager
+        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            val layoutManager = GridLayoutManager(view.context, 2)
+            recyclerViewStreams.layoutManager = layoutManager
+        } else {
+            val layoutManager = LinearLayoutManager(view.context)
+            recyclerViewStreams.layoutManager = layoutManager
+        }
         recyclerViewStreams.adapter = streamsAdapter
 
         requireActivity().toolbar.title = "Streams"
 
-        refreshStreams()
+        requireActivity().nav_view.setCheckedItem(R.id.nav_Streams)
+
+        displayStreams()
+
+        this.retainInstance = true
     }
 
-    private fun refreshStreams() {
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            val layoutManager = GridLayoutManager(view?.context, 2)
+            recyclerViewStreams.layoutManager = layoutManager
+        } else {
+            val layoutManager = LinearLayoutManager(view?.context)
+            recyclerViewStreams.layoutManager = layoutManager
+        }
+    }
+
+    fun parseStream(input: String) {
+        val test = Gson().fromJson(input, JsonElement::class.java)
+        when (test.asJsonArray[0].asString) {
+            "RUSTLERS_SET" -> {
+                if (CurrentUser.streams != null) {
+                    CurrentUser.streams!!.forEach {
+                        if (it.id == test.asJsonArray[1].asLong) {
+                            it.rustlers = test.asJsonArray[2].asInt
+                            it.afk_rustlers = test.asJsonArray[3].asInt
+                        }
+                    }
+                }
+            }
+            "STREAMS_SET" -> {
+                val streams2 = Gson().fromJson(test.asJsonArray[1], Array<Stream>::class.java)
+                CurrentUser.streams = streams2.toMutableList()
+            }
+        }
+    }
+
+    private fun displayStreams() {
         if (CurrentUser.streams != null) {
             streamsAdapter.clear()
             CurrentUser.streams!!.sortByDescending {
@@ -79,45 +122,60 @@ class StreamsFragment : Fragment() {
             }
             viewHolder.itemView.streamTitle.text = "${stream.channel} presents ${stream.title} via ${stream.service}"
             viewHolder.itemView.streamViewerCount.text = stream.rustlers.toString()
+            viewHolder.itemView.streamViewerState.setColorFilter(stream.colour)
             if (stream.live) {
-                viewHolder.itemView.streamViewerCount.setTextColor(Color.parseColor("#FFFFFF"))
+                viewHolder.itemView.constraintLayoutStreamViewers.background =
+                    ResourcesCompat.getDrawable(
+                        resources,
+                        R.drawable.rounded_text_viewers_online,
+                        null
+                    )
             } else {
-                viewHolder.itemView.streamViewerCount.setTextColor(Color.parseColor("#F44336"))
+                viewHolder.itemView.constraintLayoutStreamViewers.background =
+                    ResourcesCompat.getDrawable(
+                        resources,
+                        R.drawable.rounded_text_viewers_offline,
+                        null
+                    )
             }
 
             viewHolder.itemView.setOnClickListener {
-                requireFragmentManager().fragments.forEach {
-                    if (it.tag == "StreamsFragment" || it.tag == "ProfileFragment" || it.tag == "OptionsFragment") {
-                        requireFragmentManager().beginTransaction().remove(it).commit()
-                    }
+                for (i in 0..parentFragmentManager.backStackEntryCount) {
+                    parentFragmentManager.popBackStack()
                 }
-                hideFragment(activity!!, fragmentManager!!.findFragmentById(R.id.angelthump_fragment)!!)
-                hideFragment(activity!!, fragmentManager!!.findFragmentById(R.id.twitch_fragment)!!)
-                hideFragment(activity!!, fragmentManager!!.findFragmentById(R.id.youtube_fragment)!!)
+
+                hideFragment(activity!!, parentFragmentManager.findFragmentById(R.id.angelthump_fragment)!!)
+                hideFragment(activity!!, parentFragmentManager.findFragmentById(R.id.twitch_fragment)!!)
+                hideFragment(activity!!, parentFragmentManager.findFragmentById(R.id.youtube_fragment)!!)
                 val navView = requireActivity().findViewById<NavigationView>(R.id.nav_view)
                 navView.setCheckedItem(R.id.nav_Chat)
                 requireActivity().toolbar.title = "Chat"
+
+                if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                    activity!!.constraintLayoutStream.visibility = View.VISIBLE
+                }
+
                 when (stream.service) {
                     "angelthump", "m3u8" -> {
                         CurrentUser.tempStream = stream
-                        val fragment = fragmentManager!!.findFragmentById(R.id.angelthump_fragment)
+                        val fragment = parentFragmentManager.findFragmentById(R.id.angelthump_fragment)
                         showFragment(activity!!, fragment!!)
                     }
                     "twitch" -> {
                         CurrentUser.tempTwitchUrl = stream.channel
                         CurrentUser.tempTwitchVod = false
-                        val fragment = fragmentManager!!.findFragmentById(R.id.twitch_fragment)
+                        val fragment = parentFragmentManager.findFragmentById(R.id.twitch_fragment)
                         showFragment(activity!!, fragment!!)
                     }
                     "youtube" -> {
                         CurrentUser.tempYouTubeId = stream.channel
-                        val fragment = fragmentManager!!.findFragmentById(R.id.youtube_fragment)
+                        val fragment = parentFragmentManager.findFragmentById(R.id.youtube_fragment)
                         showFragment(activity!!, fragment!!)
                     }
                     "twitch-vod" -> {
                         CurrentUser.tempTwitchUrl = stream.channel
                         CurrentUser.tempTwitchVod = true
-                        val fragment = fragmentManager!!.findFragmentById(R.id.twitch_fragment)
+                        val fragment = parentFragmentManager.findFragmentById(R.id.twitch_fragment)
                         showFragment(activity!!, fragment!!)
                     }
                 }

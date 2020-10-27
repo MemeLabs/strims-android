@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import gg.strims.android.CurrentUser
 import gg.strims.android.R
 import io.ktor.util.KtorExperimentalAPI
+import kotlinx.android.synthetic.main.activity_navigation_drawer.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.fragment_chat_options.*
 
@@ -31,6 +32,7 @@ class OptionsFragment : Fragment() {
             checkBoxHideNsfw.isChecked = CurrentUser.options!!.hideNsfw
             checkBoxNotifications.isChecked = CurrentUser.options!!.notifications
             checkBoxEmotes.isChecked = CurrentUser.options!!.emotes
+            checkBoxViewerState.isChecked = CurrentUser.options!!.showViewerState
 
             ignoredUsersTextViewOptions.text =
                 CurrentUser.options!!.ignoreList.toString()
@@ -45,6 +47,8 @@ class OptionsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         requireActivity().toolbar.title = "Settings"
 
+        requireActivity().nav_view.setCheckedItem(R.id.nav_Settings)
+
         retrieveOptions()
 
         saveOptionsButton.setOnClickListener {
@@ -53,28 +57,32 @@ class OptionsFragment : Fragment() {
             recycler.adapter!!.notifyDataSetChanged()
         }
 
-        checkBoxTimestamp.setOnCheckedChangeListener { buttonView, isChecked ->
+        checkBoxTimestamp.setOnCheckedChangeListener { _, isChecked ->
             CurrentUser.options!!.showTime = isChecked
         }
 
-        checkBoxGreentext.setOnCheckedChangeListener { buttonView, isChecked ->
+        checkBoxGreentext.setOnCheckedChangeListener { _, isChecked ->
             CurrentUser.options!!.greentext = isChecked
         }
 
-        checkBoxHarshIgnore.setOnCheckedChangeListener { buttonView, isChecked ->
+        checkBoxHarshIgnore.setOnCheckedChangeListener { _, isChecked ->
             CurrentUser.options!!.harshIgnore = isChecked
         }
 
-        checkBoxHideNsfw.setOnCheckedChangeListener { buttonView, isChecked ->
+        checkBoxHideNsfw.setOnCheckedChangeListener { _, isChecked ->
             CurrentUser.options!!.hideNsfw = isChecked
         }
 
-        checkBoxNotifications.setOnCheckedChangeListener { buttonView, isChecked ->
+        checkBoxNotifications.setOnCheckedChangeListener { _, isChecked ->
             CurrentUser.options!!.notifications = isChecked
         }
 
-        checkBoxEmotes.setOnCheckedChangeListener { buttonView, isChecked ->
+        checkBoxEmotes.setOnCheckedChangeListener { _, isChecked ->
             CurrentUser.options!!.emotes = isChecked
+        }
+
+        checkBoxViewerState.setOnCheckedChangeListener { _, isChecked ->
+            CurrentUser.options!!.showViewerState = isChecked
         }
     }
 }

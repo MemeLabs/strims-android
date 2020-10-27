@@ -1,6 +1,7 @@
 package gg.strims.android.fragments
 
 import android.annotation.SuppressLint
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -9,9 +10,12 @@ import androidx.fragment.app.Fragment
 import gg.strims.android.CurrentUser
 import gg.strims.android.R
 import gg.strims.android.hideFragment
+import io.ktor.util.*
+import kotlinx.android.synthetic.main.activity_chat.*
 import kotlinx.android.synthetic.main.fragment_twitch.*
 
 @SuppressLint("SetJavaScriptEnabled")
+@KtorExperimentalAPI
 class TwitchFragment: Fragment() {
 
     override fun onCreateView(
@@ -24,16 +28,21 @@ class TwitchFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         hideFragment(requireActivity(), this)
-        view.setOnTouchListener { view, motionEvent -> return@setOnTouchListener true }
+
         webViewTwitch.settings.domStorageEnabled = true
         webViewTwitch.settings.javaScriptEnabled = true
+
         twitchClose.setOnClickListener {
             webViewTwitch.loadUrl("")
             CurrentUser.tempTwitchVod = null
-            CurrentUser.tempYouTubeId = null
-            requireFragmentManager().beginTransaction()
+            CurrentUser.tempTwitchUrl = null
+            parentFragmentManager.beginTransaction()
                 .hide(this)
                 .commit()
+
+            if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                requireActivity().constraintLayoutStream.visibility = View.GONE
+            }
         }
     }
 

@@ -13,7 +13,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginBottom="4dp"
-        android:background="#080808"
+        android:background="#111111"
         app:layout_constraintBottom_toTopOf="@+id/sendMessageText"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
@@ -42,7 +42,7 @@
         android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/userListButton" />
+        app:layout_constraintStart_toEndOf="@+id/emoteMenuButton" />
 
     <Button
         android:id="@+id/sendMessageButton"
@@ -56,24 +56,24 @@
         app:layout_constraintTop_toTopOf="@+id/sendMessageText" />
 
     <ImageView
-        android:id="@+id/userListButton"
+        android:id="@+id/emoteMenuButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/sendMessageText"
-        app:srcCompat="@drawable/ic_person_orange_24dp" />
+        app:srcCompat="@drawable/ic_sentiment_satisfied_orange_24dp" />
 
     <ImageView
-        android:id="@+id/emotesButton"
+        android:id="@+id/userListButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="@+id/sendMessageText"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/sendMessageText"
         app:layout_constraintTop_toTopOf="@+id/sendMessageText"
-        app:srcCompat="@drawable/ic_sentiment_satisfied_orange_24dp" />
+        app:srcCompat="@drawable/ic_person_orange_24dp" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/goToBottomLayout"
@@ -169,39 +169,58 @@
         tools:visibility="gone" />
 
     <fragment
-        android:id="@+id/whispers_fragment"
-        android:name="gg.strims.android.fragments.WhispersFragment"
+        android:id="@+id/emote_menu_fragment"
+        android:name="gg.strims.android.fragments.EmotesMenuFragment"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="60dp"
+        android:layout_weight="2"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:layout="@layout/fragment_whispers"
+        tools:layout="@layout/fragment_emote_menu"
         tools:visibility="gone" />
 
-    <fragment
-        android:id="@+id/whispers_user_fragment"
-        android:name="gg.strims.android.fragments.WhispersUserFragment"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@id/recyclerViewAutofill"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:layout="@layout/fragment_whispers"
-        tools:visibility="gone" />
-
-    <fragment
+    <androidx.fragment.app.FragmentContainerView
         android:id="@+id/nav_host_fragment"
         android:name="androidx.navigation.fragment.NavHostFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:elevation="10dp"
-        android:visibility="gone"
         app:defaultNavHost="true"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:navGraph="@navigation/mobile_navigation" />
+        app:navGraph="@navigation/mobile_navigation"
+        tools:visibility="gone">
+
+    </androidx.fragment.app.FragmentContainerView>
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/nav_host_fragment2"
+        android:name="androidx.navigation.fragment.NavHostFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:elevation="10dp"
+        app:defaultNavHost="true"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:navGraph="@navigation/mobile_navigation"
+        tools:visibility="gone" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -4,6 +4,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
         android:allowBackup="true"
@@ -14,14 +15,19 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".ChatActivity"
-            android:screenOrientation="portrait">
+            android:launchMode="singleTop"
+            android:supportsPictureInPicture="true"
+            >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".ChatService"/>
+        <service android:name=".clients.ChatService"
+            android:stopWithTask="true" />
+        <service android:name=".clients.StreamsService"
+            android:stopWithTask="true" />
     </application>
 
 </manifest>

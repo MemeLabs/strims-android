@@ -22,10 +22,6 @@
         <item name="android:popupBackground">@drawable/rounded_popup_menu</item>
     </style>
 
-    <style name="StreamingServiceSpinner" parent="@android:style/Widget.Holo.DropDownItem.Spinner">
-        <item name="android:color">#FFFFFF</item>
-    </style>
-
     <style name="AppTheme.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
