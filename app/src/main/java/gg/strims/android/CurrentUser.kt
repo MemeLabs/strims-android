@@ -33,6 +33,8 @@ object CurrentUser {
     lateinit var bitmapMemoryCache: HashMap<String, Bitmap> // Collection of all emote Bitmaps
     lateinit var gifMemoryCache: LruCache<String, GifDrawable> // Collection of all animated emote GifDrawables
 
+    val time = System.currentTimeMillis()
+
     fun saveOptions(context: Context) {
         val userOptions = options
         val fileOutputStream: FileOutputStream

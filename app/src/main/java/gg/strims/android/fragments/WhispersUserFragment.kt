@@ -19,9 +19,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
-import gg.strims.android.*
+import gg.strims.android.ChatActivity
+import gg.strims.android.CurrentUser
+import gg.strims.android.R
 import gg.strims.android.models.Message
-import io.ktor.util.KtorExperimentalAPI
+import io.ktor.util.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.fragment_user_whispers.*
 import kotlinx.android.synthetic.main.whisper_message_item_left.view.*
@@ -45,6 +47,11 @@ class WhispersUserFragment : Fragment() {
                 }
             }
         }
+    }
+
+    override fun onDestroyView() {
+        requireActivity().unregisterReceiver(broadcastReceiver)
+        super.onDestroyView()
     }
 
     override fun onCreateView(

@@ -17,8 +17,6 @@ import com.beust.klaxon.Klaxon
 import gg.strims.android.ChatActivity
 import gg.strims.android.CurrentUser
 import gg.strims.android.R
-import gg.strims.android.models.EmotesParsed
-import gg.strims.android.models.Options
 import gg.strims.android.models.ViewerState
 import io.ktor.client.*
 import io.ktor.client.features.websocket.*
@@ -26,12 +24,9 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.http.cio.websocket.*
 import io.ktor.util.*
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
-import kotlinx.coroutines.launch
-import java.io.BufferedReader
-import java.io.InputStreamReader
 import java.net.URL
 
 @KtorExperimentalAPI
@@ -46,8 +41,9 @@ class ChatService: Service() {
         startForeground()
 
         try {
-            job = GlobalScope.launch {
+            job = CoroutineScope(IO).launch {
                 try {
+                    Log.d("TAG", "STARTING SERVICE ${(System.currentTimeMillis() - CurrentUser.time)}")
                     ChatClient().onConnect()
                 } catch (e: ClosedReceiveChannelException) {
                     job?.cancel()
@@ -59,6 +55,7 @@ class ChatService: Service() {
             Thread.currentThread().interrupt()
             sendBroadcast(Intent("gg.strims.android.CHAT_SOCKET_CLOSE"))
         }
+
         return START_STICKY
     }
 
@@ -124,13 +121,6 @@ class ChatService: Service() {
             sendBroadcast(intent)
         }
 
-        private suspend fun retrieveEmotes() {
-            val text: String = client.get("https://chat.strims.gg/emote-manifest.json")
-            val emotesParsed: EmotesParsed = Klaxon().parse(text)!!
-            CurrentUser.emotes = emotesParsed.emotes.toMutableList()
-            sendBroadcast(Intent("gg.strims.android.EMOTES"))
-        }
-
         private fun retrieveCookie() {
             val cookieManager = CookieManager.getInstance()
             val cookies = cookieManager.getCookie("https://strims.gg")
@@ -152,24 +142,6 @@ class ChatService: Service() {
             sendBroadcast(Intent("gg.strims.android.PROFILE"))
         }
 
-        private fun retrieveOptions() {
-            val file = baseContext.getFileStreamPath("options.txt")
-            if (file.exists()) {
-                val fileInputStream = openFileInput("options.txt")
-                val inputStreamReader = InputStreamReader(fileInputStream)
-                val bufferedReader = BufferedReader(inputStreamReader)
-                val stringBuilder = StringBuilder()
-                var text: String? = null
-                while ({ text = bufferedReader.readLine(); text }() != null) {
-                    stringBuilder.append(text)
-                }
-                CurrentUser.options = Klaxon().parse(stringBuilder.toString())
-                bufferedReader.close()
-            } else {
-                CurrentUser.options = Options()
-            }
-        }
-
         suspend fun onConnect() = client.wss(
             host = "chat.strims.gg",
             path = "/ws",
@@ -178,16 +150,17 @@ class ChatService: Service() {
                 if (jwt != null) {
                     Log.d("TAG", "Requesting with JWT: $jwt")
                     header("Cookie", "jwt=$jwt")
+                    CoroutineScope(IO).launch {
+                        retrieveProfile()
+                        sendBroadcast(Intent("gg.strims.android.RETRIEVE_PRIVATE_MESSAGES"))
+                    }
                 }
             }
         ) {
-            if (jwt != null) {
-                retrieveProfile()
-                sendBroadcast(Intent("gg.strims.android.RETRIEVE_PRIVATE_MESSAGES"))
-            }
-            retrieveEmotes()
-            retrieveOptions()
+            Log.d("TAG", "CONNECTED ${(System.currentTimeMillis() - CurrentUser.time)}")
+
             retrieveHistory()
+            Log.d("TAG", "HISTORY ENDING ${(System.currentTimeMillis() - CurrentUser.time)}")
 
             val broadcastReceiver = object : BroadcastReceiver() {
                 override fun onReceive(context: Context?, intent: Intent?) {

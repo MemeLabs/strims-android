@@ -92,6 +92,9 @@ class EmotesMenuFragment : Fragment() {
 
     inner class EmoteMenuItem(val name: String, private val bitmap: Bitmap) :
         Item<GroupieViewHolder>() {
+
+        override fun getLayout(): Int = R.layout.emote_menu_item
+
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
             viewHolder.itemView.imageViewEmote.setImageBitmap(bitmap)
 
@@ -101,8 +104,6 @@ class EmotesMenuFragment : Fragment() {
                 hideFragment(requireActivity(), this@EmotesMenuFragment)
             }
         }
-
-        override fun getLayout(): Int = R.layout.emote_menu_item
     }
 
 }

@@ -99,9 +99,7 @@ class WhispersFragment : Fragment() {
 
     inner class WhisperUserItem(var nick: String) : Item<GroupieViewHolder>() {
 
-        override fun getLayout(): Int {
-            return R.layout.whisper_user_item
-        }
+        override fun getLayout(): Int = R.layout.whisper_user_item
 
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
 
@@ -124,7 +122,7 @@ class WhispersFragment : Fragment() {
             viewHolder.itemView.setOnClickListener {
                 CurrentUser.tempWhisperUser = nick
                 parentFragmentManager.beginTransaction()
-                    .add(R.id.nav_host_fragment, WhispersUserFragment(), "WhispersUserFragment")
+                    .replace(R.id.nav_host_fragment, WhispersUserFragment(), "WhispersUserFragment")
                     .addToBackStack("WhispersUserFragment").commit()
             }
         }

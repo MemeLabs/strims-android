@@ -11,10 +11,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.res.Configuration
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Color
-import android.graphics.Typeface
+import android.graphics.*
 import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
@@ -67,9 +64,7 @@ import gg.strims.android.customspans.ColouredUnderlineSpan
 import gg.strims.android.customspans.DrawableCallback
 import gg.strims.android.customspans.NoUnderlineClickableSpan
 import gg.strims.android.fragments.*
-import gg.strims.android.models.Message
-import gg.strims.android.models.NamesMessage
-import gg.strims.android.models.ViewerState
+import gg.strims.android.models.*
 import gg.strims.android.viewmodels.ChatViewModel
 import io.ktor.util.*
 import io.ktor.utils.io.errors.*
@@ -84,6 +79,7 @@ import kotlinx.android.synthetic.main.error_chat_message_item.view.*
 import kotlinx.android.synthetic.main.nav_header_main.*
 import kotlinx.android.synthetic.main.nav_header_main.view.*
 import kotlinx.android.synthetic.main.private_chat_message_item.view.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import pl.droidsonroids.gif.GifDrawable
@@ -143,67 +139,72 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private val broadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent != null) {
-                if (intent.action == "gg.strims.android.MESSAGE_HISTORY") {
-                    if (adapter.itemCount == 0) {
-                        val messageHistory =
-                            intent.getStringArrayListExtra("gg.strims.android.MESSAGE_HISTORY_TEXT")
-                        messageHistory?.forEach {
-                            val msg = parseChatMessage(it)
-                            if (msg != null) {
-                                var consecutiveMessage = false
-                                if (adapter.itemCount > 0) {
-                                    if (adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item || adapter.getItem(
-                                            adapter.itemCount - 1
-                                        ).layout == R.layout.chat_message_item_consecutive_nick
-                                    ) {
-                                        val lastMessage =
-                                            adapter.getItem(adapter.itemCount - 1) as ChatMessage
-                                        consecutiveMessage =
-                                            lastMessage.isNickSame(msg.nick)
-                                    }
-
+                if (intent.action == "gg.strims.android.MESSAGE_HISTORY" && adapter.itemCount <= 1) {
+                    Log.d("TAG", "STARTING PARSING ${(System.currentTimeMillis() - CurrentUser.time)}")
+                    val messageHistory =
+                        intent.getStringArrayListExtra("gg.strims.android.MESSAGE_HISTORY_TEXT")
+                    messageHistory?.forEach {
+                        val msg = parseChatMessage(it)
+                        if (msg != null) {
+                            var consecutiveMessage = false
+                            /** Check for consecutive message **/
+                            if (adapter.itemCount > 0) {
+                                if (adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item || adapter.getItem(
+                                        adapter.itemCount - 1
+                                    ).layout == R.layout.chat_message_item_consecutive_nick
+                                ) {
+                                    val lastMessage =
+                                        adapter.getItem(adapter.itemCount - 1) as ChatMessage
+                                    consecutiveMessage =
+                                        lastMessage.isNickSame(msg.nick)
                                 }
-                                if (adapter.itemCount > 0 && msg.entities.emotes != null && msg.entities.emotes!!.isNotEmpty() && msg.entities.emotes!![0].combo > 1) {
-                                    if (msg.entities.emotes!![0].combo == 2) {
-                                        adapter.removeGroupAtAdapterPosition(adapter.itemCount - 1)
-                                        adapter.add(ChatMessageCombo(msg))
-                                    } else {
-                                        if (adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item_emote_combo) {
-                                            val lastMessageCombo =
-                                                adapter.getItem(adapter.itemCount - 1) as ChatMessageCombo
-                                            lastMessageCombo.setCombo(msg.entities.emotes!![0].combo)
-                                            adapter.notifyItemChanged(adapter.itemCount - 1)
-                                        }
-                                    }
 
+                            }
+                            /** Check for combo and adjust previous message accordingly **/
+                            if (adapter.itemCount > 0 && msg.entities.emotes != null && msg.entities.emotes!!.isNotEmpty() && msg.entities.emotes!![0].combo > 1) {
+                                if (msg.entities.emotes!![0].combo == 2) {
+                                    adapter.removeGroupAtAdapterPosition(adapter.itemCount - 1)
+                                    adapter.add(ChatMessageCombo(msg))
                                 } else {
-                                    if (adapter.itemCount > 0 && adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item_emote_combo) {
-                                        val lastMessage =
+                                    if (adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item_emote_combo) {
+                                        val lastMessageCombo =
                                             adapter.getItem(adapter.itemCount - 1) as ChatMessageCombo
-                                        lastMessage.state = 1
+                                        lastMessageCombo.setCombo(msg.entities.emotes!![0].combo)
                                         adapter.notifyItemChanged(adapter.itemCount - 1)
                                     }
-                                    adapter.add(
-                                        ChatMessage(msg, consecutiveMessage)
-                                    )
                                 }
+                            } else {
+                                /** Check if previous message was combo then add message **/
+                                if (adapter.itemCount > 0 && adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item_emote_combo) {
+                                    val lastMessage =
+                                        adapter.getItem(adapter.itemCount - 1) as ChatMessageCombo
+                                    lastMessage.state = 1
+                                    adapter.notifyItemChanged(adapter.itemCount - 1)
+                                }
+                                adapter.add(
+                                    ChatMessage(msg, consecutiveMessage)
+                                )
                             }
                         }
                     }
+                    Log.d("TAG", "ENDING PARSING ${(System.currentTimeMillis() - CurrentUser.time)}")
                 } else if (intent.action == "gg.strims.android.MESSAGE") {
                     val message = parseChatMessage(intent.getStringExtra("gg.strims.android.MESSAGE_TEXT")!!)
+
+                    /** Remove duplicate messages **/
                     if (adapter.itemCount > 0 && message != null) {
-                        if (adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item || adapter.getItem(
-                                adapter.itemCount - 1
+                        if (adapter.getItem(adapter.itemCount - 2).layout == R.layout.chat_message_item || adapter.getItem(
+                                adapter.itemCount - 2
                             ).layout == R.layout.chat_message_item_consecutive_nick
                         ) {
                             val lastMessage =
-                                adapter.getItem(adapter.itemCount - 1) as ChatMessage
+                                adapter.getItem(adapter.itemCount - 2) as ChatMessage
                             if (lastMessage.messageData.nick == message.nick && lastMessage.messageData.data == message.data) {
                                 return
                             }
                         }
                     }
+
                     if (message != null) {
                         Log.d("TAG", "FROM SERVICE: ${message.nick} + ${message.data}")
                         if (!CurrentUser.options!!.ignoreList.contains(message.nick)) {
@@ -219,6 +220,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                                 }
                             } else {
                                 var consecutiveMessage = false
+                                /** Check for consecutive message **/
                                 if (adapter.itemCount > 0) {
                                     if (adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item || adapter.getItem(
                                             adapter.itemCount - 1
@@ -229,8 +231,8 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                                         consecutiveMessage =
                                             lastMessage.isNickSame(message.nick)
                                     }
-
                                 }
+                                /** Check for combo and adjust previous message accordingly **/
                                 if (message.entities.emotes != null && message.entities.emotes!!.isNotEmpty() && message.entities.emotes!![0].combo > 1) {
                                     if (message.entities.emotes!![0].combo == 2) {
                                         adapter.removeGroupAtAdapterPosition(adapter.itemCount - 1)
@@ -243,12 +245,9 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                                             adapter.notifyItemChanged(adapter.itemCount - 1)
                                         }
                                     }
-
                                 } else {
-                                    if (adapter.itemCount > 0 && adapter.getItem(
-                                            adapter.itemCount - 1
-                                        ).layout == R.layout.chat_message_item_emote_combo
-                                    ) {
+                                    /** Check if previous message was combo then add message **/
+                                    if (adapter.itemCount > 0 && adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item_emote_combo) {
                                         val lastMessage =
                                             adapter.getItem(adapter.itemCount - 1) as ChatMessageCombo
                                         lastMessage.state = 1
@@ -268,8 +267,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             }
                         }
                     }
-                } else if (intent.action == "gg.strims.android.EMOTES") {
-                    cacheEmotes()
                 } else if (intent.action == "gg.strims.android.PROFILE") {
                     sendMessageText.hint = "Write something ${CurrentUser.user!!.username} ..."
                     navHeaderUsername.text = CurrentUser.user!!.username
@@ -384,7 +381,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         navView.setupWithNavController(navController)
         navView.setNavigationItemSelectedListener(this)
 
-        RedScreenOfDeath.init(this.application)
+//        RedScreenOfDeath.init(this.application)
 
         toolbar.title = "Chat"
 
@@ -399,7 +396,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val intentFilter = IntentFilter()
         intentFilter.addAction("gg.strims.android.MESSAGE")
         intentFilter.addAction("gg.strims.android.MESSAGE_HISTORY")
-        intentFilter.addAction("gg.strims.android.EMOTES")
         intentFilter.addAction("gg.strims.android.PROFILE")
         intentFilter.addAction("gg.strims.android.CHAT_SOCKET_CLOSE")
         intentFilter.addAction("gg.strims.android.STREAMS_SOCKET_CLOSE")
@@ -453,6 +449,25 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             streamsSocketIntent = Intent(this, StreamsService::class.java)
             startService(chatSocketIntent)
             startService(streamsSocketIntent)
+
+//            GlobalScope.launch(Dispatchers.IO) {
+//                Log.d("TAG", "HISTORY ${(System.currentTimeMillis() - CurrentUser.time)}")
+//                retrieveHistory()
+//                Log.d("TAG", "HISTORY ENDING ${(System.currentTimeMillis() - CurrentUser.time)}")
+//            }
+
+            GlobalScope.launch(Dispatchers.IO) {
+                Log.d("TAG", "OPTIONS ${(System.currentTimeMillis() - CurrentUser.time)}")
+                retrieveOptions()
+                Log.d("TAG", "OPTIONS ENDING ${(System.currentTimeMillis() - CurrentUser.time)}")
+            }
+
+            GlobalScope.launch(Dispatchers.IO) {
+                Log.d("TAG", "EMOTES ${(System.currentTimeMillis() - CurrentUser.time)}")
+                retrieveEmotes()
+                Log.d("TAG", "EMOTES ENDING ${(System.currentTimeMillis() - CurrentUser.time)}")
+            }
+
         }
 
         sendMessageText.addTextChangedListener(object : TextWatcher {
@@ -778,6 +793,50 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
+    private fun retrieveEmotes() {
+        val text = URL("https://chat.strims.gg/emote-manifest.json").readText()
+        val emotesParsed: EmotesParsed = Klaxon().parse(text)!!
+        CurrentUser.emotes = emotesParsed.emotes.toMutableList()
+        cacheEmotes()
+    }
+
+    private fun retrieveHistory() {
+        val messageHistory =
+            Klaxon().parseArray<String>(URL("https://chat.strims.gg/api/chat/history").readText())
+        CurrentUser.viewerStates =
+            Klaxon().parseArray<ViewerState>(URL("https://chat.strims.gg/api/chat/viewer-states").readText())
+                ?.toMutableList()
+        val intent = Intent("gg.strims.android.MESSAGE_HISTORY")
+        val arrayList = arrayListOf<String>()
+        if (messageHistory != null) {
+            arrayList.addAll(messageHistory)
+        }
+        intent.putStringArrayListExtra(
+            "gg.strims.android.MESSAGE_HISTORY_TEXT", ArrayList(
+                arrayList
+            )
+        )
+        sendBroadcast(intent)
+    }
+
+    private fun retrieveOptions() {
+        val file = baseContext.getFileStreamPath("options.txt")
+        if (file.exists()) {
+            val fileInputStream = openFileInput("options.txt")
+            val inputStreamReader = InputStreamReader(fileInputStream)
+            val bufferedReader = BufferedReader(inputStreamReader)
+            val stringBuilder = StringBuilder()
+            var text: String? = null
+            while ({ text = bufferedReader.readLine(); text }() != null) {
+                stringBuilder.append(text)
+            }
+            CurrentUser.options = Klaxon().parse(stringBuilder.toString())
+            bufferedReader.close()
+        } else {
+            CurrentUser.options = Options()
+        }
+    }
+
     private fun cacheEmotes() {
         CurrentUser.emotes?.forEach {
             val size = it.versions.size - 1
@@ -801,6 +860,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         if (CurrentUser.user == null) {
             return
         }
+
         if (CurrentUser.privateMessageUsers == null) {
             CurrentUser.privateMessageUsers = mutableListOf()
         }
@@ -850,7 +910,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         when (item.itemId) {
             R.id.optionsLogIn -> {
                 supportFragmentManager.beginTransaction()
-                    .add(R.id.nav_host_fragment, LoginFragment(), "LoginFragment")
+                    .replace(R.id.nav_host_fragment, LoginFragment(), "LoginFragment")
                     .addToBackStack("LoginFragment").commit()
             }
         }
@@ -867,7 +927,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         when (item.itemId) {
             R.id.nav_Streams -> {
                 supportFragmentManager.beginTransaction()
-                    .add(R.id.nav_host_fragment, StreamsFragment(), "StreamsFragment")
+                    .replace(R.id.nav_host_fragment, StreamsFragment(), "StreamsFragment")
                     .addToBackStack("StreamsFragment").commit()
             }
 
@@ -887,19 +947,19 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
             R.id.nav_Profile -> {
                 supportFragmentManager.beginTransaction()
-                    .add(R.id.nav_host_fragment, ProfileFragment(), "ProfileFragment")
+                    .replace(R.id.nav_host_fragment, ProfileFragment(), "ProfileFragment")
                     .addToBackStack("ProfileFragment").commit()
             }
 
             R.id.nav_Whispers -> {
                 supportFragmentManager.beginTransaction()
-                    .add(R.id.nav_host_fragment, WhispersFragment(), "WhispersFragment")
+                    .replace(R.id.nav_host_fragment, WhispersFragment(), "WhispersFragment")
                     .addToBackStack("WhispersFragment").commit()
             }
 
             R.id.nav_Settings -> {
                 supportFragmentManager.beginTransaction()
-                    .add(R.id.nav_host_fragment, OptionsFragment(), "OptionsFragment")
+                    .replace(R.id.nav_host_fragment, OptionsFragment(), "OptionsFragment")
                     .addToBackStack("OptionsFragment").commit()
             }
         }
@@ -918,6 +978,19 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 toolbar.title = "Chat"
             }
         }
+    }
+
+    private fun Bitmap.flip(degrees: Float): Bitmap {
+        val matrix = Matrix()
+        matrix.preScale(-1f, 1f)
+        matrix.apply { postRotate(degrees) }
+        return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
+    }
+
+    private fun Bitmap.mirror(): Bitmap {
+        val matrix = Matrix()
+        matrix.preScale(-1f, 1f)
+        return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
     }
 
     fun createMessageTextView(
@@ -948,10 +1021,25 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             bitmap = CurrentUser.bitmapMemoryCache[it.name]
                         }
                         var width = bitmap.width * 0.75
+
                         if (it.modifiers.contains("wide")) {
                             width = (bitmap.width * 1.5)
                         }
-                        val height = bitmap.height * 0.75
+
+                        var height = bitmap.height * 0.75
+
+                        if (it.modifiers.contains("smol")) {
+                            width *= 0.5
+                            height *= 0.5
+                        }
+
+                        if (it.modifiers.contains("flip")) {
+                            bitmap = bitmap.flip(180f)
+                        }
+
+                        if (it.modifiers.contains("mirror")) {
+                            bitmap = bitmap.mirror()
+                        }
                         val resized =
                             Bitmap.createScaledBitmap(bitmap, width.toInt(), height.toInt(), false)
                         ssb.setSpan(
@@ -1535,7 +1623,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         )
 
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_launcher_background)
             .setContentTitle(message.nick)
             .setContentText(message.data)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -1552,7 +1640,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         val replyPendingIntent = PendingIntent.getBroadcast(this, 0, replyIntent, PendingIntent.FLAG_UPDATE_CURRENT)
 
-        val action = NotificationCompat.Action.Builder(R.drawable.ic_launcher_foreground, "Reply", replyPendingIntent)
+        val action = NotificationCompat.Action.Builder(R.drawable.ic_launcher_background, "Reply", replyPendingIntent)
             .addRemoteInput(remoteInput).build()
 
         notificationBuilder.addAction(action)
@@ -1566,9 +1654,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     inner class ErrorChatMessage(private val message: String) : Item<GroupieViewHolder>() {
-        override fun getLayout(): Int {
-            return R.layout.error_chat_message_item
-        }
+        override fun getLayout(): Int = R.layout.error_chat_message_item
 
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
             if (CurrentUser.options!!.showTime) {
@@ -1591,9 +1677,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         private var xInitialSize = -1f
         private var hitsInitialSize = -1f
 
-        override fun getLayout(): Int {
-            return R.layout.chat_message_item_emote_combo
-        }
+        override fun getLayout(): Int = R.layout.chat_message_item_emote_combo
 
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
             if (comboCountInitialSize == -1f) {
@@ -2011,7 +2095,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             if (isConsecutive) {
                 return R.layout.chat_message_item_consecutive_nick
             }
-
             return R.layout.chat_message_item
         }
 
@@ -2242,9 +2325,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         private val isReceived: Boolean = false
     ) :
         Item<GroupieViewHolder>() {
-        override fun getLayout(): Int {
-            return R.layout.private_chat_message_item
-        }
+        override fun getLayout(): Int = R.layout.private_chat_message_item
 
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
             if (isReceived) {
@@ -2447,6 +2528,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         )
                     )
                     progressBar.visibility = View.GONE
+                    Log.d("TAG", "ENDING BAR ${(System.currentTimeMillis() - CurrentUser.time)}")
                     recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
                 }
             }

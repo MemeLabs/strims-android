@@ -93,9 +93,8 @@ class UserListFragment : Fragment() {
     }
 
     inner class UserListItem(val user: String) : Item<GroupieViewHolder>() {
-        override fun getLayout(): Int {
-            return R.layout.chat_user_item
-        }
+
+        override fun getLayout(): Int = R.layout.chat_user_item
 
         @SuppressLint("SetTextI18n")
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {

@@ -93,9 +93,14 @@ class StreamsFragment : Fragment() {
     private fun displayStreams() {
         if (CurrentUser.streams != null) {
             streamsAdapter.clear()
-            CurrentUser.streams!!.sortByDescending {
-                it.live
-            }
+
+            CurrentUser.streams = CurrentUser.streams!!.sortedWith(
+                compareBy(
+                    { it.live },
+                    { it.service == "angelthump" },
+                    { it.rustlers })
+            ).reversed().toMutableList()
+
             CurrentUser.streams!!.forEach {
                 if (CurrentUser.user != null) {
                     if (!CurrentUser.user!!.show_hidden && it.hidden) {
@@ -110,15 +115,14 @@ class StreamsFragment : Fragment() {
     }
 
     inner class StreamItem(private val stream: Stream): Item<GroupieViewHolder>() {
-        override fun getLayout(): Int {
-            return R.layout.stream_item
-        }
+
+        override fun getLayout(): Int = R.layout.stream_item
 
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
             if (stream.thumbnail.isNotEmpty()) {
                 Picasso.get().load(stream.thumbnail).into(viewHolder.itemView.streamThumbnail)
             } else {
-                Picasso.get().load(R.drawable.jigglymonkey).into(viewHolder.itemView.streamThumbnail)
+                Picasso.get().load(R.drawable.ic_person_orange_24dp).into(viewHolder.itemView.streamThumbnail)
             }
             viewHolder.itemView.streamTitle.text = "${stream.channel} presents ${stream.title} via ${stream.service}"
             viewHolder.itemView.streamViewerCount.text = stream.rustlers.toString()
