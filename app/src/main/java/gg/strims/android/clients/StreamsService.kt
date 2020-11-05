@@ -19,8 +19,7 @@ import io.ktor.client.*
 import io.ktor.client.features.websocket.*
 import io.ktor.http.cio.websocket.*
 import io.ktor.util.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.launch
@@ -37,7 +36,7 @@ class StreamsService: Service() {
         startForeground()
 
         try {
-            job = CoroutineScope(IO).launch {
+            job = GlobalScope.launch {
                 try {
                     StreamsClient().onConnect()
                 } catch (e: ClosedReceiveChannelException) {

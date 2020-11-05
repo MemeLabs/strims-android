@@ -21,6 +21,7 @@ import io.ktor.util.*
 import kotlinx.android.synthetic.main.activity_chat.*
 import kotlinx.android.synthetic.main.emote_menu_item.view.*
 import kotlinx.android.synthetic.main.fragment_emote_menu.*
+import pl.droidsonroids.gif.GifDrawable
 import java.util.*
 
 @KtorExperimentalAPI
@@ -77,6 +78,21 @@ class EmotesMenuFragment : Fragment() {
                         emoteMenuAdapter.add(EmoteMenuItem(it.key, it.value))
                     }
                 }
+
+                CurrentUser.gifMemoryCache.forEach {
+                    if (emoteMenuSearch.text.isNotEmpty()) {
+                        if (it.key.toLowerCase(Locale.ROOT).contains(
+                                emoteMenuSearch.text.toString().toLowerCase(
+                                    Locale.ROOT
+                                )
+                            )
+                        ) {
+                            emoteMenuAdapter.add(EmoteMenuItem(it.key, it.value))
+                        }
+                    } else {
+                        emoteMenuAdapter.add(EmoteMenuItem(it.key, it.value))
+                    }
+                }
             }
         })
     }
@@ -87,16 +103,24 @@ class EmotesMenuFragment : Fragment() {
             CurrentUser.bitmapMemoryCache.forEach {
                 emoteMenuAdapter.add(EmoteMenuItem(it.key, it.value))
             }
+
+            CurrentUser.gifMemoryCache.forEach {
+                emoteMenuAdapter.add(EmoteMenuItem(it.key, it.value))
+            }
         }
     }
 
-    inner class EmoteMenuItem(val name: String, private val bitmap: Bitmap) :
+    inner class EmoteMenuItem<T>(val name: String, private val emote: T) :
         Item<GroupieViewHolder>() {
 
         override fun getLayout(): Int = R.layout.emote_menu_item
 
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
-            viewHolder.itemView.imageViewEmote.setImageBitmap(bitmap)
+            if (emote is Bitmap) {
+                viewHolder.itemView.imageViewEmote.setImageBitmap(emote as Bitmap)
+            } else {
+                viewHolder.itemView.imageViewEmote.setImageDrawable(emote as GifDrawable)
+            }
 
             viewHolder.itemView.imageViewEmote.setOnClickListener {
                 val activity = requireActivity() as ChatActivity

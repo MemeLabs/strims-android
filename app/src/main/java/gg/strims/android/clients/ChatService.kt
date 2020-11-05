@@ -41,7 +41,7 @@ class ChatService: Service() {
         startForeground()
 
         try {
-            job = CoroutineScope(IO).launch {
+            job = GlobalScope.launch {
                 try {
                     Log.d("TAG", "STARTING SERVICE ${(System.currentTimeMillis() - CurrentUser.time)}")
                     ChatClient().onConnect()

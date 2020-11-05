@@ -3,7 +3,6 @@ package gg.strims.android
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
-import android.util.LruCache
 import com.google.gson.Gson
 import gg.strims.android.models.*
 import io.ktor.util.*
@@ -31,7 +30,7 @@ object CurrentUser {
     var whispersMap = HashMap<String, MutableList<Message>>() // HashMap of users and their private conversations
     var viewerStates: MutableList<ViewerState>? = null
     lateinit var bitmapMemoryCache: HashMap<String, Bitmap> // Collection of all emote Bitmaps
-    lateinit var gifMemoryCache: LruCache<String, GifDrawable> // Collection of all animated emote GifDrawables
+    lateinit var gifMemoryCache: HashMap<String, GifDrawable> // Collection of all animated emote GifDrawables
 
     val time = System.currentTimeMillis()
 

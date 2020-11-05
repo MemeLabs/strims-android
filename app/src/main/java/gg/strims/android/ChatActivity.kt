@@ -381,7 +381,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         navView.setupWithNavController(navController)
         navView.setNavigationItemSelectedListener(this)
 
-//        RedScreenOfDeath.init(this.application)
+        RedScreenOfDeath.init(this.application)
 
         toolbar.title = "Chat"
 
@@ -440,21 +440,13 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 }
             }
         } else {
-            val maxMemory = (Runtime.getRuntime().maxMemory() / 1024).toInt()
-            val cacheSize = maxMemory / 8
             CurrentUser.bitmapMemoryCache = HashMap()
-            CurrentUser.gifMemoryCache = object : LruCache<String, GifDrawable>(cacheSize) {}
+            CurrentUser.gifMemoryCache = HashMap()
 
             chatSocketIntent = Intent(this, ChatService::class.java)
             streamsSocketIntent = Intent(this, StreamsService::class.java)
             startService(chatSocketIntent)
             startService(streamsSocketIntent)
-
-//            GlobalScope.launch(Dispatchers.IO) {
-//                Log.d("TAG", "HISTORY ${(System.currentTimeMillis() - CurrentUser.time)}")
-//                retrieveHistory()
-//                Log.d("TAG", "HISTORY ENDING ${(System.currentTimeMillis() - CurrentUser.time)}")
-//            }
 
             GlobalScope.launch(Dispatchers.IO) {
                 Log.d("TAG", "OPTIONS ${(System.currentTimeMillis() - CurrentUser.time)}")
@@ -800,25 +792,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         cacheEmotes()
     }
 
-    private fun retrieveHistory() {
-        val messageHistory =
-            Klaxon().parseArray<String>(URL("https://chat.strims.gg/api/chat/history").readText())
-        CurrentUser.viewerStates =
-            Klaxon().parseArray<ViewerState>(URL("https://chat.strims.gg/api/chat/viewer-states").readText())
-                ?.toMutableList()
-        val intent = Intent("gg.strims.android.MESSAGE_HISTORY")
-        val arrayList = arrayListOf<String>()
-        if (messageHistory != null) {
-            arrayList.addAll(messageHistory)
-        }
-        intent.putStringArrayListExtra(
-            "gg.strims.android.MESSAGE_HISTORY_TEXT", ArrayList(
-                arrayList
-            )
-        )
-        sendBroadcast(intent)
-    }
-
     private fun retrieveOptions() {
         val file = baseContext.getFileStreamPath("options.txt")
         if (file.exists()) {
@@ -850,7 +823,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             } else {
                 GlobalScope.launch {
                     val gif = getGifFromURL(url)
-                    CurrentUser.gifMemoryCache.put(it.name, gif)
+                    CurrentUser.gifMemoryCache[it.name] = gif!!
                 }
             }
         }
@@ -1623,7 +1596,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         )
 
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.ic_launcher_background)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle(message.nick)
             .setContentText(message.data)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -1698,7 +1671,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 viewHolder.itemView.timestampChatMessageCombo.visibility = View.VISIBLE
                 viewHolder.itemView.timestampChatMessageCombo.text = time
             }
-
             if (CurrentUser.tempHighlightNick != null) {
                 viewHolder.itemView.alpha = 0.5f
             }
@@ -1725,7 +1697,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
 
             viewHolder.itemView.comboCountChatMessageCombo.text = "$count"
-
 
             if (count >= 10) {
                 viewHolder.itemView.hitsComboChatMessageCombo.setTypeface(
@@ -2083,7 +2054,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         fun setCombo(comboCount: Int) {
             count = comboCount
         }
-
     }
 
     inner class ChatMessage(

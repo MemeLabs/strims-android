@@ -28,16 +28,28 @@ import kotlinx.android.synthetic.main.whisper_user_item.view.*
 @KtorExperimentalAPI
 class WhispersFragment : Fragment() {
 
-    private val whispersAdapter = GroupAdapter<GroupieViewHolder>()
+    private var whispersAdapter: GroupAdapter<GroupieViewHolder>? = GroupAdapter<GroupieViewHolder>()
 
     private val broadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent != null) {
                 if (intent.action == "gg.strims.android.PRIVATE_MESSAGE") {
-                    whispersAdapter.notifyDataSetChanged()
+                    whispersAdapter?.notifyDataSetChanged()
                 }
             }
         }
+    }
+
+    override fun onDetach() {
+        whispersAdapter = null
+        requireActivity().unregisterReceiver(broadcastReceiver)
+        super.onDetach()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val intentFilter = IntentFilter("gg.strims.android.PRIVATE_MESSAGE")
+        requireActivity().registerReceiver(broadcastReceiver, intentFilter)
     }
 
     override fun onCreateView(
@@ -45,12 +57,11 @@ class WhispersFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val intentFilter = IntentFilter("gg.strims.android.PRIVATE_MESSAGE")
-        requireActivity().registerReceiver(broadcastReceiver, intentFilter)
         return inflater.inflate(R.layout.fragment_whispers, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        whispersAdapter = GroupAdapter<GroupieViewHolder>()
         recyclerViewWhispers.layoutManager = LinearLayoutManager(view.context)
         recyclerViewWhispers.adapter = whispersAdapter
 
@@ -88,13 +99,13 @@ class WhispersFragment : Fragment() {
     }
 
     private fun displayPrivateMessages() {
-        whispersAdapter.clear()
+        whispersAdapter?.clear()
         if (CurrentUser.privateMessageUsers != null) {
             CurrentUser.privateMessageUsers!!.forEach {
-                whispersAdapter.add(WhisperUserItem(it))
+                whispersAdapter?.add(WhisperUserItem(it))
             }
         }
-        whispersAdapter.notifyDataSetChanged()
+        whispersAdapter?.notifyDataSetChanged()
     }
 
     inner class WhisperUserItem(var nick: String) : Item<GroupieViewHolder>() {
