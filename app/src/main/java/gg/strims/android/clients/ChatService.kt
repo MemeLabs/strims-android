@@ -152,7 +152,6 @@ class ChatService: Service() {
                     header("Cookie", "jwt=$jwt")
                     CoroutineScope(IO).launch {
                         retrieveProfile()
-                        sendBroadcast(Intent("gg.strims.android.RETRIEVE_PRIVATE_MESSAGES"))
                     }
                 }
             }

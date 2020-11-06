@@ -8,3 +8,11 @@ class ViewerState(
     constructor(): this(Channel(), "", false)
 
 }
+
+class Channel(
+    var channel: String,
+    var path: String?,
+    var service: String
+) {
+    constructor(): this("", "", "")
+}

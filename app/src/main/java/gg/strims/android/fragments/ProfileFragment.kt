@@ -94,8 +94,6 @@ class ProfileFragment: Fragment() {
         logOutProfile.setOnClickListener {
             CurrentUser.user = null
             CurrentUser.tempWhisperUser = null
-            CurrentUser.whispersMap = HashMap<String, MutableList<Message>>()
-            CurrentUser.privateMessageUsers = null
 
             deleteCookie()
             val activity = requireActivity() as ChatActivity

@@ -1,10 +1,6 @@
 package gg.strims.android.fragments
 
 import android.annotation.SuppressLint
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.graphics.Rect
 import android.os.Bundle
 import android.util.TypedValue
@@ -12,12 +8,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
 import gg.strims.android.*
+import gg.strims.android.room.PrivateMessage
+import gg.strims.android.room.PrivateMessagesViewModel
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.android.synthetic.main.activity_navigation_drawer.*
 import kotlinx.android.synthetic.main.app_bar_main.*
@@ -30,26 +29,13 @@ class WhispersFragment : Fragment() {
 
     private var whispersAdapter: GroupAdapter<GroupieViewHolder>? = GroupAdapter<GroupieViewHolder>()
 
-    private val broadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent != null) {
-                if (intent.action == "gg.strims.android.PRIVATE_MESSAGE") {
-                    whispersAdapter?.notifyDataSetChanged()
-                }
-            }
-        }
-    }
+    private lateinit var privateMessagesViewModel: PrivateMessagesViewModel
+
+    var newMap: HashMap<String, PrivateMessage> = hashMapOf()
 
     override fun onDetach() {
         whispersAdapter = null
-        requireActivity().unregisterReceiver(broadcastReceiver)
         super.onDetach()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        val intentFilter = IntentFilter("gg.strims.android.PRIVATE_MESSAGE")
-        requireActivity().registerReceiver(broadcastReceiver, intentFilter)
     }
 
     override fun onCreateView(
@@ -95,30 +81,37 @@ class WhispersFragment : Fragment() {
             )
         )
 
-        displayPrivateMessages()
-    }
-
-    private fun displayPrivateMessages() {
-        whispersAdapter?.clear()
-        if (CurrentUser.privateMessageUsers != null) {
-            CurrentUser.privateMessageUsers!!.forEach {
-                whispersAdapter?.add(WhisperUserItem(it))
+        privateMessagesViewModel = ViewModelProvider(this).get(PrivateMessagesViewModel::class.java)
+        privateMessagesViewModel.privateMessages.observe(viewLifecycleOwner, { messages ->
+            whispersAdapter!!.clear()
+            messages.forEach { message ->
+                val otherUser = if (CurrentUser.user!!.username == message.nick) message.targetNick else message.nick
+                if (!newMap.containsKey(otherUser)) {
+                    newMap[otherUser] = message
+                } else if (newMap[otherUser] != null) {
+                    if (message.timestamp > newMap[otherUser]!!.timestamp) {
+                        newMap[otherUser] = message
+                    }
+                }
             }
-        }
-        whispersAdapter?.notifyDataSetChanged()
+            newMap.forEach {
+                whispersAdapter!!.add(WhisperUserItem(it.value))
+            }
+        })
     }
 
-    inner class WhisperUserItem(var nick: String) : Item<GroupieViewHolder>() {
+    inner class WhisperUserItem(var message: PrivateMessage) : Item<GroupieViewHolder>() {
 
         override fun getLayout(): Int = R.layout.whisper_user_item
 
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
 
-            viewHolder.itemView.usernameWhisperUser.text = nick
+            val otherUser = if (CurrentUser.user!!.username == message.nick) message.targetNick else message.nick
+            viewHolder.itemView.usernameWhisperUser.text = otherUser
 
             var online = false
             CurrentUser.users.forEach { user ->
-                if (user == nick) {
+                if (user == otherUser) {
                     viewHolder.itemView.onlineWhisperUser.visibility = View.VISIBLE
                     online = true
                     return@forEach
@@ -128,10 +121,10 @@ class WhispersFragment : Fragment() {
                 viewHolder.itemView.onlineWhisperUser.visibility = View.GONE
             }
             val parentActivity = requireActivity() as ChatActivity
-            parentActivity.createMessageTextView(CurrentUser.whispersMap[nick]!!.last(), viewHolder.itemView.latestMessageWhisperUser)
+            parentActivity.createMessageTextView(message.toMessage(), viewHolder.itemView.latestMessageWhisperUser)
 
             viewHolder.itemView.setOnClickListener {
-                CurrentUser.tempWhisperUser = nick
+                CurrentUser.tempWhisperUser = otherUser
                 parentFragmentManager.beginTransaction()
                     .replace(R.id.nav_host_fragment, WhispersUserFragment(), "WhispersUserFragment")
                     .addToBackStack("WhispersUserFragment").commit()

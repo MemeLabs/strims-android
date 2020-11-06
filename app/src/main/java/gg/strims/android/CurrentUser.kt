@@ -13,7 +13,7 @@ import java.util.HashMap
 
 @KtorExperimentalAPI
 object CurrentUser {
-    var user: User? = null // Current user
+    var user: Profile? = null // Current user
     var options: Options? = null // Loaded options file
     var tempHighlightNick: MutableList<String>? = null // List of nicks to highlight in chat when a user clicks on them
     var users = mutableListOf<String>() // List of all users in chat
@@ -25,10 +25,8 @@ object CurrentUser {
     var tempYouTubeId: String? = null // Currently playing YouTube Video ID
     var emotes: MutableList<Emote>? = null // Collection of all emote models
     var jwt: String? = null // JSON Web Token of current user
-    var privateMessageUsers: MutableList<String>? = null // List of users currently with private conversations
     var tempWhisperUser: String? = null // User to be passed to WhispersUserFragment
-    var whispersMap = HashMap<String, MutableList<Message>>() // HashMap of users and their private conversations
-    var viewerStates: MutableList<ViewerState>? = null
+    var viewerStates: MutableList<ViewerState>? = null // Collection of ViewerStates
     lateinit var bitmapMemoryCache: HashMap<String, Bitmap> // Collection of all emote Bitmaps
     lateinit var gifMemoryCache: HashMap<String, GifDrawable> // Collection of all animated emote GifDrawables
 

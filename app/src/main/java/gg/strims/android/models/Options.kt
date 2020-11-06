@@ -11,5 +11,6 @@ class Options(
     var customHighlights: MutableList<String>,
     var showViewerState: Boolean = true
 ) {
+
     constructor(): this(false, mutableListOf(), false, false , false, true, true, mutableListOf(), true)
 }

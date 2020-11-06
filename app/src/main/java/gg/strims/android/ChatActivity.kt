@@ -22,7 +22,6 @@ import android.text.method.LinkMovementMethod
 import android.text.style.*
 import android.util.DisplayMetrics
 import android.util.Log
-import android.util.LruCache
 import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
@@ -52,7 +51,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.beust.klaxon.Klaxon
 import com.google.android.material.navigation.NavigationView
-import com.google.gson.Gson
 import com.melegy.redscreenofdeath.RedScreenOfDeath
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
@@ -65,6 +63,8 @@ import gg.strims.android.customspans.DrawableCallback
 import gg.strims.android.customspans.NoUnderlineClickableSpan
 import gg.strims.android.fragments.*
 import gg.strims.android.models.*
+import gg.strims.android.room.PrivateMessage
+import gg.strims.android.room.PrivateMessagesViewModel
 import gg.strims.android.viewmodels.ChatViewModel
 import io.ktor.util.*
 import io.ktor.utils.io.errors.*
@@ -109,6 +109,8 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     private lateinit var appBarConfiguration: AppBarConfiguration
+
+    private lateinit var privateMessagesViewModel: PrivateMessagesViewModel
 
     var adapter = GroupAdapter<GroupieViewHolder>()
 
@@ -289,8 +291,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 } else if (intent.action == "gg.strims.android.STREAMS_SOCKET_CLOSE") {
                     stopService(streamsSocketIntent)
                     startService(streamsSocketIntent)
-                } else if (intent.action == "gg.strims.android.RETRIEVE_PRIVATE_MESSAGES") {
-                    retrievePrivateMessages()
                 } else if (intent.action == "gg.strims.android.STREAMS") {
                     val streams = intent.getStringExtra("gg.strims.android.STREAMS_TEXT")
                     StreamsFragment().parseStream(streams!!)
@@ -399,7 +399,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         intentFilter.addAction("gg.strims.android.PROFILE")
         intentFilter.addAction("gg.strims.android.CHAT_SOCKET_CLOSE")
         intentFilter.addAction("gg.strims.android.STREAMS_SOCKET_CLOSE")
-        intentFilter.addAction("gg.strims.android.RETRIEVE_PRIVATE_MESSAGES")
         intentFilter.addAction("gg.strims.android.STREAMS")
         registerReceiver(broadcastReceiver, intentFilter)
 
@@ -442,6 +441,8 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         } else {
             CurrentUser.bitmapMemoryCache = HashMap()
             CurrentUser.gifMemoryCache = HashMap()
+
+            privateMessagesViewModel = ViewModelProvider(this).get(PrivateMessagesViewModel::class.java)
 
             chatSocketIntent = Intent(this, ChatService::class.java)
             streamsSocketIntent = Intent(this, StreamsService::class.java)
@@ -824,46 +825,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 GlobalScope.launch {
                     val gif = getGifFromURL(url)
                     CurrentUser.gifMemoryCache[it.name] = gif!!
-                }
-            }
-        }
-    }
-
-    private fun retrievePrivateMessages() {
-        if (CurrentUser.user == null) {
-            return
-        }
-
-        if (CurrentUser.privateMessageUsers == null) {
-            CurrentUser.privateMessageUsers = mutableListOf()
-        }
-
-        baseContext.fileList().forEach {
-            if (it.contains("${CurrentUser.user!!.username}_private_messages")) {
-                val nick = it.substringAfter("private_messages_").substringBefore(".txt")
-                CurrentUser.privateMessageUsers!!.add(nick)
-            }
-        }
-
-        if (CurrentUser.privateMessageUsers != null) {
-            CurrentUser.privateMessageUsers!!.forEach {
-                val file =
-                    baseContext.getFileStreamPath("${CurrentUser.user?.username}_private_messages_$it.txt")
-                if (file.exists()) {
-                    val fileInputStream = openFileInput(file.name)
-                    val inputStreamReader = InputStreamReader(fileInputStream)
-                    val bufferedReader = BufferedReader(inputStreamReader)
-                    val messagesArray = mutableListOf<Message>()
-                    while (bufferedReader.ready()) {
-                        val line = bufferedReader.readLine()
-                        val curPMessage: Message = Gson().fromJson(line, Message::class.java)
-                        messagesArray.add(curPMessage)
-                    }
-                    bufferedReader.close()
-                    CurrentUser.whispersMap[it] = messagesArray
-                    CurrentUser.whispersMap[it]?.sortBy { message ->
-                        message.timestamp
-                    }
                 }
             }
         }
@@ -1546,41 +1507,23 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    private fun savePrivateMessage(messageJson: String, message: Message) {
+    private fun savePrivateMessage(message: Message) {
         if (CurrentUser.user == null) {
             return
         }
-        val otherUser = if (CurrentUser.user!!.username == message.nick) message.targetNick else message.nick
-        if (!CurrentUser.privateMessageUsers!!.contains(otherUser)) {
-            CurrentUser.privateMessageUsers!!.add(otherUser!!)
-        }
-        val filename = "${CurrentUser.user!!.username}_private_messages_$otherUser.txt"
-        val file =
-            baseContext.getFileStreamPath(filename)
-        if (file.exists()) {
-            try {
-                val fileOutputStream = baseContext.openFileOutput(
-                    filename,
-                    Context.MODE_APPEND
-                )
-                fileOutputStream.write("\n$messageJson".toByteArray())
-            } catch (e: java.lang.Exception) {
-                e.printStackTrace()
-            }
-        } else {
-            try {
-                val fileOutputStream = baseContext.openFileOutput(
-                    filename,
-                    Context.MODE_PRIVATE
-                )
 
-                fileOutputStream.write(messageJson.toByteArray())
-            } catch (e: java.lang.Exception) {
-                e.printStackTrace()
-            }
-        }
-
-        CurrentUser.whispersMap[otherUser]?.add(message)
+        privateMessagesViewModel.addMessage(
+            PrivateMessage(
+                0,
+                message.privMsg,
+                message.nick,
+                message.data,
+                message.timestamp,
+                message.features,
+                message.entities,
+                message.targetNick!!
+            )
+        )
     }
 
     override fun onDestroy() {
@@ -2531,7 +2474,7 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     }
                 }
 
-                savePrivateMessage(msg[1], message)
+                savePrivateMessage(message)
                 sendBroadcast(Intent("gg.strims.android.PRIVATE_MESSAGE"))
                 return message
             }
