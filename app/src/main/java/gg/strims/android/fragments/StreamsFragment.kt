@@ -55,8 +55,6 @@ class StreamsFragment : Fragment() {
         requireActivity().nav_view.setCheckedItem(R.id.nav_Streams)
 
         displayStreams()
-
-        this.retainInstance = true
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -71,21 +69,21 @@ class StreamsFragment : Fragment() {
     }
 
     fun parseStream(input: String) {
-        val test = Gson().fromJson(input, JsonElement::class.java)
-        when (test.asJsonArray[0].asString) {
+        val stream = Gson().fromJson(input, JsonElement::class.java)
+        when (stream.asJsonArray[0].asString) {
             "RUSTLERS_SET" -> {
                 if (CurrentUser.streams != null) {
                     CurrentUser.streams!!.forEach {
-                        if (it.id == test.asJsonArray[1].asLong) {
-                            it.rustlers = test.asJsonArray[2].asInt
-                            it.afk_rustlers = test.asJsonArray[3].asInt
+                        if (it.id == stream.asJsonArray[1].asLong) {
+                            it.rustlers = stream.asJsonArray[2].asInt
+                            it.afk_rustlers = stream.asJsonArray[3].asInt
                         }
                     }
                 }
             }
             "STREAMS_SET" -> {
-                val streams2 = Gson().fromJson(test.asJsonArray[1], Array<Stream>::class.java)
-                CurrentUser.streams = streams2.toMutableList()
+                val streams = Gson().fromJson(stream.asJsonArray[1], Array<Stream>::class.java)
+                CurrentUser.streams = streams.toMutableList()
             }
         }
     }
@@ -122,7 +120,7 @@ class StreamsFragment : Fragment() {
             if (stream.thumbnail.isNotEmpty()) {
                 Picasso.get().load(stream.thumbnail).into(viewHolder.itemView.streamThumbnail)
             } else {
-                Picasso.get().load(R.drawable.ic_person_orange_24dp).into(viewHolder.itemView.streamThumbnail)
+                Picasso.get().load(R.drawable.jigglymonkey).into(viewHolder.itemView.streamThumbnail)
             }
             viewHolder.itemView.streamTitle.text = "${stream.channel} presents ${stream.title} via ${stream.service}"
             viewHolder.itemView.streamViewerCount.text = stream.rustlers.toString()
@@ -151,6 +149,12 @@ class StreamsFragment : Fragment() {
                 hideFragment(activity!!, parentFragmentManager.findFragmentById(R.id.angelthump_fragment)!!)
                 hideFragment(activity!!, parentFragmentManager.findFragmentById(R.id.twitch_fragment)!!)
                 hideFragment(activity!!, parentFragmentManager.findFragmentById(R.id.youtube_fragment)!!)
+
+                CurrentUser.tempTwitchUrl = null
+                CurrentUser.tempTwitchVod = null
+                CurrentUser.tempStream = null
+                CurrentUser.tempYouTubeId = null
+
                 val navView = requireActivity().findViewById<NavigationView>(R.id.nav_view)
                 navView.setCheckedItem(R.id.nav_Chat)
                 requireActivity().toolbar.title = "Chat"

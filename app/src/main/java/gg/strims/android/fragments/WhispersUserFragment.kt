@@ -2,7 +2,6 @@ package gg.strims.android.fragments
 
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.graphics.Rect
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -13,17 +12,16 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
-import gg.strims.android.ChatActivity
 import gg.strims.android.CurrentUser
 import gg.strims.android.R
+import gg.strims.android.createMessageTextView
+import gg.strims.android.customspans.MarginItemDecoration
 import gg.strims.android.room.PrivateMessage
-import gg.strims.android.room.PrivateMessagesViewModel
+import gg.strims.android.viewmodels.PrivateMessagesViewModel
 import io.ktor.util.*
-import kotlinx.android.synthetic.main.activity_chat.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.fragment_user_whispers.*
 import kotlinx.android.synthetic.main.fragment_user_whispers.goToBottom
@@ -43,7 +41,7 @@ class WhispersUserFragment : Fragment() {
 
     private val conversation = mutableListOf<Int>()
 
-    var open = true
+    private var open = true
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -58,22 +56,6 @@ class WhispersUserFragment : Fragment() {
         recyclerViewWhispersUser.adapter = whispersUserAdapter
 
         requireActivity().toolbar.title = CurrentUser.tempWhisperUser
-
-        class MarginItemDecoration(private val spaceHeight: Int) : RecyclerView.ItemDecoration() {
-            override fun getItemOffsets(
-                outRect: Rect, view: View,
-                parent: RecyclerView, state: RecyclerView.State
-            ) {
-                with(outRect) {
-                    if (parent.getChildAdapterPosition(view) == 0) {
-                        top = spaceHeight
-                    }
-                    left = spaceHeight
-                    right = spaceHeight
-                    bottom = spaceHeight
-                }
-            }
-        }
 
         recyclerViewWhispersUser.addItemDecoration(
             MarginItemDecoration(
@@ -172,8 +154,8 @@ class WhispersUserFragment : Fragment() {
         }
 
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
-            val parentActivity = requireActivity() as ChatActivity
-            parentActivity.createMessageTextView(
+            createMessageTextView(
+                context!!,
                 message.toMessage(),
                 viewHolder.itemView.messageWhisperMessageItemLeft
             )

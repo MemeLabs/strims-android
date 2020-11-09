@@ -11,7 +11,6 @@ import com.google.gson.Gson
 import gg.strims.android.ChatActivity
 import gg.strims.android.CurrentUser
 import gg.strims.android.R
-import gg.strims.android.models.Message
 import io.ktor.client.HttpClient
 import io.ktor.client.features.websocket.WebSockets
 import io.ktor.client.request.header
@@ -24,7 +23,6 @@ import kotlinx.android.synthetic.main.fragment_profile.*
 import kotlinx.android.synthetic.main.nav_header_main.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import java.util.HashMap
 
 @KtorExperimentalAPI
 class ProfileFragment: Fragment() {

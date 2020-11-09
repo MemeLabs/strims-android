@@ -1,7 +1,6 @@
 package gg.strims.android.fragments
 
 import android.annotation.SuppressLint
-import android.graphics.Rect
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.LayoutInflater
@@ -10,13 +9,13 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
 import gg.strims.android.*
+import gg.strims.android.customspans.MarginItemDecoration
 import gg.strims.android.room.PrivateMessage
-import gg.strims.android.room.PrivateMessagesViewModel
+import gg.strims.android.viewmodels.PrivateMessagesViewModel
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.android.synthetic.main.activity_navigation_drawer.*
 import kotlinx.android.synthetic.main.app_bar_main.*
@@ -31,7 +30,7 @@ class WhispersFragment : Fragment() {
 
     private lateinit var privateMessagesViewModel: PrivateMessagesViewModel
 
-    var newMap: HashMap<String, PrivateMessage> = hashMapOf()
+    private var newMap: HashMap<String, PrivateMessage> = hashMapOf()
 
     override fun onDetach() {
         whispersAdapter = null
@@ -54,22 +53,6 @@ class WhispersFragment : Fragment() {
         requireActivity().toolbar.title = "Private Messages"
 
         requireActivity().nav_view.setCheckedItem(R.id.nav_Whispers)
-
-        class MarginItemDecoration(private val spaceHeight: Int) : RecyclerView.ItemDecoration() {
-            override fun getItemOffsets(
-                outRect: Rect, view: View,
-                parent: RecyclerView, state: RecyclerView.State
-            ) {
-                with(outRect) {
-                    if (parent.getChildAdapterPosition(view) == 0) {
-                        top = spaceHeight
-                    }
-                    left = spaceHeight
-                    right = spaceHeight
-                    bottom = spaceHeight
-                }
-            }
-        }
 
         recyclerViewWhispers.addItemDecoration(
             MarginItemDecoration(
@@ -120,8 +103,7 @@ class WhispersFragment : Fragment() {
             if (!online) {
                 viewHolder.itemView.onlineWhisperUser.visibility = View.GONE
             }
-            val parentActivity = requireActivity() as ChatActivity
-            parentActivity.createMessageTextView(message.toMessage(), viewHolder.itemView.latestMessageWhisperUser)
+            createMessageTextView(context!!, message.toMessage(), viewHolder.itemView.latestMessageWhisperUser)
 
             viewHolder.itemView.setOnClickListener {
                 CurrentUser.tempWhisperUser = otherUser

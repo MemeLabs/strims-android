@@ -1,9 +1,12 @@
-package gg.strims.android.room
+package gg.strims.android.viewmodels
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
+import gg.strims.android.room.PrivateMessage
+import gg.strims.android.room.PrivateMessagesDatabase
+import gg.strims.android.room.PrivateMessagesRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 

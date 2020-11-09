@@ -32,10 +32,6 @@ class AngelThumpFragment: Fragment() {
 
     override fun onResume() {
         super.onResume()
-        if (CurrentUser.tempStream != null && !player!!.isPlaying) {
-            player?.play()
-        }
-
         angelThumpStreamTitle.visibility = View.VISIBLE
         angelThumpSeparator.visibility = View.VISIBLE
         angelThumpClose.visibility = View.VISIBLE
@@ -48,6 +44,11 @@ class AngelThumpFragment: Fragment() {
         super.onPause()
     }
 
+    override fun onDestroy() {
+        player?.stop()
+        super.onDestroy()
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         hideFragment(requireActivity(), this)
 
@@ -55,8 +56,6 @@ class AngelThumpFragment: Fragment() {
         angelThumpVideoView.player = player
 
         angelThumpClose.setOnClickListener {
-            player?.stop()
-            player?.removeMediaItems(0, player?.mediaItemCount!!)
             CurrentUser.tempStream = null
             parentFragmentManager.beginTransaction()
                 .hide(this)
