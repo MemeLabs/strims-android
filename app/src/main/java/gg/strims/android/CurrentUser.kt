@@ -2,13 +2,10 @@ package gg.strims.android
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.util.Log
 import com.google.gson.Gson
 import gg.strims.android.models.*
 import io.ktor.util.*
 import pl.droidsonroids.gif.GifDrawable
-import java.io.FileOutputStream
-import java.lang.Exception
 import java.util.HashMap
 
 @KtorExperimentalAPI
@@ -32,14 +29,8 @@ object CurrentUser {
     val time = System.currentTimeMillis()
 
     fun saveOptions(context: Context) {
-        val userOptions = options
-        val fileOutputStream: FileOutputStream
-        try {
-            fileOutputStream = context.openFileOutput("options.txt", Context.MODE_PRIVATE)
-            Log.d("TAG", "Saving: ${Gson().toJson(userOptions)}")
-            fileOutputStream.write(Gson().toJson(userOptions).toByteArray())
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        val sharedPreferences = context.getSharedPreferences("ChatOptions", Context.MODE_PRIVATE).edit()
+        sharedPreferences.putString("options", Gson().toJson(options))
+        sharedPreferences.apply()
     }
 }

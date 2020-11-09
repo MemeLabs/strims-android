@@ -1,5 +1,8 @@
 package gg.strims.android.fragments
 
+import android.annotation.SuppressLint
+import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -14,7 +17,10 @@ import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.fragment_chat_options.*
 
 @KtorExperimentalAPI
+@SuppressLint("CommitPrefEdits")
 class OptionsFragment : Fragment() {
+
+    lateinit var sharedPreferences: SharedPreferences.Editor
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -45,6 +51,8 @@ class OptionsFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        sharedPreferences = requireActivity().getSharedPreferences("ChatOptions", Context.MODE_PRIVATE).edit()
+
         requireActivity().toolbar.title = "Settings"
 
         requireActivity().nav_view.setCheckedItem(R.id.nav_Settings)

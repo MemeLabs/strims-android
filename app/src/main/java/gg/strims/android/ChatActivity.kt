@@ -770,18 +770,10 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     private fun retrieveOptions() {
-        val file = baseContext.getFileStreamPath("options.txt")
-        if (file.exists()) {
-            val fileInputStream = openFileInput("options.txt")
-            val inputStreamReader = InputStreamReader(fileInputStream)
-            val bufferedReader = BufferedReader(inputStreamReader)
-            val stringBuilder = StringBuilder()
-            var text: String? = null
-            while ({ text = bufferedReader.readLine(); text }() != null) {
-                stringBuilder.append(text)
-            }
-            CurrentUser.options = Klaxon().parse(stringBuilder.toString())
-            bufferedReader.close()
+        val sharedPreferences = getSharedPreferences("ChatOptions", Context.MODE_PRIVATE)
+        val options = sharedPreferences.getString("options", "")
+        if (options != null && options.isNotEmpty()) {
+            CurrentUser.options = Klaxon().parse(options)
         } else {
             CurrentUser.options = Options()
         }
