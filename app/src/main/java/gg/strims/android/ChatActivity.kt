@@ -323,6 +323,10 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 val item = adapter.getItem(i) as ChatMessage
                 item.adapter = null
                 item.sendMessageText = null
+            } else if (adapter.getItem(i).layout == R.layout.private_chat_message_item) {
+                val item = adapter.getItem(i) as PrivateChatMessage
+                item.adapter = null
+                item.sendMessageText = null
             }
         }
         super.onSaveInstanceState(outState)

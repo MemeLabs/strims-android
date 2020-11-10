@@ -24,10 +24,10 @@ import java.text.SimpleDateFormat
 @KtorExperimentalAPI
 class PrivateChatMessage(
     private val context: Context,
-    private val adapter: GroupAdapter<GroupieViewHolder>,
+    var adapter: GroupAdapter<GroupieViewHolder>?,
     private val messageData: Message,
     private val isReceived: Boolean = false,
-    private val sendMessageText: EditText? = null
+    var sendMessageText: EditText? = null
 ) :
     Item<GroupieViewHolder>() {
     override fun getLayout(): Int = R.layout.private_chat_message_item
@@ -91,7 +91,7 @@ class PrivateChatMessage(
                 CurrentUser.tempHighlightNick = mutableListOf()
             }
             CurrentUser.tempHighlightNick!!.add(messageData.nick)
-            adapter.notifyDataSetChanged()
+            adapter?.notifyDataSetChanged()
         }
 
         if (sendMessageText != null) {
@@ -102,28 +102,28 @@ class PrivateChatMessage(
                 pop.setOnMenuItemClickListener { itMenuItem ->
                     when (itMenuItem.itemId) {
                         R.id.chatWhisper -> {
-                            sendMessageText.setText("/w ${messageData.nick} ")
-                            keyRequestFocus(sendMessageText, context)
-                            sendMessageText.setSelection(sendMessageText.text.length)
+                            sendMessageText!!.setText("/w ${messageData.nick} ")
+                            keyRequestFocus(sendMessageText!!, context)
+                            sendMessageText!!.setSelection(sendMessageText!!.text.length)
                         }
                         R.id.chatMention -> {
-                            val currentMessage = sendMessageText.text.toString()
+                            val currentMessage = sendMessageText!!.text.toString()
                             if (currentMessage.isNotEmpty()) {
                                 if (currentMessage.last() == ' ') {
-                                    sendMessageText.setText(currentMessage.plus("${messageData.nick} "))
+                                    sendMessageText!!.setText(currentMessage.plus("${messageData.nick} "))
                                 } else {
-                                    sendMessageText.setText(currentMessage.plus(" ${messageData.nick} "))
+                                    sendMessageText!!.setText(currentMessage.plus(" ${messageData.nick} "))
                                 }
                             } else {
-                                sendMessageText.setText("${messageData.nick} ")
+                                sendMessageText!!.setText("${messageData.nick} ")
                             }
-                            keyRequestFocus(sendMessageText, context)
-                            sendMessageText.setSelection(sendMessageText.text.length)
+                            keyRequestFocus(sendMessageText!!, context)
+                            sendMessageText!!.setSelection(sendMessageText!!.text.length)
                         }
                         R.id.chatIgnore -> {
                             CurrentUser.options!!.ignoreList.add(messageData.nick)
                             CurrentUser.saveOptions(context)
-                            adapter.notifyDataSetChanged()
+                            adapter?.notifyDataSetChanged()
                         }
                     }
                     true
@@ -133,9 +133,14 @@ class PrivateChatMessage(
             }
         }
 
+        viewHolder.itemView.messagePrivateMessage.setOnClickListener {
+            CurrentUser.tempHighlightNick = null
+            adapter?.notifyDataSetChanged()
+        }
+
         viewHolder.itemView.setOnClickListener {
             CurrentUser.tempHighlightNick = null
-            adapter.notifyDataSetChanged()
+            adapter?.notifyDataSetChanged()
         }
     }
 
