@@ -14,7 +14,6 @@ import android.view.animation.ScaleAnimation
 import android.view.animation.TranslateAnimation
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.recyclerview.widget.RecyclerView
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
@@ -32,7 +31,6 @@ class ChatMessageCombo(
     private val messageData: Message,
     private val context: Context,
     private val adapter: GroupAdapter<GroupieViewHolder>,
-    private val recyclerViewChat: RecyclerView,
     private var count: Int = 2
 ) :
     Item<GroupieViewHolder>() {
@@ -64,27 +62,12 @@ class ChatMessageCombo(
         }
         if (CurrentUser.tempHighlightNick != null) {
             viewHolder.itemView.alpha = 0.5f
+        } else {
+            viewHolder.itemView.alpha = 1f
         }
         viewHolder.itemView.setOnClickListener {
             CurrentUser.tempHighlightNick = null
-            for (i in 0 until adapter.itemCount) {
-                if (adapter.getItem(i).layout == R.layout.chat_message_item || adapter.getItem(i).layout == R.layout.chat_message_item_consecutive_nick) {
-                    val adapterItem =
-                        recyclerViewChat.findViewHolderForAdapterPosition(i)
-                    adapterItem?.itemView?.alpha = 1f
-
-                } else if (adapter.getItem(i).layout == R.layout.private_chat_message_item) {
-                    val adapterItem =
-                        recyclerViewChat.findViewHolderForAdapterPosition(i)
-                    adapterItem?.itemView?.alpha = 1f
-
-                } else {
-                    val adapterItem =
-                        recyclerViewChat.findViewHolderForAdapterPosition(i)
-                    adapterItem?.itemView?.alpha = 1f
-                }
-                adapter.notifyItemChanged(i)
-            }
+            adapter.notifyDataSetChanged()
         }
 
         viewHolder.itemView.comboCountChatMessageCombo.text = "$count"

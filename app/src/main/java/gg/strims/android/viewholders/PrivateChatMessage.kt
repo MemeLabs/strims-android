@@ -8,7 +8,6 @@ import android.view.View
 import android.widget.EditText
 import android.widget.PopupMenu
 import androidx.appcompat.view.ContextThemeWrapper
-import androidx.recyclerview.widget.RecyclerView
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
@@ -26,7 +25,6 @@ import java.text.SimpleDateFormat
 class PrivateChatMessage(
     private val context: Context,
     private val adapter: GroupAdapter<GroupieViewHolder>,
-    private val recyclerViewChat: RecyclerView,
     private val messageData: Message,
     private val isReceived: Boolean = false,
     private val sendMessageText: EditText? = null
@@ -89,57 +87,11 @@ class PrivateChatMessage(
         )
 
         viewHolder.itemView.usernamePrivateMessage.setOnClickListener {
-            for (i in 0 until adapter.itemCount) {
-                if (adapter.getItem(i).layout == R.layout.chat_message_item || adapter.getItem(i).layout == R.layout.chat_message_item_consecutive_nick) {
-                    val item = adapter.getItem(i) as ChatMessage
-                    if (item.isNickSame(messageData.nick)) {
-                        val adapterItem =
-                            recyclerViewChat.findViewHolderForAdapterPosition(i)
-                        adapterItem?.itemView?.alpha = 1f
-
-                    } else {
-
-                        val adapterItem =
-                            recyclerViewChat.findViewHolderForAdapterPosition(i)
-
-                        if (CurrentUser.tempHighlightNick != null && CurrentUser.tempHighlightNick!!.contains(
-                                item.getNick()
-                            )
-                        ) {
-                            adapterItem?.itemView?.alpha = 1f
-                        } else {
-                            adapterItem?.itemView?.alpha = 0.5f
-                        }
-                    }
-                } else if (adapter.getItem(i).layout == R.layout.private_chat_message_item) {
-                    val item = adapter.getItem(i) as PrivateChatMessage
-                    if (item.messageData.nick == messageData.nick) {
-                        val adapterItem =
-                            recyclerViewChat.findViewHolderForAdapterPosition(i)
-                        adapterItem?.itemView?.alpha = 1f
-                    } else {
-                        val adapterItem =
-                            recyclerViewChat.findViewHolderForAdapterPosition(i)
-                        if (CurrentUser.tempHighlightNick != null && CurrentUser.tempHighlightNick!!.contains(
-                                item.getNick()
-                            )
-                        ) {
-                            adapterItem?.itemView?.alpha = 1f
-                        } else {
-                            adapterItem?.itemView?.alpha = 0.5f
-                        }
-                    }
-                } else {
-                    val adapterItem =
-                        recyclerViewChat.findViewHolderForAdapterPosition(i)
-                    adapterItem?.itemView?.alpha = 0.5f
-                }
-                adapter.notifyItemChanged(i)
-            }
             if (CurrentUser.tempHighlightNick == null) {
                 CurrentUser.tempHighlightNick = mutableListOf()
             }
             CurrentUser.tempHighlightNick!!.add(messageData.nick)
+            adapter.notifyDataSetChanged()
         }
 
         if (sendMessageText != null) {
@@ -183,32 +135,11 @@ class PrivateChatMessage(
 
         viewHolder.itemView.setOnClickListener {
             CurrentUser.tempHighlightNick = null
-            for (i in 0 until adapter.itemCount) {
-                if (adapter.getItem(i).layout == R.layout.chat_message_item || adapter.getItem(i).layout == R.layout.chat_message_item_consecutive_nick) {
-                    val adapterItem =
-                        recyclerViewChat.findViewHolderForAdapterPosition(i)
-                    adapterItem?.itemView?.alpha = 1f
-
-                } else if (adapter.getItem(i).layout == R.layout.private_chat_message_item) {
-                    val adapterItem =
-                        recyclerViewChat.findViewHolderForAdapterPosition(i)
-                    adapterItem?.itemView?.alpha = 1f
-
-                } else {
-                    val adapterItem =
-                        recyclerViewChat.findViewHolderForAdapterPosition(i)
-                    adapterItem?.itemView?.alpha = 1f
-                }
-                adapter.notifyItemChanged(i)
-            }
+            adapter.notifyDataSetChanged()
         }
     }
 
     fun isNickSame(nick: String): Boolean {
         return nick == messageData.nick
-    }
-
-    fun getNick(): String {
-        return messageData.nick
     }
 }

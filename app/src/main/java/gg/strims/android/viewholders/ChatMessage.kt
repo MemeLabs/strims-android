@@ -8,7 +8,6 @@ import android.view.View
 import android.widget.EditText
 import android.widget.PopupMenu
 import androidx.appcompat.view.ContextThemeWrapper
-import androidx.recyclerview.widget.RecyclerView
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
@@ -23,11 +22,10 @@ import java.util.*
 @SuppressLint("SimpleDateFormat", "SetTextI18n")
 class ChatMessage(
     private val context: Context,
-    private val adapter: GroupAdapter<GroupieViewHolder>,
-    private val recyclerViewChat: RecyclerView,
+    var adapter: GroupAdapter<GroupieViewHolder>?,
     val messageData: Message,
     private val isConsecutive: Boolean = false,
-    private val sendMessageText: EditText? = null
+    var sendMessageText: EditText? = null
 ) :
     Item<GroupieViewHolder>() {
     override fun getLayout(): Int {
@@ -133,57 +131,11 @@ class ChatMessage(
         createMessageTextView(context, messageData, viewHolder.itemView.messageChatMessage)
 
         viewHolder.itemView.usernameChatMessage.setOnClickListener {
-            for (i in 0 until adapter.itemCount) {
-                if (adapter.getItem(i).layout == R.layout.chat_message_item || adapter.getItem(i).layout == R.layout.chat_message_item_consecutive_nick) {
-                    val item = adapter.getItem(i) as ChatMessage
-                    if (item.isNickSame(messageData.nick)) {
-                        val adapterItem =
-                            recyclerViewChat.findViewHolderForAdapterPosition(i)
-                        adapterItem?.itemView?.alpha = 1f
-                    } else {
-                        val adapterItem =
-                            recyclerViewChat.findViewHolderForAdapterPosition(i)
-                        if (CurrentUser.tempHighlightNick != null && CurrentUser.tempHighlightNick!!.contains(
-                                item.getNick()
-                            )
-                        ) {
-                            adapterItem?.itemView?.alpha = 1f
-                        } else {
-                            adapterItem?.itemView?.alpha = 0.5f
-                        }
-
-                    }
-
-
-                } else if (adapter.getItem(i).layout == R.layout.private_chat_message_item) {
-                    val item = adapter.getItem(i) as PrivateChatMessage
-                    if (item.isNickSame(messageData.nick)) {
-                        val adapterItem =
-                            recyclerViewChat.findViewHolderForAdapterPosition(i)
-                        adapterItem?.itemView?.alpha = 1f
-                    } else {
-                        val adapterItem =
-                            recyclerViewChat.findViewHolderForAdapterPosition(i)
-                        if (CurrentUser.tempHighlightNick != null && CurrentUser.tempHighlightNick!!.contains(
-                                item.getNick()
-                            )
-                        ) {
-                            adapterItem?.itemView?.alpha = 1f
-                        } else {
-                            adapterItem?.itemView?.alpha = 0.5f
-                        }
-                    }
-                } else {
-                    val adapterItem =
-                        recyclerViewChat.findViewHolderForAdapterPosition(i)
-                    adapterItem?.itemView?.alpha = 0.5f
-                }
-                adapter.notifyItemChanged(i)
-            }
             if (CurrentUser.tempHighlightNick == null) {
                 CurrentUser.tempHighlightNick = mutableListOf()
             }
             CurrentUser.tempHighlightNick!!.add(messageData.nick)
+            adapter?.notifyDataSetChanged()
         }
 
         if (sendMessageText != null) {
@@ -194,28 +146,28 @@ class ChatMessage(
                 pop.setOnMenuItemClickListener { itMenuItem ->
                     when (itMenuItem.itemId) {
                         R.id.chatWhisper -> {
-                            sendMessageText.setText("/w ${messageData.nick} ")
-                            keyRequestFocus(sendMessageText, context)
-                            sendMessageText.setSelection(sendMessageText.text.length)
+                            sendMessageText!!.setText("/w ${messageData.nick} ")
+                            keyRequestFocus(sendMessageText!!, context)
+                            sendMessageText!!.setSelection(sendMessageText!!.text.length)
                         }
                         R.id.chatMention -> {
-                            val currentMessage = sendMessageText.text.toString()
+                            val currentMessage = sendMessageText!!.text.toString()
                             if (currentMessage.isNotEmpty()) {
                                 if (currentMessage.last() == ' ') {
-                                    sendMessageText.setText(currentMessage.plus("${messageData.nick} "))
+                                    sendMessageText!!.setText(currentMessage.plus("${messageData.nick} "))
                                 } else {
-                                    sendMessageText.setText(currentMessage.plus(" ${messageData.nick} "))
+                                    sendMessageText!!.setText(currentMessage.plus(" ${messageData.nick} "))
                                 }
                             } else {
-                                sendMessageText.setText("${messageData.nick} ")
+                                sendMessageText!!.setText("${messageData.nick} ")
                             }
-                            keyRequestFocus(sendMessageText, context)
-                            sendMessageText.setSelection(sendMessageText.text.length)
+                            keyRequestFocus(sendMessageText!!, context)
+                            sendMessageText!!.setSelection(sendMessageText!!.text.length)
                         }
                         R.id.chatIgnore -> {
                             CurrentUser.options!!.ignoreList.add(messageData.nick)
                             CurrentUser.saveOptions(context)
-                            adapter.notifyDataSetChanged()
+                            adapter?.notifyDataSetChanged()
                         }
                     }
                     true
@@ -225,27 +177,16 @@ class ChatMessage(
             }
         }
 
+        viewHolder.itemView.messageChatMessage.setOnClickListener {
+            CurrentUser.tempHighlightNick = null
+            adapter?.notifyDataSetChanged()
+        }
+
         viewHolder.itemView.setOnClickListener {
             CurrentUser.tempHighlightNick = null
-            for (i in 0 until adapter.itemCount) {
-                if (adapter.getItem(i).layout == R.layout.chat_message_item || adapter.getItem(i).layout == R.layout.chat_message_item_consecutive_nick) {
-                    val adapterItem =
-                        recyclerViewChat.findViewHolderForAdapterPosition(i)
-                    adapterItem?.itemView?.alpha = 1f
-
-                } else if (adapter.getItem(i).layout == R.layout.private_chat_message_item) {
-                    val adapterItem =
-                        recyclerViewChat.findViewHolderForAdapterPosition(i)
-                    adapterItem?.itemView?.alpha = 1f
-
-                } else {
-                    val adapterItem =
-                        recyclerViewChat.findViewHolderForAdapterPosition(i)
-                    adapterItem?.itemView?.alpha = 1f
-                }
-                adapter.notifyItemChanged(i)
-            }
+            adapter?.notifyDataSetChanged()
         }
+
         if (isConsecutive) {
             viewHolder.itemView.usernameChatMessage.visibility = View.GONE
             viewHolder.itemView.botFlairChatMessage.visibility = View.GONE
@@ -254,9 +195,5 @@ class ChatMessage(
 
     fun isNickSame(nick: String): Boolean {
         return messageData.nick == nick
-    }
-
-    fun getNick(): String {
-        return messageData.nick
     }
 }

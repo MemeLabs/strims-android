@@ -61,8 +61,6 @@ import kotlinx.android.synthetic.main.nav_header_main.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import java.io.BufferedReader
-import java.io.InputStreamReader
 import java.net.URL
 import java.util.*
 import java.util.regex.Matcher
@@ -137,7 +135,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             message,
                             this@ChatActivity,
                             adapter,
-                            recyclerViewChat
                         )
                     )
                 } else {
@@ -160,7 +157,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     ChatMessage(
                         this@ChatActivity,
                         adapter,
-                        recyclerViewChat,
                         message,
                         consecutiveMessage,
                         sendMessageText
@@ -214,7 +210,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                                 PrivateChatMessage(
                                     this@ChatActivity,
                                     adapter,
-                                    recyclerViewChat,
                                     message,
                                     isReceived,
                                     sendMessageText
@@ -246,7 +241,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         ChatMessage(
                             this@ChatActivity,
                             adapter,
-                            recyclerViewChat,
                             Message(
                                 false,
                                 "Info",
@@ -321,6 +315,15 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             chatViewModel?.visibleStream = "twitch"
         } else if (CurrentUser.tempYouTubeId != null) {
             chatViewModel?.visibleStream = "youtube"
+        }
+
+        for (i in 0 until adapter.itemCount) {
+            if (adapter.getItem(i).layout == R.layout.chat_message_item ||
+                adapter.getItem(i).layout == R.layout.chat_message_item_consecutive_nick) {
+                val item = adapter.getItem(i) as ChatMessage
+                item.adapter = null
+                item.sendMessageText = null
+            }
         }
         super.onSaveInstanceState(outState)
     }
@@ -412,6 +415,15 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     }
                 }
             }
+
+            for (i in 0 until adapter.itemCount) {
+                if (adapter.getItem(i).layout == R.layout.chat_message_item ||
+                    adapter.getItem(i).layout == R.layout.chat_message_item_consecutive_nick) {
+                    val item = adapter.getItem(i) as ChatMessage
+                    item.adapter = adapter
+                    item.sendMessageText = sendMessageText
+                }
+            }
         } else {
             CurrentUser.bitmapMemoryCache = HashMap()
             CurrentUser.gifMemoryCache = HashMap()
@@ -435,7 +447,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 retrieveEmotes()
                 Log.d("TAG", "EMOTES ENDING ${(System.currentTimeMillis() - CurrentUser.time)}")
             }
-
         }
 
         sendMessageText.addTextChangedListener(object : TextWatcher {
@@ -495,6 +506,13 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     }
                 } else if (sendMessageText.text.isEmpty()) {
                     recyclerViewAutofill.visibility = View.GONE
+                    val layoutTest = recyclerViewChat.layoutManager as LinearLayoutManager
+                    val lastItem = layoutTest.findLastVisibleItemPosition()
+                    if (lastItem < recyclerViewChat.adapter!!.itemCount - 1) {
+                        goToBottomLayout.visibility = View.VISIBLE
+                    } else {
+                        goToBottomLayout.visibility = View.GONE
+                    }
                 }
             }
         })
@@ -618,7 +636,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         ChatMessage(
                             this@ChatActivity,
                             adapter,
-                            recyclerViewChat,
                             Message(
                                 false,
                                 "Info",
@@ -636,7 +653,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             ChatMessage(
                                 this@ChatActivity,
                                 adapter,
-                                recyclerViewChat,
                                 Message(
                                     false,
                                     "Info",
@@ -649,7 +665,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             ChatMessage(
                                 this@ChatActivity,
                                 adapter,
-                                recyclerViewChat,
                                 Message(
                                     false,
                                     "Info",
@@ -666,7 +681,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             ChatMessage(
                                 this@ChatActivity,
                                 adapter,
-                                recyclerViewChat,
                                 Message(
                                     false,
                                     "Info",
@@ -681,7 +695,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             ChatMessage(
                                 this@ChatActivity,
                                 adapter,
-                                recyclerViewChat,
                                 Message(
                                     false,
                                     "Info",
@@ -700,7 +713,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             ChatMessage(
                                 this@ChatActivity,
                                 adapter,
-                                recyclerViewChat,
                                 Message(
                                     false,
                                     "Info",
@@ -713,7 +725,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             ChatMessage(
                                 this@ChatActivity,
                                 adapter,
-                                recyclerViewChat,
                                 Message(
                                     false,
                                     "Info",
@@ -727,7 +738,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         ChatMessage(
                             this@ChatActivity,
                             adapter,
-                            recyclerViewChat,
                             Message(
                                 false,
                                 "Info",
@@ -740,7 +750,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         ChatMessage(
                             this@ChatActivity,
                             adapter,
-                            recyclerViewChat,
                             Message(
                                 false,
                                 "Info",
@@ -1059,7 +1068,6 @@ class ChatActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         ChatMessage(
                             this@ChatActivity,
                             adapter,
-                            recyclerViewChat,
                             Message(
                                 false,
                                 "Info",
