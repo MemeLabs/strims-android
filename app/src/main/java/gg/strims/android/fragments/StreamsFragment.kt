@@ -54,10 +54,6 @@ class StreamsFragment : Fragment() {
         }
         recyclerViewStreams.adapter = streamsAdapter
 
-//        requireActivity().toolbar.title = "Streams"
-//
-//        requireActivity().nav_view.setCheckedItem(R.id.nav_Streams)
-
         displayStreams()
     }
 
@@ -146,47 +142,27 @@ class StreamsFragment : Fragment() {
             }
 
             viewHolder.itemView.setOnClickListener {
-//                for (i in 0..parentFragmentManager.backStackEntryCount) {
-//                    parentFragmentManager.popBackStack()
-//                }
-//
-//                hideFragment(activity!!, parentFragmentManager.findFragmentById(R.id.angelthump_fragment)!!)
-//                hideFragment(activity!!, parentFragmentManager.findFragmentById(R.id.twitch_fragment)!!)
-//                hideFragment(activity!!, parentFragmentManager.findFragmentById(R.id.youtube_fragment)!!)
-
                 CurrentUser.tempTwitchUrl = null
                 CurrentUser.tempTwitchVod = null
                 CurrentUser.tempStream = null
                 CurrentUser.tempYouTubeId = null
-
-//                val navView = requireActivity().findViewById<NavigationView>(R.id.nav_view)
-//                navView.setCheckedItem(R.id.nav_Chat)
-//                requireActivity().toolbar.title = "Chat"
 
                 requireActivity().onBackPressed()
 
                 when (stream.service) {
                     "angelthump", "m3u8" -> {
                         CurrentUser.tempStream = stream
-//                        val fragment = parentFragmentManager.findFragmentById(R.id.angelthump_fragment)
-//                        showFragment(activity!!, fragment!!)
                     }
                     "twitch" -> {
                         CurrentUser.tempTwitchUrl = stream.channel
                         CurrentUser.tempTwitchVod = false
-//                        val fragment = parentFragmentManager.findFragmentById(R.id.twitch_fragment)
-//                        showFragment(activity!!, fragment!!)
                     }
                     "youtube" -> {
                         CurrentUser.tempYouTubeId = stream.channel
-//                        val fragment = parentFragmentManager.findFragmentById(R.id.youtube_fragment)
-//                        showFragment(activity!!, fragment!!)
                     }
                     "twitch-vod" -> {
                         CurrentUser.tempTwitchUrl = stream.channel
                         CurrentUser.tempTwitchVod = true
-//                        val fragment = parentFragmentManager.findFragmentById(R.id.twitch_fragment)
-//                        showFragment(activity!!, fragment!!)
                     }
                 }
                 requireContext().sendBroadcast(Intent("gg.strims.android.SHOWSTREAM"))

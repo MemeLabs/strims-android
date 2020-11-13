@@ -154,7 +154,7 @@
         tools:layout="@layout/fragment_youtube"
         tools:visibility="gone" />
 
-    <androidx.fragment.app.FragmentContainerView
+    <fragment
         android:id="@+id/user_list_fragment"
         android:name="gg.strims.android.fragments.UserListFragment"
         android:layout_width="0dp"
@@ -172,7 +172,7 @@
         tools:layout="@layout/fragment_user_list"
         tools:visibility="gone" />
 
-    <androidx.fragment.app.FragmentContainerView
+    <fragment
         android:id="@+id/emote_menu_fragment"
         android:name="gg.strims.android.fragments.EmotesMenuFragment"
         android:layout_width="0dp"

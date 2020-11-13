@@ -51,10 +51,6 @@ class OptionsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         sharedPreferences = requireActivity().getSharedPreferences("ChatOptions", Context.MODE_PRIVATE).edit()
 
-//        requireActivity().toolbar.title = "Settings"
-//
-//        requireActivity().nav_view.setCheckedItem(R.id.nav_Settings)
-
         retrieveOptions()
 
         saveOptionsButton.setOnClickListener {

@@ -27,7 +27,6 @@ class TwitchFragment: Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-//        hideFragment(requireActivity(), this)
         hideChildFragment(requireParentFragment(), this)
 
         webViewTwitch.settings.domStorageEnabled = true

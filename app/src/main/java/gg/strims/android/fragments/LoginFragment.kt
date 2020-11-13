@@ -27,8 +27,6 @@ class LoginFragment: Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-//        requireActivity().toolbar.title = "Login"
-
         loginWebView.settings.javaScriptEnabled = true
         loginWebView.settings.domStorageEnabled = true
         loginWebView.loadUrl("https://strims.gg/login")
@@ -39,12 +37,6 @@ class LoginFragment: Fragment() {
                     activity.stopService(activity.chatSocketIntent)
                     activity.startService(activity.chatSocketIntent)
                     requireActivity().onBackPressed()
-//                    parentFragmentManager.beginTransaction()
-//                        .remove(this@LoginFragment)
-//                        .commit()
-//                    parentFragmentManager.popBackStack()
-//                    activity.toolbar.title = "Chat"
-//                    activity.progressBar.visibility = View.VISIBLE
                 }
             }
         }

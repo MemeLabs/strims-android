@@ -51,10 +51,6 @@ class WhispersFragment : Fragment() {
         recyclerViewWhispers.layoutManager = LinearLayoutManager(view.context)
         recyclerViewWhispers.adapter = whispersAdapter
 
-//        requireActivity().toolbar.title = "Private Messages"
-//
-//        requireActivity().nav_view.setCheckedItem(R.id.nav_Whispers)
-
         recyclerViewWhispers.addItemDecoration(
             MarginItemDecoration(
                 (TypedValue.applyDimension(

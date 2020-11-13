@@ -57,16 +57,9 @@ class AngelThumpFragment: Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-//        hideFragment(requireActivity(), this)
         hideChildFragment(requireParentFragment(), this)
 
         exoPlayerViewModel = ViewModelProvider(this).get(ExoPlayerViewModel::class.java)
-
-        exoPlayerViewModel.liveDataPlayer.observe(viewLifecycleOwner, {
-            it.let {
-                Log.d("TAG", "${exoPlayerViewModel.liveDataPlayer.value}")
-            }
-        })
 
         angelThumpClose.setOnClickListener {
             exoPlayerViewModel.player?.release()

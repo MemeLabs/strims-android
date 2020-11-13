@@ -55,10 +55,6 @@ class ProfileFragment: Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-//        requireActivity().toolbar.title = "Profile"
-//
-//        requireActivity().nav_view.setCheckedItem(R.id.nav_Profile)
-
         val spinnerArray = resources.getStringArray(R.array.streaming_service_spinner)
 
         val arrayAdapter = ArrayAdapter(requireContext(), R.layout.spinner_item, spinnerArray)

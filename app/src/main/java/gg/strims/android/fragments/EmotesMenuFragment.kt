@@ -37,6 +37,7 @@ class EmotesMenuFragment : Fragment() {
         requireParentFragment().childFragmentManager.beginTransaction()
             .hide(this)
             .commit()
+
         recyclerViewEmoteMenu.layoutManager = GridLayoutManager(
             view.context,
             if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) 8 else 5

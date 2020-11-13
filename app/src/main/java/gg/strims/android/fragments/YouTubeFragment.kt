@@ -43,7 +43,6 @@ class YouTubeFragment: Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-//        hideFragment(requireActivity(), this)
         hideChildFragment(requireParentFragment(), this)
 
         lifecycle.addObserver(youTubeView)
