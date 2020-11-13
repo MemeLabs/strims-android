@@ -89,6 +89,10 @@ class AngelThumpFragment: Fragment() {
 
     override fun onHiddenChanged(hidden: Boolean) {
         if (CurrentUser.tempStream != null && !hidden) {
+            CurrentUser.liveDataStream.observe(viewLifecycleOwner, {
+
+            })
+
             player = SimpleExoPlayer.Builder(requireView().context).build()
             angelThumpVideoView.player = player
 

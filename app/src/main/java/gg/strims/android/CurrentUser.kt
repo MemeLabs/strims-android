@@ -2,6 +2,7 @@ package gg.strims.android
 
 import android.content.Context
 import android.graphics.Bitmap
+import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
 import gg.strims.android.models.*
 import io.ktor.util.*
@@ -24,6 +25,8 @@ object CurrentUser {
     var viewerStates: MutableList<ViewerState>? = null // Collection of ViewerStates
     lateinit var bitmapMemoryCache: HashMap<String, Bitmap> // Collection of all emote Bitmaps
     lateinit var gifMemoryCache: HashMap<String, GifDrawable> // Collection of all animated emote GifDrawables
+
+    var liveDataStream = MutableLiveData<Stream>()
 
     val time = System.currentTimeMillis()
 
