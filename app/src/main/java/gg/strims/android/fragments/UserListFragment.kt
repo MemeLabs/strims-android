@@ -1,7 +1,6 @@
 package gg.strims.android.fragments
 
 import android.annotation.SuppressLint
-import android.graphics.Color
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -15,15 +14,15 @@ import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
 import gg.strims.android.CurrentUser
 import gg.strims.android.R
-import gg.strims.android.hideFragment
 import gg.strims.android.keyRequestFocus
 import io.ktor.util.*
-import kotlinx.android.synthetic.main.activity_chat.*
 import kotlinx.android.synthetic.main.fragment_user_list.*
 import kotlinx.android.synthetic.main.chat_user_item.view.*
+import kotlinx.android.synthetic.main.fragment_chat.*
 import java.util.*
 
 @KtorExperimentalAPI
+@SuppressLint("SetTextI18n")
 class UserListFragment : Fragment() {
     private val userListAdapter =
         GroupAdapter<GroupieViewHolder>()
@@ -80,7 +79,9 @@ class UserListFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        hideFragment(requireActivity(), this)
+        requireParentFragment().childFragmentManager.beginTransaction()
+            .hide(this)
+            .commit()
         val layoutManager =
             LinearLayoutManager(view.context)
         layoutManager.stackFromEnd = true
@@ -88,7 +89,10 @@ class UserListFragment : Fragment() {
         recyclerViewUserList.adapter = userListAdapter
 
         closeUserListButton.setOnClickListener {
-            hideFragment(requireActivity(), this@UserListFragment)
+            requireParentFragment().childFragmentManager.beginTransaction()
+                .setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
+                .hide(this)
+                .commit()
         }
     }
 
@@ -96,31 +100,20 @@ class UserListFragment : Fragment() {
 
         override fun getLayout(): Int = R.layout.chat_user_item
 
-        @SuppressLint("SetTextI18n")
         override fun bind(viewHolder: GroupieViewHolder, position: Int) {
             viewHolder.itemView.chatUserUsername.text = user
-            viewHolder.itemView.chatUserUsername.setTextColor(
-                Color.parseColor(
-                    "#FFFFFF"
-                )
-            )
 
             viewHolder.itemView.chatUserUsername.setOnClickListener {
-                activity!!.sendMessageText.setText("/w $user ")
+                parentFragment!!.sendMessageText.setText("/w $user ")
                 keyRequestFocus(
-                    activity!!.sendMessageText,
+                    parentFragment!!.sendMessageText,
                     context!!
                 )
-                activity!!.sendMessageText.setSelection(activity!!.sendMessageText.text.length)
-                val fragment = this@UserListFragment
-                val fragmentTransaction = parentFragmentManager.beginTransaction()
-                fragmentTransaction.setCustomAnimations(
-                    android.R.anim.fade_in,
-                    android.R.anim.fade_out
-                )
-                    .hide(fragment)
-
-                fragmentTransaction.commit()
+                requireParentFragment().childFragmentManager.beginTransaction()
+                    .setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
+                    .hide(this@UserListFragment)
+                    .commit()
+                parentFragment!!.sendMessageText.setSelection(parentFragment!!.sendMessageText.text.length)
             }
         }
     }

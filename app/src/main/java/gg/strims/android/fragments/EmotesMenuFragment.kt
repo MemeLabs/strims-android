@@ -13,13 +13,10 @@ import androidx.recyclerview.widget.GridLayoutManager
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
-import gg.strims.android.ChatActivity
-import gg.strims.android.CurrentUser
-import gg.strims.android.R
-import gg.strims.android.hideFragment
+import gg.strims.android.*
 import io.ktor.util.*
-import kotlinx.android.synthetic.main.activity_chat.*
 import kotlinx.android.synthetic.main.emote_menu_item.view.*
+import kotlinx.android.synthetic.main.fragment_chat.*
 import kotlinx.android.synthetic.main.fragment_emote_menu.*
 import pl.droidsonroids.gif.GifDrawable
 import java.util.*
@@ -33,12 +30,13 @@ class EmotesMenuFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_emote_menu, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        hideFragment(requireActivity(), this)
+        requireParentFragment().childFragmentManager.beginTransaction()
+            .hide(this)
+            .commit()
         recyclerViewEmoteMenu.layoutManager = GridLayoutManager(
             view.context,
             if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) 8 else 5
@@ -46,7 +44,10 @@ class EmotesMenuFragment : Fragment() {
         recyclerViewEmoteMenu.adapter = emoteMenuAdapter
 
         closeEmoteMenuButton.setOnClickListener {
-            hideFragment(requireActivity(), this@EmotesMenuFragment)
+            requireParentFragment().childFragmentManager.beginTransaction()
+                .setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
+                .hide(this)
+                .commit()
         }
 
         emoteMenuSearch.addTextChangedListener(object :
@@ -123,9 +124,16 @@ class EmotesMenuFragment : Fragment() {
             }
 
             viewHolder.itemView.imageViewEmote.setOnClickListener {
-                val activity = requireActivity() as ChatActivity
-                activity.sendMessageText.append("$name ")
-                hideFragment(requireActivity(), this@EmotesMenuFragment)
+                parentFragment!!.sendMessageText.append("$name ")
+                keyRequestFocus(
+                    parentFragment!!.sendMessageText,
+                    context!!
+                )
+                requireParentFragment().childFragmentManager.beginTransaction()
+                    .setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
+                    .hide(this@EmotesMenuFragment)
+                    .commit()
+                parentFragment!!.sendMessageText.setSelection(parentFragment!!.sendMessageText.text.length)
             }
         }
     }

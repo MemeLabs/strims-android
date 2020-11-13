@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
@@ -22,10 +23,7 @@ import gg.strims.android.customspans.MarginItemDecoration
 import gg.strims.android.room.PrivateMessage
 import gg.strims.android.viewmodels.PrivateMessagesViewModel
 import io.ktor.util.*
-import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.fragment_user_whispers.*
-import kotlinx.android.synthetic.main.fragment_user_whispers.goToBottom
-import kotlinx.android.synthetic.main.fragment_user_whispers.goToBottomLayout
 import kotlinx.android.synthetic.main.whisper_message_item_left.view.*
 import kotlinx.android.synthetic.main.whisper_message_item_right.view.*
 import kotlinx.android.synthetic.main.whisper_message_item_right.view.messageWhisperMessageItemLeft
@@ -43,6 +41,8 @@ class WhispersUserFragment : Fragment() {
 
     private var open = true
 
+    private val args: WhispersUserFragmentArgs by navArgs()
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -52,10 +52,10 @@ class WhispersUserFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        recyclerViewWhispersUser.layoutManager = LinearLayoutManager(view.context)
+        val layoutManager = LinearLayoutManager(view.context)
+        layoutManager.stackFromEnd = true
+        recyclerViewWhispersUser.layoutManager = layoutManager
         recyclerViewWhispersUser.adapter = whispersUserAdapter
-
-        requireActivity().toolbar.title = CurrentUser.tempWhisperUser
 
         recyclerViewWhispersUser.addItemDecoration(
             MarginItemDecoration(
@@ -66,6 +66,8 @@ class WhispersUserFragment : Fragment() {
                 )).toInt()
             )
         )
+
+        recyclerViewWhispersUser.itemAnimator = null
 
         recyclerViewWhispersUser.setOnScrollChangeListener { _, _, _, _, _ ->
             val layoutTest = recyclerViewWhispersUser.layoutManager as LinearLayoutManager
@@ -89,7 +91,7 @@ class WhispersUserFragment : Fragment() {
             val intent = Intent("gg.strims.android.SEND_MESSAGE")
             intent.putExtra(
                 "gg.strims.android.SEND_MESSAGE_TEXT",
-                "PRIVMSG {\"nick\":\"${CurrentUser.tempWhisperUser}\", \"data\":\"${sendMessageTextWhisper.text}\"}"
+                "PRIVMSG {\"nick\":\"${args.username}\", \"data\":\"${sendMessageTextWhisper.text}\"}"
             )
             requireActivity().sendBroadcast(intent)
             sendMessageTextWhisper.text.clear()
@@ -118,7 +120,7 @@ class WhispersUserFragment : Fragment() {
         privateMessagesViewModel = ViewModelProvider(this).get(PrivateMessagesViewModel::class.java)
         privateMessagesViewModel.privateMessages.observe(viewLifecycleOwner, { messages ->
             val newMessages = messages.filter {
-                (it.nick == CurrentUser.user!!.username && it.targetNick == CurrentUser.tempWhisperUser) || it.nick == CurrentUser.tempWhisperUser
+                (it.nick == CurrentUser.user!!.username && it.targetNick == args.username) || it.nick == args.username
             }
                 .reversed()
 

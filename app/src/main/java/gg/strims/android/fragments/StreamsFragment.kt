@@ -1,6 +1,7 @@
 package gg.strims.android.fragments
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -8,21 +9,20 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.navigation.NavigationView
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.squareup.picasso.Picasso
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
-import gg.strims.android.*
+import gg.strims.android.CurrentUser
+import gg.strims.android.R
 import gg.strims.android.models.Stream
-import io.ktor.util.KtorExperimentalAPI
-import kotlinx.android.synthetic.main.activity_chat.*
-import kotlinx.android.synthetic.main.activity_navigation_drawer.*
-import kotlinx.android.synthetic.main.app_bar_main.*
+import gg.strims.android.viewmodels.ExoPlayerViewModel
+import io.ktor.util.*
 import kotlinx.android.synthetic.main.fragment_streams.*
 import kotlinx.android.synthetic.main.stream_item.view.*
 
@@ -31,6 +31,8 @@ import kotlinx.android.synthetic.main.stream_item.view.*
 class StreamsFragment : Fragment() {
 
     private val streamsAdapter = GroupAdapter<GroupieViewHolder>()
+
+    private lateinit var exoPlayerViewModel: ExoPlayerViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -41,6 +43,8 @@ class StreamsFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        exoPlayerViewModel = ViewModelProvider(this).get(ExoPlayerViewModel::class.java)
+
         if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             val layoutManager = GridLayoutManager(view.context, 2)
             recyclerViewStreams.layoutManager = layoutManager
@@ -50,9 +54,9 @@ class StreamsFragment : Fragment() {
         }
         recyclerViewStreams.adapter = streamsAdapter
 
-        requireActivity().toolbar.title = "Streams"
-
-        requireActivity().nav_view.setCheckedItem(R.id.nav_Streams)
+//        requireActivity().toolbar.title = "Streams"
+//
+//        requireActivity().nav_view.setCheckedItem(R.id.nav_Streams)
 
         displayStreams()
     }
@@ -142,51 +146,50 @@ class StreamsFragment : Fragment() {
             }
 
             viewHolder.itemView.setOnClickListener {
-                for (i in 0..parentFragmentManager.backStackEntryCount) {
-                    parentFragmentManager.popBackStack()
-                }
-
-                hideFragment(activity!!, parentFragmentManager.findFragmentById(R.id.angelthump_fragment)!!)
-                hideFragment(activity!!, parentFragmentManager.findFragmentById(R.id.twitch_fragment)!!)
-                hideFragment(activity!!, parentFragmentManager.findFragmentById(R.id.youtube_fragment)!!)
+//                for (i in 0..parentFragmentManager.backStackEntryCount) {
+//                    parentFragmentManager.popBackStack()
+//                }
+//
+//                hideFragment(activity!!, parentFragmentManager.findFragmentById(R.id.angelthump_fragment)!!)
+//                hideFragment(activity!!, parentFragmentManager.findFragmentById(R.id.twitch_fragment)!!)
+//                hideFragment(activity!!, parentFragmentManager.findFragmentById(R.id.youtube_fragment)!!)
 
                 CurrentUser.tempTwitchUrl = null
                 CurrentUser.tempTwitchVod = null
                 CurrentUser.tempStream = null
                 CurrentUser.tempYouTubeId = null
 
-                val navView = requireActivity().findViewById<NavigationView>(R.id.nav_view)
-                navView.setCheckedItem(R.id.nav_Chat)
-                requireActivity().toolbar.title = "Chat"
+//                val navView = requireActivity().findViewById<NavigationView>(R.id.nav_view)
+//                navView.setCheckedItem(R.id.nav_Chat)
+//                requireActivity().toolbar.title = "Chat"
 
-                if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                    activity!!.constraintLayoutStream.visibility = View.VISIBLE
-                }
+                requireActivity().onBackPressed()
 
                 when (stream.service) {
                     "angelthump", "m3u8" -> {
                         CurrentUser.tempStream = stream
-                        val fragment = parentFragmentManager.findFragmentById(R.id.angelthump_fragment)
-                        showFragment(activity!!, fragment!!)
+//                        val fragment = parentFragmentManager.findFragmentById(R.id.angelthump_fragment)
+//                        showFragment(activity!!, fragment!!)
                     }
                     "twitch" -> {
                         CurrentUser.tempTwitchUrl = stream.channel
                         CurrentUser.tempTwitchVod = false
-                        val fragment = parentFragmentManager.findFragmentById(R.id.twitch_fragment)
-                        showFragment(activity!!, fragment!!)
+//                        val fragment = parentFragmentManager.findFragmentById(R.id.twitch_fragment)
+//                        showFragment(activity!!, fragment!!)
                     }
                     "youtube" -> {
                         CurrentUser.tempYouTubeId = stream.channel
-                        val fragment = parentFragmentManager.findFragmentById(R.id.youtube_fragment)
-                        showFragment(activity!!, fragment!!)
+//                        val fragment = parentFragmentManager.findFragmentById(R.id.youtube_fragment)
+//                        showFragment(activity!!, fragment!!)
                     }
                     "twitch-vod" -> {
                         CurrentUser.tempTwitchUrl = stream.channel
                         CurrentUser.tempTwitchVod = true
-                        val fragment = parentFragmentManager.findFragmentById(R.id.twitch_fragment)
-                        showFragment(activity!!, fragment!!)
+//                        val fragment = parentFragmentManager.findFragmentById(R.id.twitch_fragment)
+//                        showFragment(activity!!, fragment!!)
                     }
                 }
+                requireContext().sendBroadcast(Intent("gg.strims.android.SHOWSTREAM"))
             }
         }
     }

@@ -1,9 +1,5 @@
 package gg.strims.android.models
 
-import androidx.room.TypeConverter
-import com.beust.klaxon.Klaxon
-import com.google.gson.Gson
-
 class Entities(
     var emotes: List<ChatEmote>?,
     var spoilers: List<Bounds>?,

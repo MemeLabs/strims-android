@@ -1,5 +1,6 @@
 package gg.strims.android.fragments
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,14 +12,11 @@ import com.google.gson.Gson
 import gg.strims.android.ChatActivity
 import gg.strims.android.CurrentUser
 import gg.strims.android.R
-import io.ktor.client.HttpClient
-import io.ktor.client.features.websocket.WebSockets
-import io.ktor.client.request.header
-import io.ktor.client.request.post
-import io.ktor.util.KtorExperimentalAPI
-import kotlinx.android.synthetic.main.activity_chat.*
+import io.ktor.client.*
+import io.ktor.client.features.websocket.*
+import io.ktor.client.request.*
+import io.ktor.util.*
 import kotlinx.android.synthetic.main.activity_navigation_drawer.*
-import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.fragment_profile.*
 import kotlinx.android.synthetic.main.nav_header_main.*
 import kotlinx.coroutines.GlobalScope
@@ -57,9 +55,9 @@ class ProfileFragment: Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        requireActivity().toolbar.title = "Profile"
-
-        requireActivity().nav_view.setCheckedItem(R.id.nav_Profile)
+//        requireActivity().toolbar.title = "Profile"
+//
+//        requireActivity().nav_view.setCheckedItem(R.id.nav_Profile)
 
         val spinnerArray = resources.getStringArray(R.array.streaming_service_spinner)
 
@@ -87,23 +85,25 @@ class ProfileFragment: Fragment() {
                     }
                 }
             }
+
+            requireActivity().onBackPressed()
         }
 
         logOutProfile.setOnClickListener {
             CurrentUser.user = null
-            CurrentUser.tempWhisperUser = null
 
             deleteCookie()
             val activity = requireActivity() as ChatActivity
-            requireActivity().stopService(activity.chatSocketIntent)
-            requireActivity().startService(activity.chatSocketIntent)
+            activity.stopService(activity.chatSocketIntent)
+            activity.startService(activity.chatSocketIntent)
             activity.onBackPressed()
             activity.invalidateOptionsMenu()
             activity.navHeaderUsername.text = resources.getString(R.string.anonymous)
             activity.nav_view.menu.findItem(R.id.nav_Profile).isVisible = false
             activity.nav_view.menu.findItem(R.id.nav_Whispers).isVisible = false
-            activity.sendMessageText.hint = "Log in to send messages"
-            requireActivity().progressBar.visibility = View.VISIBLE
+            requireContext().sendBroadcast(Intent("gg.strims.android.LOGOUT"))
+//            activity.sendMessageText.hint = "Log in to send messages"
+//            requireActivity().progressBar.visibility = View.VISIBLE
         }
 
         fetchProfile()

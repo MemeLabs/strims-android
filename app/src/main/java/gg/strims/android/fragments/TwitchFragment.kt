@@ -9,9 +9,9 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import gg.strims.android.CurrentUser
 import gg.strims.android.R
-import gg.strims.android.hideFragment
+import gg.strims.android.hideChildFragment
 import io.ktor.util.*
-import kotlinx.android.synthetic.main.activity_chat.*
+import kotlinx.android.synthetic.main.fragment_chat.*
 import kotlinx.android.synthetic.main.fragment_twitch.*
 
 @SuppressLint("SetJavaScriptEnabled")
@@ -27,7 +27,8 @@ class TwitchFragment: Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        hideFragment(requireActivity(), this)
+//        hideFragment(requireActivity(), this)
+        hideChildFragment(requireParentFragment(), this)
 
         webViewTwitch.settings.domStorageEnabled = true
         webViewTwitch.settings.javaScriptEnabled = true
@@ -41,7 +42,8 @@ class TwitchFragment: Fragment() {
                 .commit()
 
             if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                requireActivity().constraintLayoutStream.visibility = View.GONE
+                val parentFragment = requireParentFragment() as ChatFragment
+                parentFragment.constraintLayoutStreamFragment.visibility = View.GONE
             }
         }
     }

@@ -21,7 +21,6 @@ object CurrentUser {
     var tempYouTubeId: String? = null // Currently playing YouTube Video ID
     var emotes: MutableList<Emote>? = null // Collection of all emote models
     var jwt: String? = null // JSON Web Token of current user
-    var tempWhisperUser: String? = null // User to be passed to WhispersUserFragment
     var viewerStates: MutableList<ViewerState>? = null // Collection of ViewerStates
     lateinit var bitmapMemoryCache: HashMap<String, Bitmap> // Collection of all emote Bitmaps
     lateinit var gifMemoryCache: HashMap<String, GifDrawable> // Collection of all animated emote GifDrawables

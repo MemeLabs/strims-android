@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/constraintLayoutChatMessageItem"
     android:layout_width="match_parent"
+    android:minHeight="30dp"
     android:layout_height="wrap_content"
     android:background="#000000">
 
@@ -39,9 +40,11 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="2dp"
         android:layout_marginEnd="4dp"
+        android:layout_marginBottom="4dp"
         android:maxWidth="200dp"
         android:text="@string/message"
         android:textColor="#AAAAAA"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/chevronChatMessage"
         app:layout_constraintTop_toTopOf="parent" />

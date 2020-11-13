@@ -177,9 +177,11 @@ class ChatMessage(
             }
         }
 
-        viewHolder.itemView.messageChatMessage.setOnClickListener {
-            CurrentUser.tempHighlightNick = null
-            adapter?.notifyDataSetChanged()
+        if (messageData.entities.spoilers!!.isEmpty()) {
+            viewHolder.itemView.messageChatMessage.setOnClickListener {
+                CurrentUser.tempHighlightNick = null
+                adapter?.notifyDataSetChanged()
+            }
         }
 
         viewHolder.itemView.setOnClickListener {

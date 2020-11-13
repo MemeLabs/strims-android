@@ -8,19 +8,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.RecyclerView
 import gg.strims.android.CurrentUser
 import gg.strims.android.R
-import io.ktor.util.KtorExperimentalAPI
-import kotlinx.android.synthetic.main.activity_navigation_drawer.*
-import kotlinx.android.synthetic.main.app_bar_main.*
+import io.ktor.util.*
 import kotlinx.android.synthetic.main.fragment_chat_options.*
 
 @KtorExperimentalAPI
 @SuppressLint("CommitPrefEdits")
 class OptionsFragment : Fragment() {
 
-    lateinit var sharedPreferences: SharedPreferences.Editor
+    private lateinit var sharedPreferences: SharedPreferences.Editor
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -39,6 +36,7 @@ class OptionsFragment : Fragment() {
             checkBoxNotifications.isChecked = CurrentUser.options!!.notifications
             checkBoxEmotes.isChecked = CurrentUser.options!!.emotes
             checkBoxViewerState.isChecked = CurrentUser.options!!.showViewerState
+            checkBoxPictureInPicture.isChecked = CurrentUser.options!!.pictureInPicture
 
             ignoredUsersTextViewOptions.text =
                 CurrentUser.options!!.ignoreList.toString()
@@ -53,44 +51,47 @@ class OptionsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         sharedPreferences = requireActivity().getSharedPreferences("ChatOptions", Context.MODE_PRIVATE).edit()
 
-        requireActivity().toolbar.title = "Settings"
-
-        requireActivity().nav_view.setCheckedItem(R.id.nav_Settings)
+//        requireActivity().toolbar.title = "Settings"
+//
+//        requireActivity().nav_view.setCheckedItem(R.id.nav_Settings)
 
         retrieveOptions()
 
         saveOptionsButton.setOnClickListener {
             CurrentUser.saveOptions(requireContext())
-            val recycler = requireActivity().findViewById<RecyclerView>(R.id.recyclerViewChat)
-            recycler.adapter!!.notifyDataSetChanged()
+            requireActivity().onBackPressed()
         }
 
         checkBoxTimestamp.setOnCheckedChangeListener { _, isChecked ->
-            CurrentUser.options!!.showTime = isChecked
+            CurrentUser.options?.showTime = isChecked
         }
 
         checkBoxGreentext.setOnCheckedChangeListener { _, isChecked ->
-            CurrentUser.options!!.greentext = isChecked
+            CurrentUser.options?.greentext = isChecked
         }
 
         checkBoxHarshIgnore.setOnCheckedChangeListener { _, isChecked ->
-            CurrentUser.options!!.harshIgnore = isChecked
+            CurrentUser.options?.harshIgnore = isChecked
         }
 
         checkBoxHideNsfw.setOnCheckedChangeListener { _, isChecked ->
-            CurrentUser.options!!.hideNsfw = isChecked
+            CurrentUser.options?.hideNsfw = isChecked
         }
 
         checkBoxNotifications.setOnCheckedChangeListener { _, isChecked ->
-            CurrentUser.options!!.notifications = isChecked
+            CurrentUser.options?.notifications = isChecked
         }
 
         checkBoxEmotes.setOnCheckedChangeListener { _, isChecked ->
-            CurrentUser.options!!.emotes = isChecked
+            CurrentUser.options?.emotes = isChecked
         }
 
         checkBoxViewerState.setOnCheckedChangeListener { _, isChecked ->
-            CurrentUser.options!!.showViewerState = isChecked
+            CurrentUser.options?.showViewerState = isChecked
+        }
+
+        checkBoxPictureInPicture.setOnCheckedChangeListener { _, isChecked ->
+            CurrentUser.options?.pictureInPicture = isChecked
         }
     }
 }

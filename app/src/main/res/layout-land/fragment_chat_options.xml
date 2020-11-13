@@ -2,6 +2,7 @@
 
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/constraintLayoutChatOptionsRoot"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -28,7 +29,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
-                android:buttonTint="#FF5722"
+                android:buttonTint="@color/orange"
                 android:text="@string/show_timestamps_on_messages"
                 android:textColor="#BBBBBB"
                 app:layout_constraintStart_toStartOf="parent"
@@ -38,7 +39,7 @@
                 android:id="@+id/checkBoxGreentext"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:buttonTint="#FF5722"
+                android:buttonTint="@color/orange"
                 android:text="@string/greentext"
                 android:textColor="#BBBBBB"
                 app:layout_constraintStart_toStartOf="@+id/checkBoxTimestamp"
@@ -48,7 +49,7 @@
                 android:id="@+id/checkBoxHarshIgnore"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:buttonTint="#FF5722"
+                android:buttonTint="@color/orange"
                 android:text="@string/harsh_ignore"
                 android:textColor="#BBBBBB"
                 app:layout_constraintStart_toStartOf="@+id/checkBoxGreentext"
@@ -58,7 +59,7 @@
                 android:id="@+id/checkBoxHideNsfw"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:buttonTint="#FF5722"
+                android:buttonTint="@color/orange"
                 android:text="@string/hide_nsfw_nsfl_content"
                 android:textColor="#BBBBBB"
                 app:layout_constraintStart_toStartOf="@+id/checkBoxHarshIgnore"
@@ -68,7 +69,7 @@
                 android:id="@+id/checkBoxNotifications"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:buttonTint="#FF5722"
+                android:buttonTint="@color/orange"
                 android:text="@string/push_notifications"
                 android:textColor="#BBBBBB"
                 app:layout_constraintStart_toStartOf="@+id/checkBoxHideNsfw"
@@ -78,7 +79,7 @@
                 android:id="@+id/checkBoxEmotes"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:buttonTint="#FF5722"
+                android:buttonTint="@color/orange"
                 android:text="@string/emotes"
                 android:textColor="#BBBBBB"
                 app:layout_constraintStart_toStartOf="@+id/checkBoxNotifications"
@@ -88,22 +89,32 @@
                 android:id="@+id/checkBoxViewerState"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:buttonTint="#FF5722"
+                android:buttonTint="@color/orange"
                 android:text="@string/show_stream_viewer_indicators"
                 android:textColor="#BBBBBB"
                 app:layout_constraintStart_toStartOf="@+id/checkBoxEmotes"
                 app:layout_constraintTop_toBottomOf="@+id/checkBoxEmotes" />
+
+            <CheckBox
+                android:id="@+id/checkBoxPictureInPicture"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:buttonTint="@color/orange"
+                android:text="Picture-in-picture mode"
+                android:textColor="#BBBBBB"
+                app:layout_constraintStart_toStartOf="@+id/checkBoxViewerState"
+                app:layout_constraintTop_toBottomOf="@+id/checkBoxViewerState" />
 
             <TextView
                 android:id="@+id/ignoredUsers"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
-                android:layout_marginTop="40dp"
+                android:layout_marginTop="20dp"
                 android:text="@string/ignored_users"
                 android:textColor="#BBBBBB"
                 app:layout_constraintStart_toStartOf="@+id/checkBoxEmotes"
-                app:layout_constraintTop_toBottomOf="@+id/checkBoxEmotes" />
+                app:layout_constraintTop_toBottomOf="@+id/checkBoxPictureInPicture" />
 
             <TextView
                 android:id="@+id/ignoredUsersTextViewOptions"

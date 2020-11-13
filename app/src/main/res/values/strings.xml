@@ -33,6 +33,7 @@
     <string name="log_out">Log Out</string>
     <string name="show_what_i_m_watching_in_chat">Show what I\'m watching in chat</string>
     <string name="whispers">Whispers</string>
+    <string name="private_messages">Private Messages</string>
     <string name="help">"/me - A normal message, but emotive.\n/message - Whisper someone.\n/ignore &lt;nick&gt; - No longer see user messages, without &lt;nick&gt; to list the nicks ignored.\n/unignore - Remove a user from your ignore list.\n/highlight - Highlights target nicks messages for easier visibility.\n/unhighlight - Unhighlights target nick."</string>
 
     <string-array name="streaming_service_spinner">
@@ -64,6 +65,36 @@
         <item>youtube-playlist</item>
         <item>advanced</item>
     </string-array>
+
+    <string-array name="modifiersArray">
+        <item>banned</item>
+        <item>dank</item>
+        <item>fast</item>
+        <item>flip</item>
+        <item>hyper</item>
+        <item>lag</item>
+        <item>love</item>
+        <item>mirror</item>
+        <item>rain</item>
+        <item>rustle</item>
+        <item>slow</item>
+        <item>smol</item>
+        <item>snow</item>
+        <item>spin</item>
+        <item>virus</item>
+        <item>wide</item>
+        <item>worth</item>
+    </string-array>
+
+    <string-array name="commandsArray">
+        <item>w</item>
+        <item>whisper</item>
+        <item>msg</item>
+        <item>tell</item>
+        <item>t</item>
+        <item>notify</item>
+    </string-array>
+
     <string name="title_activity_navigation_drawer">NavigationDrawerActivity</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>

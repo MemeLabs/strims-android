@@ -50,10 +50,24 @@ fun hideFragment(activity: FragmentActivity, fragment: Fragment) {
         .commit()
 }
 
+fun hideChildFragment(fragment: Fragment, fragmentToHide: Fragment) {
+    fragment.childFragmentManager.beginTransaction()
+        .setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
+        .hide(fragmentToHide)
+        .commit()
+}
+
 fun showFragment(activity: FragmentActivity, fragment: Fragment) {
     activity.supportFragmentManager.beginTransaction()
         .setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
         .show(fragment)
+        .commit()
+}
+
+fun showChildFragment(fragment: Fragment, fragmentToShow: Fragment) {
+    fragment.childFragmentManager.beginTransaction()
+        .setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
+        .show(fragmentToShow)
         .commit()
 }
 
@@ -174,7 +188,7 @@ fun createMessageTextView(
 
                     var gif: GifDrawable? = null
                     while (gif == null) {
-                        gif = CurrentUser.gifMemoryCache.get(it.name)
+                        gif = CurrentUser.gifMemoryCache[it.name]
                     }
 //                        gif.loopCount = 1
                     gif.callback = DrawableCallback(messageTextView)
@@ -430,7 +444,9 @@ fun createMessageTextView(
                                     ImageSpan::class.java
                                 )
 
-                                emoteSpan[0].drawable.alpha = 255
+                                if (emoteSpan.isNotEmpty()) {
+                                    emoteSpan[0].drawable.alpha = 255
+                                }
                             }
                         }
                     }
@@ -515,7 +531,9 @@ fun createMessageTextView(
                                         ImageSpan::class.java
                                     )
 
-                                    emoteSpan[0].drawable.alpha = 0
+                                    if (emoteSpan.isNotEmpty()) {
+                                        emoteSpan[0].drawable.alpha = 0
+                                    }
                                 }
                             }
                         }

@@ -8,17 +8,18 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
-import gg.strims.android.*
+import gg.strims.android.CurrentUser
+import gg.strims.android.R
+import gg.strims.android.createMessageTextView
 import gg.strims.android.customspans.MarginItemDecoration
 import gg.strims.android.room.PrivateMessage
 import gg.strims.android.viewmodels.PrivateMessagesViewModel
-import io.ktor.util.KtorExperimentalAPI
-import kotlinx.android.synthetic.main.activity_navigation_drawer.*
-import kotlinx.android.synthetic.main.app_bar_main.*
+import io.ktor.util.*
 import kotlinx.android.synthetic.main.fragment_whispers.*
 import kotlinx.android.synthetic.main.whisper_user_item.view.*
 
@@ -50,9 +51,9 @@ class WhispersFragment : Fragment() {
         recyclerViewWhispers.layoutManager = LinearLayoutManager(view.context)
         recyclerViewWhispers.adapter = whispersAdapter
 
-        requireActivity().toolbar.title = "Private Messages"
-
-        requireActivity().nav_view.setCheckedItem(R.id.nav_Whispers)
+//        requireActivity().toolbar.title = "Private Messages"
+//
+//        requireActivity().nav_view.setCheckedItem(R.id.nav_Whispers)
 
         recyclerViewWhispers.addItemDecoration(
             MarginItemDecoration(
@@ -106,10 +107,11 @@ class WhispersFragment : Fragment() {
             createMessageTextView(context!!, message.toMessage(), viewHolder.itemView.latestMessageWhisperUser)
 
             viewHolder.itemView.setOnClickListener {
-                CurrentUser.tempWhisperUser = otherUser
-                parentFragmentManager.beginTransaction()
-                    .replace(R.id.nav_host_fragment, WhispersUserFragment(), "WhispersUserFragment")
-                    .addToBackStack("WhispersUserFragment").commit()
+//                parentFragmentManager.beginTransaction()
+//                    .replace(R.id.nav_host_fragment, WhispersUserFragment(), "WhispersUserFragment")
+//                    .addToBackStack("WhispersUserFragment").commit()
+                val action = WhispersFragmentDirections.actionNavWhispersToWhispersUserFragment(otherUser)
+                findNavController().navigate(action)
             }
         }
     }

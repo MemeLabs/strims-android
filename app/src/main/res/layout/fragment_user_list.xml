@@ -36,7 +36,8 @@
         android:textCursorDrawable="@drawable/orange_cursor"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@+id/recyclerViewUserList"
-        app:layout_constraintStart_toStartOf="@+id/recyclerViewUserList" />
+        app:layout_constraintStart_toStartOf="@+id/recyclerViewUserList"
+        android:importantForAutofill="no" />
 
     <ImageView
         android:id="@+id/closeUserListButton"

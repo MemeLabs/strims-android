@@ -16,7 +16,6 @@ import androidx.core.app.NotificationCompat.PRIORITY_MIN
 import com.beust.klaxon.Klaxon
 import gg.strims.android.ChatActivity
 import gg.strims.android.CurrentUser
-import gg.strims.android.R
 import gg.strims.android.models.ViewerState
 import io.ktor.client.*
 import io.ktor.client.features.websocket.*
@@ -24,9 +23,12 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.http.cio.websocket.*
 import io.ktor.util.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
+import kotlinx.coroutines.launch
 import java.net.URL
 
 @KtorExperimentalAPI
@@ -74,7 +76,6 @@ class ChatService: Service() {
         val channelId = createNotificationChannel("strims_chat_service", "Strims Chat Service")
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
         val notification = notificationBuilder.setOngoing(true)
-            .setSmallIcon(R.mipmap.ic_launcher_foreground)
             .setPriority(PRIORITY_MIN)
             .setCategory(Notification.CATEGORY_SERVICE)
             .build()

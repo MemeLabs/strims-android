@@ -9,10 +9,9 @@ import android.view.ViewGroup
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.fragment.app.Fragment
-import gg.strims.android.*
-import io.ktor.util.KtorExperimentalAPI
-import kotlinx.android.synthetic.main.activity_chat.*
-import kotlinx.android.synthetic.main.app_bar_main.*
+import gg.strims.android.ChatActivity
+import gg.strims.android.R
+import io.ktor.util.*
 import kotlinx.android.synthetic.main.fragment_login.*
 
 @SuppressLint("SetJavaScriptEnabled")
@@ -28,7 +27,7 @@ class LoginFragment: Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        requireActivity().toolbar.title = "Login"
+//        requireActivity().toolbar.title = "Login"
 
         loginWebView.settings.javaScriptEnabled = true
         loginWebView.settings.domStorageEnabled = true
@@ -39,12 +38,13 @@ class LoginFragment: Fragment() {
                     val activity = requireActivity() as ChatActivity
                     activity.stopService(activity.chatSocketIntent)
                     activity.startService(activity.chatSocketIntent)
-                    parentFragmentManager.beginTransaction()
-                        .remove(this@LoginFragment)
-                        .commit()
-                    parentFragmentManager.popBackStack()
-                    activity.toolbar.title = "Chat"
-                    activity.progressBar.visibility = View.VISIBLE
+                    requireActivity().onBackPressed()
+//                    parentFragmentManager.beginTransaction()
+//                        .remove(this@LoginFragment)
+//                        .commit()
+//                    parentFragmentManager.popBackStack()
+//                    activity.toolbar.title = "Chat"
+//                    activity.progressBar.visibility = View.VISIBLE
                 }
             }
         }
