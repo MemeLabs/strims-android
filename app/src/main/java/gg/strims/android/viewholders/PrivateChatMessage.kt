@@ -43,15 +43,15 @@ class PrivateChatMessage(
             viewHolder.itemView.setBackgroundColor(Color.parseColor("#1A1A1A"))
         }
 
-        if (CurrentUser.options!!.showTime) {
+        if (CurrentUser.optionsLiveData.value?.showTime!!) {
             val dateFormat = SimpleDateFormat("HH:mm")
             val time = dateFormat.format(messageData.timestamp)
             viewHolder.itemView.timestampPrivateMessage.visibility = View.VISIBLE
             viewHolder.itemView.timestampPrivateMessage.text = time
         }
 
-        if (CurrentUser.options!!.customHighlights.isNotEmpty()) {
-            CurrentUser.options!!.customHighlights.forEach {
+        if (CurrentUser.optionsLiveData.value?.customHighlights!!.isNotEmpty()) {
+            CurrentUser.optionsLiveData.value?.customHighlights!!.forEach {
                 if (messageData.nick == it) {
                     viewHolder.itemView.setBackgroundColor(Color.parseColor("#001D36"))
                 }
@@ -121,8 +121,9 @@ class PrivateChatMessage(
                             sendMessageText!!.setSelection(sendMessageText!!.text.length)
                         }
                         R.id.chatIgnore -> {
-                            CurrentUser.options!!.ignoreList.add(messageData.nick)
-                            CurrentUser.saveOptions(context)
+//                            CurrentUser.optionsLiveData.value?.ignoreList?.add(messageData.nick)
+                            CurrentUser.addIgnore(messageData.nick)
+//                            CurrentUser.saveOptions(context)
                             adapter?.notifyDataSetChanged()
                         }
                     }

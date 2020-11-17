@@ -129,8 +129,8 @@ fun createMessageTextView(
     context: Context,
     messageData: Message,
     messageTextView: TextView,
-    emotes: Boolean = true,
-    greentext: Boolean = true,
+    emotes: Boolean = CurrentUser.optionsLiveData.value?.emotes!!,
+    greentext: Boolean = CurrentUser.optionsLiveData.value?.greentext!!,
     links: Boolean = true,
     codes: Boolean = true,
     spoilers: Boolean = true,
@@ -139,7 +139,7 @@ fun createMessageTextView(
     val ssb = SpannableStringBuilder(messageData.data)
 
     /** Emotes **/
-    if (CurrentUser.options!!.emotes && emotes) {
+    if (emotes) {
         if (messageData.entities.emotes != null && messageData.entities.emotes!!.isNotEmpty() && messageData.entities.emotes!![0].name != "") {
             messageData.entities.emotes!!.forEach {
                 var animated = false
@@ -420,7 +420,7 @@ fun createMessageTextView(
     if (messageData.entities.spoilers!!.isNotEmpty() && spoilers) {
         messageData.entities.spoilers!!.forEach {
 
-            if (messageData.entities.emotes!!.isNotEmpty() && CurrentUser.options!!.emotes) {
+            if (messageData.entities.emotes!!.isNotEmpty() && CurrentUser.optionsLiveData.value?.emotes!!) {
                 messageData.entities.emotes!!.forEach { emote ->
                     if (emote.bounds[0] >= it.bounds[0] && emote.bounds[1] <= it.bounds[1]) {
                         val emoteSpan = ssb.getSpans(
@@ -438,7 +438,7 @@ fun createMessageTextView(
             val span1: NoUnderlineClickableSpan = object : NoUnderlineClickableSpan() {
                 override fun onClick(widget: View) {
 
-                    if (messageData.entities.emotes!!.isNotEmpty() && CurrentUser.options!!.emotes) {
+                    if (messageData.entities.emotes!!.isNotEmpty() && CurrentUser.optionsLiveData.value?.emotes!!) {
                         messageData.entities.emotes!!.forEach { emote ->
                             if (emote.bounds[0] >= it.bounds[0] && emote.bounds[1] <= it.bounds[1]) {
                                 val emoteSpan = ssb.getSpans(
@@ -525,7 +525,7 @@ fun createMessageTextView(
                             Spannable.SPAN_INCLUSIVE_INCLUSIVE
                         )
 
-                        if (messageData.entities.emotes!!.isNotEmpty() && CurrentUser.options!!.emotes) {
+                        if (messageData.entities.emotes!!.isNotEmpty() && CurrentUser.optionsLiveData.value?.emotes!!) {
                             messageData.entities.emotes!!.forEach { emote ->
                                 if (emote.bounds[0] >= it.bounds[0] && emote.bounds[1] <= it.bounds[1]) {
                                     val emoteSpan = ssb.getSpans(

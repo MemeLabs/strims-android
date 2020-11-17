@@ -45,7 +45,7 @@
             app:argType="string" />
     </fragment>
     <fragment
-        android:id="@+id/loginFragment"
+        android:id="@+id/nav_LogIn"
         android:name="gg.strims.android.fragments.LoginFragment"
         android:label="@string/login"
         tools:layout="@layout/fragment_login"/>

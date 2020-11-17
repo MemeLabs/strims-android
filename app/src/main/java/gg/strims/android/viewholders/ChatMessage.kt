@@ -36,7 +36,7 @@ class ChatMessage(
     }
 
     override fun bind(viewHolder: GroupieViewHolder, position: Int) {
-        if (CurrentUser.viewerStates != null && layout == R.layout.chat_message_item && CurrentUser.options!!.showViewerState) {
+        if (CurrentUser.viewerStates != null && layout == R.layout.chat_message_item && CurrentUser.optionsLiveData.value?.showViewerState!!) {
             var changed = false
             CurrentUser.viewerStates!!.forEach {
                 if (it.nick == messageData.nick) {
@@ -53,14 +53,14 @@ class ChatMessage(
             if (!changed) {
                 viewHolder.itemView.viewerStateChatMessage.visibility = View.GONE
             }
-        } else if (layout == R.layout.chat_message_item && !CurrentUser.options!!.showViewerState) {
+        } else if (layout == R.layout.chat_message_item && !CurrentUser.optionsLiveData.value?.showViewerState!!) {
             viewHolder.itemView.viewerStateChatMessage.visibility = View.GONE
         }
 
-        if (CurrentUser.options!!.showTime) {
+        if (CurrentUser.optionsLiveData.value?.showTime!!) {
             val dateFormat = SimpleDateFormat("HH:mm")
             val time = dateFormat.format(messageData.timestamp)
-            if (CurrentUser.options!!.showTime) {
+            if (CurrentUser.optionsLiveData.value?.showTime!!) {
                 viewHolder.itemView.timestampChatMessage.visibility = View.VISIBLE
             } else {
                 viewHolder.itemView.timestampChatMessage.visibility = View.GONE
@@ -92,8 +92,8 @@ class ChatMessage(
             }
         }
 
-        if (CurrentUser.options!!.customHighlights.isNotEmpty()) {
-            CurrentUser.options!!.customHighlights.forEach {
+        if (CurrentUser.optionsLiveData.value?.customHighlights!!.isNotEmpty()) {
+            CurrentUser.optionsLiveData.value?.customHighlights?.forEach {
                 if (messageData.nick == it) {
                     viewHolder.itemView.setBackgroundColor(Color.parseColor("#001D36"))
                 }
@@ -165,8 +165,9 @@ class ChatMessage(
                             sendMessageText!!.setSelection(sendMessageText!!.text.length)
                         }
                         R.id.chatIgnore -> {
-                            CurrentUser.options!!.ignoreList.add(messageData.nick)
-                            CurrentUser.saveOptions(context)
+//                            CurrentUser.optionsLiveData.value?.ignoreList?.add(messageData.nick)
+                            CurrentUser.addIgnore(messageData.nick)
+//                            CurrentUser.saveOptions(context)
                             adapter?.notifyDataSetChanged()
                         }
                     }

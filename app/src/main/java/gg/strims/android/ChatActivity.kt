@@ -19,7 +19,6 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.beust.klaxon.Klaxon
 import com.google.android.material.navigation.NavigationView
-import com.melegy.redscreenofdeath.RedScreenOfDeath
 import gg.strims.android.clients.ChatService
 import gg.strims.android.clients.StreamsService
 import gg.strims.android.fragments.AngelThumpFragment
@@ -83,17 +82,16 @@ class ChatActivity : AppCompatActivity() {
 
         CurrentUser.optionsLiveData.observe(this, {
             CurrentUser.saveOptions(this)
-            Log.d("TAG", "SAVING OPTIONS IN OBSERVER")
         })
 
         if (savedInstanceState != null) {
-
             if (CurrentUser.user != null) {
                 nav_view.menu.findItem(R.id.nav_Profile).isVisible = true
                 nav_view.menu.findItem(R.id.nav_Whispers).isVisible = true
                 val header = navView.getHeaderView(0)
                 header.navHeaderUsername.text = CurrentUser.user!!.username
             }
+
             nav_view.setCheckedItem(R.id.nav_Chat)
 
             streamsSocketIntent = chatViewModel?.streamsSocketIntent
@@ -133,12 +131,10 @@ class ChatActivity : AppCompatActivity() {
         val sharedPreferences = getSharedPreferences("ChatOptions", Context.MODE_PRIVATE)
         val options = sharedPreferences.getString("options", "")
         if (options != null && options.isNotEmpty()) {
-            CurrentUser.options = Klaxon().parse(options)
             runOnUiThread {
-                CurrentUser.optionsLiveData.value = CurrentUser.options
+                CurrentUser.optionsLiveData.value = Klaxon().parse(options)
             }
         } else {
-            CurrentUser.options = Options()
             runOnUiThread {
                 CurrentUser.optionsLiveData.value = Options()
             }
@@ -170,17 +166,17 @@ class ChatActivity : AppCompatActivity() {
     }
 
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
-        menu!!.findItem(R.id.optionsLogIn).isVisible = CurrentUser.user == null
+        menu!!.findItem(R.id.nav_LogIn).isVisible = CurrentUser.user == null
         return super.onPrepareOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.optionsLogIn -> {
+            R.id.nav_LogIn -> {
                 val navHostFragment =
                     supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
                 val navController = navHostFragment.navController
-                navController.navigate(R.id.loginFragment)
+                navController.navigate(R.id.nav_LogIn)
             }
         }
         return super.onOptionsItemSelected(item)
@@ -203,7 +199,7 @@ class ChatActivity : AppCompatActivity() {
                 return
             }
         }
-        if (nav_view.checkedItem?.title == "Chat" || supportActionBar?.title == "Chat") {
+        if (nav_view.checkedItem?.title == "Chat" && supportActionBar?.title == "Chat") {
             return
         }
         super.onBackPressed()
@@ -211,7 +207,7 @@ class ChatActivity : AppCompatActivity() {
 
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
-        if (CurrentUser.options!!.pictureInPicture) {
+        if (CurrentUser.optionsLiveData.value?.pictureInPicture!!) {
             val navHostFragment =
                 supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
             val childFragment = navHostFragment.childFragmentManager.fragments[0]

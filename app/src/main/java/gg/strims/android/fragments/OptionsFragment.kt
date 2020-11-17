@@ -17,8 +17,6 @@ import kotlinx.android.synthetic.main.fragment_chat_options.*
 @SuppressLint("CommitPrefEdits")
 class OptionsFragment : Fragment() {
 
-    private lateinit var sharedPreferences: SharedPreferences.Editor
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -28,29 +26,27 @@ class OptionsFragment : Fragment() {
     }
 
     private fun retrieveOptions() {
-        if (CurrentUser.options != null) {
-            checkBoxTimestamp.isChecked = CurrentUser.options!!.showTime
-            checkBoxGreentext.isChecked = CurrentUser.options!!.greentext
-            checkBoxHarshIgnore.isChecked = CurrentUser.options!!.harshIgnore
-            checkBoxHideNsfw.isChecked = CurrentUser.options!!.hideNsfw
-            checkBoxNotifications.isChecked = CurrentUser.options!!.notifications
-            checkBoxEmotes.isChecked = CurrentUser.options!!.emotes
-            checkBoxViewerState.isChecked = CurrentUser.options!!.showViewerState
-            checkBoxPictureInPicture.isChecked = CurrentUser.options!!.pictureInPicture
+        if (CurrentUser.optionsLiveData.value != null) {
+            checkBoxTimestamp.isChecked = CurrentUser.optionsLiveData.value?.showTime!!
+            checkBoxGreentext.isChecked = CurrentUser.optionsLiveData.value?.greentext!!
+            checkBoxHarshIgnore.isChecked = CurrentUser.optionsLiveData.value?.harshIgnore!!
+            checkBoxHideNsfw.isChecked = CurrentUser.optionsLiveData.value?.hideNsfw!!
+            checkBoxNotifications.isChecked = CurrentUser.optionsLiveData.value?.notifications!!
+            checkBoxEmotes.isChecked = CurrentUser.optionsLiveData.value?.emotes!!
+            checkBoxViewerState.isChecked = CurrentUser.optionsLiveData.value?.showViewerState!!
+            checkBoxPictureInPicture.isChecked = CurrentUser.optionsLiveData.value?.pictureInPicture!!
 
             ignoredUsersTextViewOptions.text =
-                CurrentUser.options!!.ignoreList.toString()
+                CurrentUser.optionsLiveData.value?.ignoreList!!.toString()
                     .substringAfter('[').substringBefore(']')
 
             customHighlightsTextViewOptions.text =
-                CurrentUser.options!!.customHighlights.toString()
+                CurrentUser.optionsLiveData.value?.customHighlights!!.toString()
                     .substringAfter('[').substringBefore(']')
         }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        sharedPreferences = requireActivity().getSharedPreferences("ChatOptions", Context.MODE_PRIVATE).edit()
-
         retrieveOptions()
 
         saveOptionsButton.setOnClickListener {
@@ -59,35 +55,35 @@ class OptionsFragment : Fragment() {
         }
 
         checkBoxTimestamp.setOnCheckedChangeListener { _, isChecked ->
-            CurrentUser.options?.showTime = isChecked
+            CurrentUser.optionsLiveData.value?.showTime = isChecked
         }
 
         checkBoxGreentext.setOnCheckedChangeListener { _, isChecked ->
-            CurrentUser.options?.greentext = isChecked
+            CurrentUser.optionsLiveData.value?.greentext = isChecked
         }
 
         checkBoxHarshIgnore.setOnCheckedChangeListener { _, isChecked ->
-            CurrentUser.options?.harshIgnore = isChecked
+            CurrentUser.optionsLiveData.value?.harshIgnore = isChecked
         }
 
         checkBoxHideNsfw.setOnCheckedChangeListener { _, isChecked ->
-            CurrentUser.options?.hideNsfw = isChecked
+            CurrentUser.optionsLiveData.value?.hideNsfw = isChecked
         }
 
         checkBoxNotifications.setOnCheckedChangeListener { _, isChecked ->
-            CurrentUser.options?.notifications = isChecked
+            CurrentUser.optionsLiveData.value?.notifications = isChecked
         }
 
         checkBoxEmotes.setOnCheckedChangeListener { _, isChecked ->
-            CurrentUser.options?.emotes = isChecked
+            CurrentUser.optionsLiveData.value?.emotes = isChecked
         }
 
         checkBoxViewerState.setOnCheckedChangeListener { _, isChecked ->
-            CurrentUser.options?.showViewerState = isChecked
+            CurrentUser.optionsLiveData.value?.showViewerState = isChecked
         }
 
         checkBoxPictureInPicture.setOnCheckedChangeListener { _, isChecked ->
-            CurrentUser.options?.pictureInPicture = isChecked
+            CurrentUser.optionsLiveData.value?.pictureInPicture = isChecked
         }
     }
 }

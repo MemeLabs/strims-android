@@ -25,9 +25,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.RemoteInput
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
 import com.beust.klaxon.Klaxon
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
@@ -125,7 +123,7 @@ class ChatFragment : Fragment() {
                         sendMessageText
                     )
                 )
-                if (CurrentUser.options!!.notifications && message.nick != CurrentUser.user!!.username) {
+                if (CurrentUser.optionsLiveData.value?.notifications!! && message.nick != CurrentUser.user!!.username) {
                     displayNotification(message)
                 }
             } else {
@@ -157,8 +155,6 @@ class ChatFragment : Fragment() {
                     messageHistory?.forEach {
                         val message = parseChatMessage(it)
                         if (message != null) {
-//                            printMessage(message)
-//                            chatViewModel.messages.value?.add(message)
                             chatViewModel.addMessage(message)
                         }
                     }
@@ -188,29 +184,11 @@ class ChatFragment : Fragment() {
 
                     if (message != null) {
                         Log.d("TAG", "FROM SERVICE: ${message.nick} + ${message.data}")
-//                        if (message.privMsg) {
-//                            val isReceived = message.nick != CurrentUser.user?.username
-//                            adapter.add(
-//                                PrivateChatMessage(
-//                                    requireContext(),
-//                                    adapter,
-//                                    message,
-//                                    isReceived,
-//                                    sendMessageText
-//                                )
-//                            )
-//                            if (CurrentUser.options!!.notifications && message.nick != CurrentUser.user!!.username) {
-//                                displayNotification(message)
-//                            }
-//                        } else {
-//                            printMessage(message)
-//                            chatViewModel.messages.value?.add(message)
                         if (::chatViewModel.isInitialized) {
                             chatViewModel.addMessage(message)
                         } else {
                             missedMessages.add(message)
                         }
-//                        }
                         val recycler = recyclerViewChat
                         if (recycler != null) {
                             val layoutTest =
@@ -229,17 +207,12 @@ class ChatFragment : Fragment() {
                     requireActivity().nav_view.setCheckedItem(R.id.nav_Chat)
                     requireActivity().invalidateOptionsMenu()
                 } else if (intent.action == "gg.strims.android.CHAT_SOCKET_CLOSE") {
-                    adapter.add(
-                        ChatMessage(
-                            requireContext(),
-                            adapter,
-                            Message(
-                                false,
-                                "Info",
-                                "Disconnected, reconnecting..."
-                            )
-                        )
+                    val message = Message(
+                        false,
+                        "Info",
+                        "Disconnected, reconnecting..."
                     )
+                    chatViewModel.addMessage(message)
                     parentActivity.stopService(parentActivity.chatSocketIntent)
                     parentActivity.startService(parentActivity.chatSocketIntent)
                 } else if (intent.action == "gg.strims.android.STREAMS_SOCKET_CLOSE") {
@@ -318,24 +291,9 @@ class ChatFragment : Fragment() {
         super.onDestroy()
     }
 
-    override fun onStop() {
-        for (i in 0 until adapter.itemCount) {
-            if (adapter.getItem(i).layout == R.layout.chat_message_item ||
-                adapter.getItem(i).layout == R.layout.chat_message_item_consecutive_nick) {
-                val item = adapter.getItem(i) as ChatMessage
-                item.adapter = null
-                item.sendMessageText = null
-            } else if (adapter.getItem(i).layout == R.layout.private_chat_message_item) {
-                val item = adapter.getItem(i) as PrivateChatMessage
-                item.adapter = null
-                item.sendMessageText = null
-            }
-        }
-        super.onStop()
-    }
-
     override fun onSaveInstanceState(outState: Bundle) {
         Log.d("TAG", "SAVING")
+
         super.onSaveInstanceState(outState)
     }
 
@@ -344,7 +302,6 @@ class ChatFragment : Fragment() {
         Log.d("TAG", "ONCREATE")
 
         modifiersArray = resources.getStringArray(R.array.modifiersArray)
-
         commandsArray = resources.getStringArray(R.array.commandsArray)
 
         privateMessagesViewModel =
@@ -378,13 +335,6 @@ class ChatFragment : Fragment() {
         profileViewModel = ViewModelProvider(requireActivity()).get(ProfileViewModel::class.java)
 
         chatViewModel.latestMessage.value = null
-
-//        chatViewModel.messages.observe(viewLifecycleOwner, {
-//            Log.d("TAG", "MESSAGES OBSERVED")
-//            it.forEach { message ->
-//                printMessage(message)
-//            }
-//        })
 
         chatViewModel.latestMessage.observe(viewLifecycleOwner, {
             if (it != null) {
@@ -429,9 +379,6 @@ class ChatFragment : Fragment() {
         }
 
         if (savedInstanceState != null) {
-//            if (chatViewModel.chatAdapter != null) {
-//                adapter = chatViewModel.chatAdapter!!
-//            }
             Log.d("TAG", "SAVESTATE NOT NULL")
 
             chatViewModel.messages.value?.forEach {
@@ -454,16 +401,6 @@ class ChatFragment : Fragment() {
             && resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
         ) {
             constraintLayoutStreamFragment.visibility = View.VISIBLE
-        }
-
-        for (i in 0 until adapter.itemCount) {
-            if (adapter.getItem(i).layout == R.layout.chat_message_item ||
-                adapter.getItem(i).layout == R.layout.chat_message_item_consecutive_nick
-            ) {
-                val item = adapter.getItem(i) as ChatMessage
-                item.adapter = adapter
-                item.sendMessageText = sendMessageText
-            }
         }
 
         if (adapter.itemCount == 0) {
@@ -675,151 +612,70 @@ class ChatFragment : Fragment() {
                 } else if (command == "ignore") {
                     val nickIgnore =
                         messageText.substringAfter("/ignore ").substringBefore(' ')
-                    CurrentUser.options!!.ignoreList.add(nickIgnore)
+                    CurrentUser.optionsLiveData.value?.ignoreList?.add(nickIgnore)
                     CurrentUser.addIgnore(nickIgnore)
-//                    CurrentUser.saveOptions(requireContext())
                     val message = Message(
                         false,
                         "Info",
                         "Ignoring: $nickIgnore"
                     )
-//                    adapter.add(
-//                        ChatMessage(
-//                            requireContext(),
-//                            adapter,
-//                            Message(
-//                                false,
-//                                "Info",
-//                                "Ignoring: $nickIgnore"
-//                            )
-//                        )
-//                    )
                     chatViewModel.addMessage(message)
                 } else if (command == "unignore") {
                     val message: Message?
                     val nickUnignore =
                         messageText.substringAfter("/unignore ").substringBefore(' ')
-                    if (CurrentUser.options!!.ignoreList.contains(nickUnignore)) {
-                        CurrentUser.options!!.ignoreList.remove(nickUnignore)
+                    message = if (CurrentUser.optionsLiveData.value?.ignoreList!!.contains(nickUnignore)) {
+                        CurrentUser.optionsLiveData.value?.ignoreList?.remove(nickUnignore)
                         CurrentUser.removeIgnore(nickUnignore)
-//                        CurrentUser.saveOptions(requireContext())
-                        message = Message(
+                        Message(
                             false,
                             "Info",
                             "Unignored: $nickUnignore"
                         )
-//                        adapter.add(
-//                            ChatMessage(
-//                                requireContext(),
-//                                adapter,
-//                                Message(
-//                                    false,
-//                                    "Info",
-//                                    "Unignored: $nickUnignore"
-//                                )
-//                            )
-//                        )
                     } else {
-                        message = Message(
+                        Message(
                             false,
                             "Info",
                             "User not currently ignored"
                         )
-//                        adapter.add(
-//                            ChatMessage(
-//                                requireContext(),
-//                                adapter,
-//                                Message(
-//                                    false,
-//                                    "Info",
-//                                    "User not currently ignored"
-//                                )
-//                            )
-//                        )
                     }
                     chatViewModel.addMessage(message)
                 } else if (command == "highlight") {
                     val message: Message?
                     val nickHighlight =
                         messageText.substringAfter("/highlight ").substringBefore(' ')
-                    if (CurrentUser.options!!.customHighlights.contains(nickHighlight)) {
-                        message = Message(
+                    message = if (CurrentUser.optionsLiveData.value?.customHighlights!!.contains(nickHighlight)) {
+                        Message(
                             false,
                             "Info",
                             "User already highlighted"
                         )
-//                        adapter.add(
-//                            ChatMessage(
-//                                requireContext(),
-//                                adapter,
-//                                Message(
-//                                    false,
-//                                    "Info",
-//                                    "User already highlighted"
-//                                )
-//                            )
-//                        )
                     } else {
-                        CurrentUser.options!!.customHighlights.add(nickHighlight)
-                        CurrentUser.saveOptions(requireContext())
-                        message = Message(
+                        CurrentUser.addHighlight(nickHighlight)
+                        Message(
                             false,
                             "Info",
                             "Highlighting user: $nickHighlight"
                         )
-//                        adapter.add(
-//                            ChatMessage(
-//                                requireContext(),
-//                                adapter,
-//                                Message(
-//                                    false,
-//                                    "Info",
-//                                    "Highlighting user: $nickHighlight"
-//                                )
-//                            )
-//                        )
                     }
                     chatViewModel.addMessage(message)
                 } else if (command == "unhighlight") {
                     val message: Message?
                     val nickUnhighlight =
                         messageText.substringAfter("/unhighlight ").substringBefore(' ')
-                    if (CurrentUser.options!!.customHighlights.contains(nickUnhighlight)) {
-                        CurrentUser.options!!.customHighlights.remove(nickUnhighlight)
-                        CurrentUser.saveOptions(requireContext())
-                        message = Message(
+                    message = if (CurrentUser.optionsLiveData.value?.customHighlights!!.contains(nickUnhighlight)) {
+                        CurrentUser.removeHighlight(nickUnhighlight)
+                        Message(
                             false,
                             "Info",
                             "No longer highlighting user: $nickUnhighlight"
                         )
-//                        adapter.add(
-//                            ChatMessage(
-//                                requireContext(),
-//                                adapter,
-//                                Message(
-//                                    false,
-//                                    "Info",
-//                                    "No longer highlighting user: $nickUnhighlight"
-//                                )
-//                            )
-//                        )
                     } else {
-                        message = Message(
+                        Message(
                             false,
                             "Info",
                             "User not currently highlighted"
                         )
-//                        adapter.add(
-//                            ChatMessage(
-//                                requireContext(),
-//                                adapter,
-//                                Message(
-//                                    false,
-//                                    "Info",
-//                                    "User not currently highlighted"
-//                                )
-//                            )
-//                        )
                     }
                     chatViewModel.addMessage(message)
                 } else if (command == "help") {
@@ -829,17 +685,6 @@ class ChatFragment : Fragment() {
                         resources.getString(R.string.help)
                     )
                     chatViewModel.addMessage(message)
-//                    adapter.add(
-//                        ChatMessage(
-//                            requireContext(),
-//                            adapter,
-//                            Message(
-//                                false,
-//                                "Info",
-//                                resources.getString(R.string.help)
-//                            )
-//                        )
-//                    )
                 } else {
                     val message = Message(
                         false,
@@ -847,17 +692,6 @@ class ChatFragment : Fragment() {
                         "Invalid command"
                     )
                     chatViewModel.addMessage(message)
-//                    adapter.add(
-//                        ChatMessage(
-//                            requireContext(),
-//                            adapter,
-//                            Message(
-//                                false,
-//                                "Info",
-//                                "Invalid command"
-//                            )
-//                        )
-//                    )
                 }
             } else {
                 val intent = Intent("gg.strims.android.SEND_MESSAGE")
@@ -1057,13 +891,6 @@ class ChatFragment : Fragment() {
                     "Info",
                     "Connected users: ${names.connectioncount}"
                 )
-//                adapter.add(
-//                    ChatMessage(
-//                        requireContext(),
-//                        adapter,
-//                        message
-//                    )
-//                )
                 chatViewModel.addMessage(message)
                 progressBarFragment.visibility = View.GONE
                 Log.d("TAG", "ENDING BAR ${(System.currentTimeMillis() - CurrentUser.time)}")
@@ -1090,12 +917,12 @@ class ChatFragment : Fragment() {
                 val message = Klaxon().parse<Message>(msg[1])!!
                 message.privMsg = true
 
-                if (CurrentUser.options!!.ignoreList.isNotEmpty()) {
-                    CurrentUser.options!!.ignoreList.forEach {
+                if (CurrentUser.optionsLiveData.value?.ignoreList!!.isNotEmpty()) {
+                    CurrentUser.optionsLiveData.value?.ignoreList?.forEach {
                         if (message.nick == it) {
                             return null
                         }
-                        if (CurrentUser.options!!.harshIgnore) {
+                        if (CurrentUser.optionsLiveData.value?.harshIgnore!!) {
                             if (message.data.contains(it)) {
                                 return null
                             }
@@ -1109,7 +936,7 @@ class ChatFragment : Fragment() {
             }
             "MSG" -> {
                 val message = Klaxon().parse<Message>(msg[1])!!
-                if (CurrentUser.options!!.hideNsfw && message.entities.links!!.isNotEmpty()
+                if (CurrentUser.optionsLiveData.value?.hideNsfw!! && message.entities.links!!.isNotEmpty()
                     && message.entities.tags!!.isNotEmpty()
                 ) {
                     message.entities.tags!!.forEach {
@@ -1119,12 +946,12 @@ class ChatFragment : Fragment() {
                     }
                 }
 
-                if (CurrentUser.options!!.ignoreList.isNotEmpty()) {
-                    CurrentUser.options!!.ignoreList.forEach {
+                if (CurrentUser.optionsLiveData.value?.ignoreList!!.isNotEmpty()) {
+                    CurrentUser.optionsLiveData.value?.ignoreList?.forEach {
                         if (message.nick == it) {
                             return null
                         }
-                        if (CurrentUser.options!!.harshIgnore) {
+                        if (CurrentUser.optionsLiveData.value?.harshIgnore!!) {
                             if (message.data.contains(it)) {
                                 return null
                             }

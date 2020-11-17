@@ -16,7 +16,7 @@ class ErrorChatMessage(private val message: String) : Item<GroupieViewHolder>() 
     override fun getLayout(): Int = R.layout.error_chat_message_item
 
     override fun bind(viewHolder: GroupieViewHolder, position: Int) {
-        if (CurrentUser.options!!.showTime) {
+        if (CurrentUser.optionsLiveData.value?.showTime!!) {
             val dateFormat = SimpleDateFormat("HH:mm")
             val time = dateFormat.format(System.currentTimeMillis())
             viewHolder.itemView.timestampErrorChatMessage.visibility = View.VISIBLE

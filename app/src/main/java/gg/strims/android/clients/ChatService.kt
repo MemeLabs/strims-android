@@ -16,6 +16,7 @@ import androidx.core.app.NotificationCompat.PRIORITY_MIN
 import com.beust.klaxon.Klaxon
 import gg.strims.android.ChatActivity
 import gg.strims.android.CurrentUser
+import gg.strims.android.R
 import gg.strims.android.models.ViewerState
 import io.ktor.client.*
 import io.ktor.client.features.websocket.*
@@ -76,6 +77,10 @@ class ChatService: Service() {
         val channelId = createNotificationChannel("strims_chat_service", "Strims Chat Service")
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
         val notification = notificationBuilder.setOngoing(true)
+            .setColor(Color.parseColor("#F58851"))
+            .setColorized(true)
+            .setStyle(NotificationCompat.DecoratedCustomViewStyle())
+            .setSmallIcon(R.mipmap.ic_launcher_foreground)
             .setPriority(PRIORITY_MIN)
             .setCategory(Notification.CATEGORY_SERVICE)
             .build()

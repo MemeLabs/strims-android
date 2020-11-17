@@ -12,8 +12,7 @@ import java.util.HashMap
 @KtorExperimentalAPI
 object CurrentUser {
     var user: Profile? = null // Current user
-    var options: Options? = null // Loaded options file
-    var optionsLiveData = MutableLiveData<Options>()
+    var optionsLiveData = MutableLiveData<Options>() // LiveData of Options
     var tempHighlightNick: MutableList<String>? = null // List of nicks to highlight in chat when a user clicks on them
     var users = mutableListOf<String>() // List of all users in chat
     var streams: MutableList<Stream>? = null // List of all active streams from STREAMS_SET
@@ -52,7 +51,7 @@ object CurrentUser {
     fun saveOptions(context: Context) {
         val sharedPreferences =
             context.getSharedPreferences("ChatOptions", Context.MODE_PRIVATE).edit()
-        sharedPreferences.putString("options", Gson().toJson(options))
+        sharedPreferences.putString("options", Gson().toJson(optionsLiveData.value))
         sharedPreferences.apply()
     }
 }

@@ -54,7 +54,7 @@ class ChatMessageCombo(
             hitsInitialSize =
                 viewHolder.itemView.hitsComboChatMessageCombo.textSize / context.resources.displayMetrics.scaledDensity
         }
-        if (CurrentUser.options!!.showTime) {
+        if (CurrentUser.optionsLiveData.value?.showTime!!) {
             val dateFormat = SimpleDateFormat("HH:mm")
             val time = dateFormat.format(messageData.timestamp)
             viewHolder.itemView.timestampChatMessageCombo.visibility = View.VISIBLE
@@ -82,7 +82,7 @@ class ChatMessageCombo(
             context,
             messageData,
             viewHolder.itemView.messageChatMessageCombo,
-            emotes = true,
+            emotes = CurrentUser.optionsLiveData.value?.emotes!!,
             greentext = false,
             links = false,
             codes = false,
