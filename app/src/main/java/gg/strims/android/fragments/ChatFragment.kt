@@ -15,7 +15,6 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.view.KeyEvent
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,8 +23,11 @@ import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.RemoteInput
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
 import com.beust.klaxon.Klaxon
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
@@ -39,8 +41,7 @@ import gg.strims.android.viewholders.ChatMessage
 import gg.strims.android.viewholders.ChatMessageCombo
 import gg.strims.android.viewholders.ErrorChatMessage
 import gg.strims.android.viewholders.PrivateChatMessage
-import gg.strims.android.viewmodels.ChatViewModel
-import gg.strims.android.viewmodels.PrivateMessagesViewModel
+import gg.strims.android.viewmodels.*
 import io.ktor.util.*
 import kotlinx.android.synthetic.main.activity_navigation_drawer.*
 import kotlinx.android.synthetic.main.autofill_item.view.textViewAutofill
@@ -56,58 +57,78 @@ import java.util.regex.Pattern
 class ChatFragment : Fragment() {
 
     var adapter = GroupAdapter<GroupieViewHolder>()
-
-    private lateinit var commandsArray: Array<String>
-
-    private lateinit var modifiersArray: Array<String>
-
-    private lateinit var privateMessagesViewModel: PrivateMessagesViewModel
-
     private val autofillAdapter = GroupAdapter<GroupieViewHolder>()
 
-    private val broadcastReceiver = object : BroadcastReceiver() {
+    private lateinit var commandsArray: Array<String>
+    private lateinit var modifiersArray: Array<String>
 
-        fun printMessage(message: Message) {
-            var consecutiveMessage = false
-            /** Check for consecutive message **/
-            if (adapter.itemCount > 0) {
-                if (adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item || adapter.getItem(
-                        adapter.itemCount - 1
-                    ).layout == R.layout.chat_message_item_consecutive_nick
-                ) {
-                    val lastMessage =
-                        adapter.getItem(adapter.itemCount - 1) as ChatMessage
-                    consecutiveMessage =
-                        lastMessage.isNickSame(message.nick)
-                }
+    private lateinit var chatViewModel: ChatViewModel
+    private lateinit var privateMessagesViewModel: PrivateMessagesViewModel
+    private lateinit var exoPlayerViewModel: ExoPlayerViewModel
+    private lateinit var twitchViewModel: TwitchViewModel
+    private lateinit var youTubeViewModel: YouTubeViewModel
+    private lateinit var profileViewModel: ProfileViewModel
+
+    private var missedMessages = mutableListOf<Message>()
+
+    private fun printMessage(message: Message) {
+        var consecutiveMessage = false
+        /** Check for consecutive message **/
+        if (message.nick == "Info") {
+            consecutiveMessage = false
+        } else if (adapter.itemCount > 0) {
+            if (adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item || adapter.getItem(
+                    adapter.itemCount - 1
+                ).layout == R.layout.chat_message_item_consecutive_nick
+            ) {
+                val lastMessage =
+                    adapter.getItem(adapter.itemCount - 1) as ChatMessage
+                consecutiveMessage =
+                    lastMessage.isNickSame(message.nick)
             }
-            /** Check for combo and adjust previous message accordingly **/
-            if (adapter.itemCount > 0 && message.entities.emotes != null && message.entities.emotes!!.isNotEmpty() && message.entities.emotes!![0].combo > 1) {
-                if (message.entities.emotes!![0].combo == 2) {
-                    adapter.removeGroupAtAdapterPosition(adapter.itemCount - 1)
-                    adapter.add(
-                        ChatMessageCombo(
-                            message,
-                            requireContext(),
-                            adapter,
-                        )
+        }
+        /** Check for combo and adjust previous message accordingly **/
+        if (adapter.itemCount > 0 && message.entities.emotes != null && message.entities.emotes!!.isNotEmpty() && message.entities.emotes!![0].combo > 1) {
+            if (message.entities.emotes!![0].combo == 2) {
+                adapter.removeGroupAtAdapterPosition(adapter.itemCount - 1)
+                adapter.add(
+                    ChatMessageCombo(
+                        message,
+                        requireContext(),
+                        adapter,
                     )
-                } else {
-                    if (adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item_emote_combo) {
-                        val lastMessageCombo =
-                            adapter.getItem(adapter.itemCount - 1) as ChatMessageCombo
-                        lastMessageCombo.setCombo(message.entities.emotes!![0].combo)
-                        adapter.notifyItemChanged(adapter.itemCount - 1)
-                    }
-                }
+                )
             } else {
-                /** Check if previous message was combo then add message **/
-                if (adapter.itemCount > 0 && adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item_emote_combo) {
-                    val lastMessage =
+                if (adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item_emote_combo) {
+                    val lastMessageCombo =
                         adapter.getItem(adapter.itemCount - 1) as ChatMessageCombo
-                    lastMessage.state = 1
+                    lastMessageCombo.setCombo(message.entities.emotes!![0].combo)
                     adapter.notifyItemChanged(adapter.itemCount - 1)
                 }
+            }
+        } else {
+            /** Check if previous message was combo then add message **/
+            if (adapter.itemCount > 0 && adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item_emote_combo) {
+                val lastMessage =
+                    adapter.getItem(adapter.itemCount - 1) as ChatMessageCombo
+                lastMessage.state = 1
+                adapter.notifyItemChanged(adapter.itemCount - 1)
+            }
+            if (message.privMsg) {
+                val isReceived = message.nick != CurrentUser.user?.username
+                adapter.add(
+                    PrivateChatMessage(
+                        requireContext(),
+                        adapter,
+                        message,
+                        isReceived,
+                        sendMessageText
+                    )
+                )
+                if (CurrentUser.options!!.notifications && message.nick != CurrentUser.user!!.username) {
+                    displayNotification(message)
+                }
+            } else {
                 adapter.add(
                     ChatMessage(
                         requireContext(),
@@ -119,6 +140,9 @@ class ChatFragment : Fragment() {
                 )
             }
         }
+    }
+
+    private val broadcastReceiver = object : BroadcastReceiver() {
 
         override fun onReceive(context: Context?, intent: Intent?) {
             val parentActivity = requireActivity() as ChatActivity
@@ -133,9 +157,12 @@ class ChatFragment : Fragment() {
                     messageHistory?.forEach {
                         val message = parseChatMessage(it)
                         if (message != null) {
-                            printMessage(message)
+//                            printMessage(message)
+//                            chatViewModel.messages.value?.add(message)
+                            chatViewModel.addMessage(message)
                         }
                     }
+                    progressBarFragment.visibility = View.GONE
                     Log.d(
                         "TAG",
                         "ENDING PARSING ${(System.currentTimeMillis() - CurrentUser.time)}"
@@ -145,7 +172,8 @@ class ChatFragment : Fragment() {
                         parseChatMessage(intent.getStringExtra("gg.strims.android.MESSAGE_TEXT")!!)
 
                     /** Remove duplicate messages **/
-                    if (adapter.itemCount > 0 && message != null) {
+                    if (adapter.itemCount > 1 && message != null) {
+                        // TODO: LOOK AT THIS BELOW: "Wanted item at position -1 but an Item is a Group of size 1"
                         if (adapter.getItem(adapter.itemCount - 2).layout == R.layout.chat_message_item || adapter.getItem(
                                 adapter.itemCount - 2
                             ).layout == R.layout.chat_message_item_consecutive_nick
@@ -160,23 +188,29 @@ class ChatFragment : Fragment() {
 
                     if (message != null) {
                         Log.d("TAG", "FROM SERVICE: ${message.nick} + ${message.data}")
-                        if (message.privMsg) {
-                            val isReceived = message.nick != CurrentUser.user?.username
-                            adapter.add(
-                                PrivateChatMessage(
-                                    requireContext(),
-                                    adapter,
-                                    message,
-                                    isReceived,
-                                    sendMessageText
-                                )
-                            )
-                            if (CurrentUser.options!!.notifications && message.nick != CurrentUser.user!!.username) {
-                                displayNotification(message)
-                            }
+//                        if (message.privMsg) {
+//                            val isReceived = message.nick != CurrentUser.user?.username
+//                            adapter.add(
+//                                PrivateChatMessage(
+//                                    requireContext(),
+//                                    adapter,
+//                                    message,
+//                                    isReceived,
+//                                    sendMessageText
+//                                )
+//                            )
+//                            if (CurrentUser.options!!.notifications && message.nick != CurrentUser.user!!.username) {
+//                                displayNotification(message)
+//                            }
+//                        } else {
+//                            printMessage(message)
+//                            chatViewModel.messages.value?.add(message)
+                        if (::chatViewModel.isInitialized) {
+                            chatViewModel.addMessage(message)
                         } else {
-                            printMessage(message)
+                            missedMessages.add(message)
                         }
+//                        }
                         val recycler = recyclerViewChat
                         if (recycler != null) {
                             val layoutTest =
@@ -209,6 +243,7 @@ class ChatFragment : Fragment() {
                     parentActivity.stopService(parentActivity.chatSocketIntent)
                     parentActivity.startService(parentActivity.chatSocketIntent)
                 } else if (intent.action == "gg.strims.android.STREAMS_SOCKET_CLOSE") {
+                    //TODO: INVESTIGATE BELOW NULL OBJECT REFERENCE
                     parentActivity.stopService(parentActivity.streamsSocketIntent)
                     parentActivity.startService(parentActivity.streamsSocketIntent)
                 } else if (intent.action == "gg.strims.android.STREAMS") {
@@ -219,31 +254,27 @@ class ChatFragment : Fragment() {
                         constraintLayoutStreamFragment.visibility = View.VISIBLE
                     }
 
-                    hideChildFragment(this@ChatFragment, childFragmentManager.findFragmentById(R.id.angelthump_fragment)!!)
-                    hideChildFragment(this@ChatFragment, childFragmentManager.findFragmentById(R.id.twitch_fragment)!!)
-                    hideChildFragment(this@ChatFragment, childFragmentManager.findFragmentById(R.id.youtube_fragment)!!)
+                    hideChildFragment(
+                        this@ChatFragment,
+                        childFragmentManager.findFragmentById(R.id.angelthump_fragment)!!
+                    )
+                    hideChildFragment(
+                        this@ChatFragment,
+                        childFragmentManager.findFragmentById(R.id.twitch_fragment)!!
+                    )
+                    hideChildFragment(
+                        this@ChatFragment,
+                        childFragmentManager.findFragmentById(R.id.youtube_fragment)!!
+                    )
 
-                    with (CurrentUser) {
+                    with(exoPlayerViewModel) {
                         when {
-                            tempStream != null -> {
+                            liveDataStream.value != null -> {
                                 val fragment = childFragmentManager.findFragmentById(R.id.angelthump_fragment)
-                                showChildFragment(this@ChatFragment, fragment!!)
-                            }
-
-                            tempTwitchUrl != null -> {
-                                val fragment = childFragmentManager.findFragmentById(R.id.twitch_fragment)
-                                showChildFragment(this@ChatFragment, fragment!!)
-                            }
-
-                            tempYouTubeId != null -> {
-                                val fragment = childFragmentManager.findFragmentById(R.id.youtube_fragment)
                                 showChildFragment(this@ChatFragment, fragment!!)
                             }
                         }
                     }
-                } else if (intent.action == "gg.strims.android.LOGOUT") {
-                    sendMessageText.hint = resources.getString(R.string.log_in_to_send_messages)
-                    progressBarFragment.visibility = View.VISIBLE
                 }
             }
         }
@@ -288,19 +319,6 @@ class ChatFragment : Fragment() {
     }
 
     override fun onStop() {
-        if (CurrentUser.tempStream == null &&
-            (CurrentUser.tempTwitchVod == null &&
-                    CurrentUser.tempTwitchUrl == null) &&
-            CurrentUser.tempYouTubeId == null) {
-            chatViewModel?.visibleStream = null
-        } else if (CurrentUser.tempStream != null) {
-            chatViewModel?.visibleStream = "angelthump"
-        } else if (CurrentUser.tempTwitchVod != null || CurrentUser.tempTwitchUrl != null) {
-            chatViewModel?.visibleStream = "twitch"
-        } else if (CurrentUser.tempYouTubeId != null) {
-            chatViewModel?.visibleStream = "youtube"
-        }
-
         for (i in 0 until adapter.itemCount) {
             if (adapter.getItem(i).layout == R.layout.chat_message_item ||
                 adapter.getItem(i).layout == R.layout.chat_message_item_consecutive_nick) {
@@ -316,11 +334,7 @@ class ChatFragment : Fragment() {
         super.onStop()
     }
 
-    private var chatViewModel: ChatViewModel? = null
-
     override fun onSaveInstanceState(outState: Bundle) {
-        chatViewModel?.chatAdapter = adapter
-
         Log.d("TAG", "SAVING")
         super.onSaveInstanceState(outState)
     }
@@ -334,7 +348,7 @@ class ChatFragment : Fragment() {
         commandsArray = resources.getStringArray(R.array.commandsArray)
 
         privateMessagesViewModel =
-            ViewModelProvider(this).get(PrivateMessagesViewModel::class.java)
+            ViewModelProvider(requireActivity()).get(PrivateMessagesViewModel::class.java)
 
         val intentFilter = IntentFilter()
         intentFilter.addAction("gg.strims.android.MESSAGE")
@@ -344,7 +358,6 @@ class ChatFragment : Fragment() {
         intentFilter.addAction("gg.strims.android.STREAMS_SOCKET_CLOSE")
         intentFilter.addAction("gg.strims.android.STREAMS")
         intentFilter.addAction("gg.strims.android.SHOWSTREAM")
-        intentFilter.addAction("gg.strims.android.LOGOUT")
         requireActivity().registerReceiver(broadcastReceiver, intentFilter)
     }
 
@@ -358,43 +371,89 @@ class ChatFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         Log.d("TAG", "ONVIEWCREATED")
-        chatViewModel = ViewModelProvider(this).get(ChatViewModel::class.java)
+        chatViewModel = ViewModelProvider(requireActivity()).get(ChatViewModel::class.java)
+        exoPlayerViewModel = ViewModelProvider(requireActivity()).get(ExoPlayerViewModel::class.java)
+        twitchViewModel = ViewModelProvider(requireActivity()).get(TwitchViewModel::class.java)
+        youTubeViewModel = ViewModelProvider(requireActivity()).get(YouTubeViewModel::class.java)
+        profileViewModel = ViewModelProvider(requireActivity()).get(ProfileViewModel::class.java)
+
+        chatViewModel.latestMessage.value = null
+
+//        chatViewModel.messages.observe(viewLifecycleOwner, {
+//            Log.d("TAG", "MESSAGES OBSERVED")
+//            it.forEach { message ->
+//                printMessage(message)
+//            }
+//        })
+
+        chatViewModel.latestMessage.observe(viewLifecycleOwner, {
+            if (it != null) {
+                printMessage(it)
+            }
+        })
+
+        exoPlayerViewModel.liveDataStream.observe(viewLifecycleOwner, {
+            if (it != null) {
+                // Close YouTube and Twitch
+                val fragment = childFragmentManager.findFragmentById(R.id.angelthump_fragment)
+                showChildFragment(this@ChatFragment, fragment!!)
+            }
+        })
+
+        twitchViewModel.channel.observe(viewLifecycleOwner, {
+            if (it != null) {
+                // Close AT and YouTube
+                val fragment = childFragmentManager.findFragmentById(R.id.twitch_fragment)
+                showChildFragment(this@ChatFragment, fragment!!)
+            }
+        })
+
+        youTubeViewModel.videoId.observe(viewLifecycleOwner, {
+            if (it != null) {
+                // Close AT and Twitch
+                val fragment = childFragmentManager.findFragmentById(R.id.youtube_fragment)
+                showChildFragment(this@ChatFragment, fragment!!)
+            }
+        })
+
+        profileViewModel.logOut.observe(viewLifecycleOwner, {
+            if (it) {
+                sendMessageText.hint = resources.getString(R.string.log_in_to_send_messages)
+                progressBarFragment.visibility = View.VISIBLE
+                profileViewModel.logOut.value = false
+            }
+        })
 
         if (CurrentUser.user != null) {
             sendMessageText.hint = "Write something ${CurrentUser.user!!.username} ..."
         }
 
         if (savedInstanceState != null) {
-            if (chatViewModel!!.chatAdapter != null) {
-                adapter = chatViewModel!!.chatAdapter!!
+//            if (chatViewModel.chatAdapter != null) {
+//                adapter = chatViewModel.chatAdapter!!
+//            }
+            Log.d("TAG", "SAVESTATE NOT NULL")
+
+            chatViewModel.messages.value?.forEach {
+                printMessage(it)
             }
+
+            progressBarFragment.visibility = View.GONE
         }
 
-        if (chatViewModel?.visibleStream != null && resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+        if (missedMessages.isNotEmpty()) {
+            missedMessages.forEach {
+                printMessage(it)
+            }
+            missedMessages.clear()
+        }
+
+        if ((exoPlayerViewModel.liveDataStream.value != null ||
+                    twitchViewModel.channel.value != null ||
+                    youTubeViewModel.videoId.value != null)
+            && resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        ) {
             constraintLayoutStreamFragment.visibility = View.VISIBLE
-        }
-
-        when (chatViewModel?.visibleStream) {
-            "angelthump" -> {
-                showChildFragment(
-                    this,
-                    childFragmentManager.findFragmentById(R.id.angelthump_fragment)!!
-                )
-            }
-
-            "twitch" -> {
-                showChildFragment(
-                    this,
-                    childFragmentManager.findFragmentById(R.id.twitch_fragment)!!
-                )
-            }
-
-            "youtube" -> {
-                showChildFragment(
-                    this,
-                    childFragmentManager.findFragmentById(R.id.youtube_fragment)!!
-                )
-            }
         }
 
         for (i in 0 until adapter.itemCount) {
@@ -522,7 +581,10 @@ class ChatFragment : Fragment() {
 
         userListButtonFragment.setOnClickListener {
             if (childFragmentManager.findFragmentById(R.id.emote_menu_fragment)!!.isVisible) {
-                hideChildFragment(this, childFragmentManager.findFragmentById(R.id.emote_menu_fragment)!!)
+                hideChildFragment(
+                    this,
+                    childFragmentManager.findFragmentById(R.id.emote_menu_fragment)!!
+                )
             }
             hideKeyboardFrom(requireContext(), sendMessageText)
             if (childFragmentManager.findFragmentById(R.id.user_list_fragment)!!.isVisible) {
@@ -540,7 +602,10 @@ class ChatFragment : Fragment() {
 
         emoteMenuButtonFragment.setOnClickListener {
             if (childFragmentManager.findFragmentById(R.id.user_list_fragment)!!.isVisible) {
-                hideChildFragment(this, childFragmentManager.findFragmentById(R.id.user_list_fragment)!!)
+                hideChildFragment(
+                    this,
+                    childFragmentManager.findFragmentById(R.id.user_list_fragment)!!
+                )
             }
             hideKeyboardFrom(requireContext(), sendMessageText)
             if (childFragmentManager.findFragmentById(R.id.emote_menu_fragment)!!.isVisible) {
@@ -611,132 +676,188 @@ class ChatFragment : Fragment() {
                     val nickIgnore =
                         messageText.substringAfter("/ignore ").substringBefore(' ')
                     CurrentUser.options!!.ignoreList.add(nickIgnore)
-                    CurrentUser.saveOptions(requireContext())
-                    adapter.add(
-                        ChatMessage(
-                            requireContext(),
-                            adapter,
-                            Message(
-                                false,
-                                "Info",
-                                "Ignoring: $nickIgnore"
-                            )
-                        )
+                    CurrentUser.addIgnore(nickIgnore)
+//                    CurrentUser.saveOptions(requireContext())
+                    val message = Message(
+                        false,
+                        "Info",
+                        "Ignoring: $nickIgnore"
                     )
+//                    adapter.add(
+//                        ChatMessage(
+//                            requireContext(),
+//                            adapter,
+//                            Message(
+//                                false,
+//                                "Info",
+//                                "Ignoring: $nickIgnore"
+//                            )
+//                        )
+//                    )
+                    chatViewModel.addMessage(message)
                 } else if (command == "unignore") {
+                    val message: Message?
                     val nickUnignore =
                         messageText.substringAfter("/unignore ").substringBefore(' ')
                     if (CurrentUser.options!!.ignoreList.contains(nickUnignore)) {
                         CurrentUser.options!!.ignoreList.remove(nickUnignore)
-                        CurrentUser.saveOptions(requireContext())
-                        adapter.add(
-                            ChatMessage(
-                                requireContext(),
-                                adapter,
-                                Message(
-                                    false,
-                                    "Info",
-                                    "Unignored: $nickUnignore"
-                                )
-                            )
+                        CurrentUser.removeIgnore(nickUnignore)
+//                        CurrentUser.saveOptions(requireContext())
+                        message = Message(
+                            false,
+                            "Info",
+                            "Unignored: $nickUnignore"
                         )
+//                        adapter.add(
+//                            ChatMessage(
+//                                requireContext(),
+//                                adapter,
+//                                Message(
+//                                    false,
+//                                    "Info",
+//                                    "Unignored: $nickUnignore"
+//                                )
+//                            )
+//                        )
                     } else {
-                        adapter.add(
-                            ChatMessage(
-                                requireContext(),
-                                adapter,
-                                Message(
-                                    false,
-                                    "Info",
-                                    "User not currently ignored"
-                                )
-                            )
+                        message = Message(
+                            false,
+                            "Info",
+                            "User not currently ignored"
                         )
+//                        adapter.add(
+//                            ChatMessage(
+//                                requireContext(),
+//                                adapter,
+//                                Message(
+//                                    false,
+//                                    "Info",
+//                                    "User not currently ignored"
+//                                )
+//                            )
+//                        )
                     }
+                    chatViewModel.addMessage(message)
                 } else if (command == "highlight") {
+                    val message: Message?
                     val nickHighlight =
                         messageText.substringAfter("/highlight ").substringBefore(' ')
                     if (CurrentUser.options!!.customHighlights.contains(nickHighlight)) {
-                        adapter.add(
-                            ChatMessage(
-                                requireContext(),
-                                adapter,
-                                Message(
-                                    false,
-                                    "Info",
-                                    "User already highlighted"
-                                )
-                            )
+                        message = Message(
+                            false,
+                            "Info",
+                            "User already highlighted"
                         )
+//                        adapter.add(
+//                            ChatMessage(
+//                                requireContext(),
+//                                adapter,
+//                                Message(
+//                                    false,
+//                                    "Info",
+//                                    "User already highlighted"
+//                                )
+//                            )
+//                        )
                     } else {
                         CurrentUser.options!!.customHighlights.add(nickHighlight)
                         CurrentUser.saveOptions(requireContext())
-                        adapter.add(
-                            ChatMessage(
-                                requireContext(),
-                                adapter,
-                                Message(
-                                    false,
-                                    "Info",
-                                    "Highlighting user: $nickHighlight"
-                                )
-                            )
+                        message = Message(
+                            false,
+                            "Info",
+                            "Highlighting user: $nickHighlight"
                         )
+//                        adapter.add(
+//                            ChatMessage(
+//                                requireContext(),
+//                                adapter,
+//                                Message(
+//                                    false,
+//                                    "Info",
+//                                    "Highlighting user: $nickHighlight"
+//                                )
+//                            )
+//                        )
                     }
+                    chatViewModel.addMessage(message)
                 } else if (command == "unhighlight") {
+                    val message: Message?
                     val nickUnhighlight =
                         messageText.substringAfter("/unhighlight ").substringBefore(' ')
                     if (CurrentUser.options!!.customHighlights.contains(nickUnhighlight)) {
                         CurrentUser.options!!.customHighlights.remove(nickUnhighlight)
                         CurrentUser.saveOptions(requireContext())
-                        adapter.add(
-                            ChatMessage(
-                                requireContext(),
-                                adapter,
-                                Message(
-                                    false,
-                                    "Info",
-                                    "No longer highlighting user: $nickUnhighlight"
-                                )
-                            )
+                        message = Message(
+                            false,
+                            "Info",
+                            "No longer highlighting user: $nickUnhighlight"
                         )
+//                        adapter.add(
+//                            ChatMessage(
+//                                requireContext(),
+//                                adapter,
+//                                Message(
+//                                    false,
+//                                    "Info",
+//                                    "No longer highlighting user: $nickUnhighlight"
+//                                )
+//                            )
+//                        )
                     } else {
-                        adapter.add(
-                            ChatMessage(
-                                requireContext(),
-                                adapter,
-                                Message(
-                                    false,
-                                    "Info",
-                                    "User not currently highlighted"
-                                )
-                            )
+                        message = Message(
+                            false,
+                            "Info",
+                            "User not currently highlighted"
                         )
+//                        adapter.add(
+//                            ChatMessage(
+//                                requireContext(),
+//                                adapter,
+//                                Message(
+//                                    false,
+//                                    "Info",
+//                                    "User not currently highlighted"
+//                                )
+//                            )
+//                        )
                     }
+                    chatViewModel.addMessage(message)
                 } else if (command == "help") {
-                    adapter.add(
-                        ChatMessage(
-                            requireContext(),
-                            adapter,
-                            Message(
-                                false,
-                                "Info",
-                                resources.getString(R.string.help)
-                            )
-                        )
+                    val message = Message(
+                        false,
+                        "Info",
+                        resources.getString(R.string.help)
                     )
+                    chatViewModel.addMessage(message)
+//                    adapter.add(
+//                        ChatMessage(
+//                            requireContext(),
+//                            adapter,
+//                            Message(
+//                                false,
+//                                "Info",
+//                                resources.getString(R.string.help)
+//                            )
+//                        )
+//                    )
                 } else {
-                    adapter.add(
-                        ChatMessage(
-                            requireContext(),
-                            adapter,
-                            Message(
-                                false,
-                                "Info",
-                                "Invalid command"
-                            )
-                        )
+                    val message = Message(
+                        false,
+                        "Info",
+                        "Invalid command"
                     )
+                    chatViewModel.addMessage(message)
+//                    adapter.add(
+//                        ChatMessage(
+//                            requireContext(),
+//                            adapter,
+//                            Message(
+//                                false,
+//                                "Info",
+//                                "Invalid command"
+//                            )
+//                        )
+//                    )
                 }
             } else {
                 val intent = Intent("gg.strims.android.SEND_MESSAGE")
@@ -751,13 +872,16 @@ class ChatFragment : Fragment() {
         }
     }
 
-    fun displayNotification(message: Message) {
+    private fun displayNotification(message: Message) {
         val activityIntent = Intent(requireContext(), ChatActivity::class.java)
         val resultingActivityPendingIntent = PendingIntent.getActivity(
             requireContext(), 0, activityIntent, PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        val notificationBuilder = NotificationCompat.Builder(requireContext(), ChatActivity.channelId)
+        val notificationBuilder = NotificationCompat.Builder(
+            requireContext(),
+            ChatActivity.channelId
+        )
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle(message.nick)
             .setContentText(message.data)
@@ -774,7 +898,12 @@ class ChatFragment : Fragment() {
         )
 
         val replyPendingIntent =
-            PendingIntent.getBroadcast(requireContext(), 0, replyIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+            PendingIntent.getBroadcast(
+                requireContext(),
+                0,
+                replyIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT
+            )
 
         val action = NotificationCompat.Action.Builder(
             R.drawable.ic_launcher_background,
@@ -788,9 +917,16 @@ class ChatFragment : Fragment() {
         val notificationManager =
             requireContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val channel =
-            NotificationChannel(ChatActivity.channelId, "Chat Messages", NotificationManager.IMPORTANCE_DEFAULT)
+            NotificationChannel(
+                ChatActivity.channelId,
+                "Chat Messages",
+                NotificationManager.IMPORTANCE_DEFAULT
+            )
         notificationManager.createNotificationChannel(channel)
-        NotificationManagerCompat.from(requireContext()).notify(ChatActivity.NOTIFICATION_ID, notificationBuilder.build())
+        NotificationManagerCompat.from(requireContext()).notify(
+            ChatActivity.NOTIFICATION_ID,
+            notificationBuilder.build()
+        )
     }
 
     inner class AutofillItemCommand(private val command: String) : Item<GroupieViewHolder>() {
@@ -916,17 +1052,19 @@ class ChatFragment : Fragment() {
                     lastMessage.state = 1
                     adapter.notifyItemChanged(adapter.itemCount - 1)
                 }
-                adapter.add(
-                    ChatMessage(
-                        requireContext(),
-                        adapter,
-                        Message(
-                            false,
-                            "Info",
-                            "Connected users: ${names.connectioncount}"
-                        )
-                    )
+                val message = Message(
+                    false,
+                    "Info",
+                    "Connected users: ${names.connectioncount}"
                 )
+//                adapter.add(
+//                    ChatMessage(
+//                        requireContext(),
+//                        adapter,
+//                        message
+//                    )
+//                )
+                chatViewModel.addMessage(message)
                 progressBarFragment.visibility = View.GONE
                 Log.d("TAG", "ENDING BAR ${(System.currentTimeMillis() - CurrentUser.time)}")
                 Toast.makeText(

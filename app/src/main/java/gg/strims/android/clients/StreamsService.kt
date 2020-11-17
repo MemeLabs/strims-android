@@ -108,7 +108,7 @@ class StreamsService: Service() {
                         val intent = Intent("gg.strims.android.STREAMS")
                         intent.putExtra("gg.strims.android.STREAMS_TEXT", frame.readText())
                         sendBroadcast(intent)
-                        Log.d("TAG", "Sending broadcast with ${frame.readText()}")
+//                        Log.d("TAG", "Sending broadcast with ${frame.readText()}")
                     }
                     is Frame.Binary -> println(frame.readBytes())
                 }

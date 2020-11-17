@@ -13,25 +13,45 @@ import java.util.HashMap
 object CurrentUser {
     var user: Profile? = null // Current user
     var options: Options? = null // Loaded options file
+    var optionsLiveData = MutableLiveData<Options>()
     var tempHighlightNick: MutableList<String>? = null // List of nicks to highlight in chat when a user clicks on them
     var users = mutableListOf<String>() // List of all users in chat
     var streams: MutableList<Stream>? = null // List of all active streams from STREAMS_SET
-    var tempStream: Stream? = null // Currently playing AngelThump stream object
-    var tempTwitchUrl: String? = null // Currently playing Twitch URL
-    var tempTwitchVod: Boolean? = null // True if selected stream is a Twitch VOD
-    var tempYouTubeId: String? = null // Currently playing YouTube Video ID
     var emotes: MutableList<Emote>? = null // Collection of all emote models
     var jwt: String? = null // JSON Web Token of current user
     var viewerStates: MutableList<ViewerState>? = null // Collection of ViewerStates
     lateinit var bitmapMemoryCache: HashMap<String, Bitmap> // Collection of all emote Bitmaps
     lateinit var gifMemoryCache: HashMap<String, GifDrawable> // Collection of all animated emote GifDrawables
 
-    var liveDataStream = MutableLiveData<Stream>()
-
     val time = System.currentTimeMillis()
 
+    private fun <T> MutableLiveData<T>.notifyObserver() {
+        this.value = this.value
+    }
+
+    fun addIgnore(user: String) {
+        optionsLiveData.value?.ignoreList?.add(user)
+        optionsLiveData.notifyObserver()
+    }
+
+    fun removeIgnore(user: String) {
+        optionsLiveData.value?.ignoreList?.remove(user)
+        optionsLiveData.notifyObserver()
+    }
+
+    fun addHighlight(user: String) {
+        optionsLiveData.value?.customHighlights?.add(user)
+        optionsLiveData.notifyObserver()
+    }
+
+    fun removeHighlight(user: String) {
+        optionsLiveData.value?.customHighlights?.remove(user)
+        optionsLiveData.notifyObserver()
+    }
+
     fun saveOptions(context: Context) {
-        val sharedPreferences = context.getSharedPreferences("ChatOptions", Context.MODE_PRIVATE).edit()
+        val sharedPreferences =
+            context.getSharedPreferences("ChatOptions", Context.MODE_PRIVATE).edit()
         sharedPreferences.putString("options", Gson().toJson(options))
         sharedPreferences.apply()
     }

@@ -1,6 +1,5 @@
 package gg.strims.android.fragments
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -8,10 +7,12 @@ import android.view.ViewGroup
 import android.webkit.CookieManager
 import android.widget.ArrayAdapter
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import com.google.gson.Gson
 import gg.strims.android.ChatActivity
 import gg.strims.android.CurrentUser
 import gg.strims.android.R
+import gg.strims.android.viewmodels.ProfileViewModel
 import io.ktor.client.*
 import io.ktor.client.features.websocket.*
 import io.ktor.client.request.*
@@ -24,6 +25,8 @@ import kotlinx.coroutines.launch
 
 @KtorExperimentalAPI
 class ProfileFragment: Fragment() {
+
+    private lateinit var profileViewModel: ProfileViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -55,6 +58,8 @@ class ProfileFragment: Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        profileViewModel = ViewModelProvider(requireActivity()).get(ProfileViewModel::class.java)
+
         val spinnerArray = resources.getStringArray(R.array.streaming_service_spinner)
 
         val arrayAdapter = ArrayAdapter(requireContext(), R.layout.spinner_item, spinnerArray)
@@ -97,9 +102,7 @@ class ProfileFragment: Fragment() {
             activity.navHeaderUsername.text = resources.getString(R.string.anonymous)
             activity.nav_view.menu.findItem(R.id.nav_Profile).isVisible = false
             activity.nav_view.menu.findItem(R.id.nav_Whispers).isVisible = false
-            requireContext().sendBroadcast(Intent("gg.strims.android.LOGOUT"))
-//            activity.sendMessageText.hint = "Log in to send messages"
-//            requireActivity().progressBar.visibility = View.VISIBLE
+            profileViewModel.logOut.value = true
         }
 
         fetchProfile()

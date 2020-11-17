@@ -1,7 +1,6 @@
 package gg.strims.android.fragments
 
 import android.annotation.SuppressLint
-import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -22,6 +21,8 @@ import gg.strims.android.CurrentUser
 import gg.strims.android.R
 import gg.strims.android.models.Stream
 import gg.strims.android.viewmodels.ExoPlayerViewModel
+import gg.strims.android.viewmodels.TwitchViewModel
+import gg.strims.android.viewmodels.YouTubeViewModel
 import io.ktor.util.*
 import kotlinx.android.synthetic.main.fragment_streams.*
 import kotlinx.android.synthetic.main.stream_item.view.*
@@ -34,6 +35,10 @@ class StreamsFragment : Fragment() {
 
     private lateinit var exoPlayerViewModel: ExoPlayerViewModel
 
+    private lateinit var twitchViewModel: TwitchViewModel
+
+    private lateinit var youTubeViewModel: YouTubeViewModel
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -43,7 +48,9 @@ class StreamsFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        exoPlayerViewModel = ViewModelProvider(this).get(ExoPlayerViewModel::class.java)
+        exoPlayerViewModel = ViewModelProvider(requireActivity()).get(ExoPlayerViewModel::class.java)
+        twitchViewModel = ViewModelProvider(requireActivity()).get(TwitchViewModel::class.java)
+        youTubeViewModel = ViewModelProvider(requireActivity()).get(YouTubeViewModel::class.java)
 
         if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             val layoutManager = GridLayoutManager(view.context, 2)
@@ -142,30 +149,24 @@ class StreamsFragment : Fragment() {
             }
 
             viewHolder.itemView.setOnClickListener {
-                CurrentUser.tempTwitchUrl = null
-                CurrentUser.tempTwitchVod = null
-                CurrentUser.tempStream = null
-                CurrentUser.tempYouTubeId = null
-
-                requireActivity().onBackPressed()
 
                 when (stream.service) {
                     "angelthump", "m3u8" -> {
-                        CurrentUser.tempStream = stream
+                        exoPlayerViewModel.liveDataStream.value = stream
                     }
                     "twitch" -> {
-                        CurrentUser.tempTwitchUrl = stream.channel
-                        CurrentUser.tempTwitchVod = false
+                        twitchViewModel.channel.value = stream.channel
                     }
                     "youtube" -> {
-                        CurrentUser.tempYouTubeId = stream.channel
+                        youTubeViewModel.videoId.value = stream.channel
                     }
                     "twitch-vod" -> {
-                        CurrentUser.tempTwitchUrl = stream.channel
-                        CurrentUser.tempTwitchVod = true
+                        twitchViewModel.channel.value = stream.channel
+                        twitchViewModel.vod = true
                     }
                 }
-                requireContext().sendBroadcast(Intent("gg.strims.android.SHOWSTREAM"))
+
+                requireActivity().onBackPressed()
             }
         }
     }

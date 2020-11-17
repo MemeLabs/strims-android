@@ -6,17 +6,21 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.YouTubePlayerCallback
 import gg.strims.android.CurrentUser
 import gg.strims.android.R
 import gg.strims.android.hideChildFragment
+import gg.strims.android.viewmodels.YouTubeViewModel
 import io.ktor.util.*
 import kotlinx.android.synthetic.main.fragment_chat.*
 import kotlinx.android.synthetic.main.fragment_youtube.*
 
 @KtorExperimentalAPI
 class YouTubeFragment: Fragment() {
+
+    private lateinit var youTubeViewModel: YouTubeViewModel
 
     override fun onDestroy() {
         if (youTubeView != null) {
@@ -45,6 +49,8 @@ class YouTubeFragment: Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         hideChildFragment(requireParentFragment(), this)
 
+        youTubeViewModel = ViewModelProvider(requireActivity()).get(YouTubeViewModel::class.java)
+
         lifecycle.addObserver(youTubeView)
 
         youTubeClose.setOnClickListener {
@@ -53,7 +59,9 @@ class YouTubeFragment: Fragment() {
                     youTubePlayer.pause()
                 }
             })
-            CurrentUser.tempYouTubeId = null
+
+            youTubeViewModel.videoId.value = null
+
             parentFragmentManager.beginTransaction()
                 .hide(this)
                 .commit()
@@ -66,10 +74,10 @@ class YouTubeFragment: Fragment() {
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
-        if (CurrentUser.tempYouTubeId != null && !hidden) {
+        if (youTubeViewModel.videoId.value != null && !hidden) {
             youTubeView.getYouTubePlayerWhenReady(object : YouTubePlayerCallback {
                 override fun onYouTubePlayer(youTubePlayer: YouTubePlayer) {
-                    youTubePlayer.loadVideo(CurrentUser.tempYouTubeId!!, 0f)
+                    youTubePlayer.loadVideo(youTubeViewModel.videoId.value!!, 0f)
                 }
             })
         }

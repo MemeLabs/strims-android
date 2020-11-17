@@ -246,8 +246,9 @@ fun createMessageTextView(
                                         }
                                         CurrentUser.streams?.forEach { stream ->
                                             if (stream.channel == channel && (stream.service == "angelthump" || stream.service == "m3u8")) {
-                                                CurrentUser.tempStream = stream
-                                                context.sendBroadcast(Intent("gg.strims.android.SHOWSTREAM"))
+                                                val intent = Intent("gg.strims.android.SHOWSTREAM")
+                                                intent.putExtra("gg.strims.android.STREAM", stream)
+                                                context.sendBroadcast(intent)
                                             }
                                         }
                                     } else if (!it.url!!.startsWith("http://") && !it.url!!.startsWith(
@@ -274,8 +275,9 @@ fun createMessageTextView(
                             }
                             CurrentUser.streams?.forEach { stream ->
                                 if (stream.channel == channel && (stream.service == "angelthump" || stream.service == "m3u8")) {
-                                    CurrentUser.tempStream = stream
-                                    context.sendBroadcast(Intent("gg.strims.android.SHOWSTREAM"))
+                                    val intent = Intent("gg.strims.android.SHOWSTREAM")
+                                    intent.putExtra("gg.strims.android.STREAM", stream)
+                                    context.sendBroadcast(intent)
                                 }
                             }
                         } else if (!it.url!!.startsWith("http://") && !it.url!!.startsWith(

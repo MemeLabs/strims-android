@@ -117,7 +117,7 @@ class WhispersUserFragment : Fragment() {
             }
         })
 
-        privateMessagesViewModel = ViewModelProvider(this).get(PrivateMessagesViewModel::class.java)
+        privateMessagesViewModel = ViewModelProvider(requireActivity()).get(PrivateMessagesViewModel::class.java)
         privateMessagesViewModel.privateMessages.observe(viewLifecycleOwner, { messages ->
             val newMessages = messages.filter {
                 (it.nick == CurrentUser.user!!.username && it.targetNick == args.username) || it.nick == args.username

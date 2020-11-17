@@ -61,7 +61,7 @@ class WhispersFragment : Fragment() {
             )
         )
 
-        privateMessagesViewModel = ViewModelProvider(this).get(PrivateMessagesViewModel::class.java)
+        privateMessagesViewModel = ViewModelProvider(requireActivity()).get(PrivateMessagesViewModel::class.java)
         privateMessagesViewModel.privateMessages.observe(viewLifecycleOwner, { messages ->
             whispersAdapter!!.clear()
             messages.forEach { message ->

@@ -107,8 +107,7 @@ dependencies {
     implementation 'com.google.android.exoplayer:exoplayer-smoothstreaming:2.12.1'
     implementation 'com.google.android.exoplayer:extension-mediasession:2.12.1'
 
-    implementation "androidx.datastore:datastore-preferences:1.0.0-alpha02"
-
+    implementation "androidx.datastore:datastore-preferences:1.0.0-alpha03"
 
     // Room components
     implementation "androidx.room:room-runtime:2.2.5"

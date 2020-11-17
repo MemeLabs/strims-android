@@ -26,6 +26,7 @@ import gg.strims.android.fragments.AngelThumpFragment
 import gg.strims.android.models.EmotesParsed
 import gg.strims.android.models.Options
 import gg.strims.android.viewmodels.ChatViewModel
+import gg.strims.android.viewmodels.ExoPlayerViewModel
 import io.ktor.util.*
 import kotlinx.android.synthetic.main.activity_navigation_drawer.*
 import kotlinx.android.synthetic.main.nav_header_main.view.*
@@ -50,11 +51,7 @@ class ChatActivity : AppCompatActivity() {
     private lateinit var appBarConfiguration: AppBarConfiguration
 
     private var chatViewModel: ChatViewModel? = null
-
-    override fun onDestroy() {
-        Log.d("TAG", "DESTROYING ACTIVITY")
-        super.onDestroy()
-    }
+    private lateinit var exoPlayerViewModel: ExoPlayerViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,13 +72,19 @@ class ChatActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
-        RedScreenOfDeath.init(this.application)
+//        RedScreenOfDeath.init(this.application)
 
         if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             supportActionBar?.hide()
         }
 
         chatViewModel = ViewModelProvider(this).get(ChatViewModel::class.java)
+        exoPlayerViewModel = ViewModelProvider(this).get(ExoPlayerViewModel::class.java)
+
+        CurrentUser.optionsLiveData.observe(this, {
+            CurrentUser.saveOptions(this)
+            Log.d("TAG", "SAVING OPTIONS IN OBSERVER")
+        })
 
         if (savedInstanceState != null) {
 
@@ -131,8 +134,14 @@ class ChatActivity : AppCompatActivity() {
         val options = sharedPreferences.getString("options", "")
         if (options != null && options.isNotEmpty()) {
             CurrentUser.options = Klaxon().parse(options)
+            runOnUiThread {
+                CurrentUser.optionsLiveData.value = CurrentUser.options
+            }
         } else {
             CurrentUser.options = Options()
+            runOnUiThread {
+                CurrentUser.optionsLiveData.value = Options()
+            }
         }
     }
 
@@ -206,7 +215,7 @@ class ChatActivity : AppCompatActivity() {
             val navHostFragment =
                 supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
             val childFragment = navHostFragment.childFragmentManager.fragments[0]
-            if (CurrentUser.tempStream != null) {
+            if (exoPlayerViewModel.liveDataStream.value != null) {
                 childFragment.childFragmentManager.fragments.forEach {
                     if (it.tag == "AngelThumpFragment") {
                         (it as AngelThumpFragment).enterPIPMode()
