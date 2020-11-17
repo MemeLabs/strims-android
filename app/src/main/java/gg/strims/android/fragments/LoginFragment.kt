@@ -9,10 +9,8 @@ import android.view.ViewGroup
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import gg.strims.android.ChatActivity
 import gg.strims.android.R
-import gg.strims.android.viewmodels.ProfileViewModel
 import io.ktor.util.*
 import kotlinx.android.synthetic.main.fragment_login.*
 

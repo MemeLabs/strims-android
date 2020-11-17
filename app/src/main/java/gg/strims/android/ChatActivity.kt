@@ -19,6 +19,7 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.beust.klaxon.Klaxon
 import com.google.android.material.navigation.NavigationView
+import com.melegy.redscreenofdeath.RedScreenOfDeath
 import gg.strims.android.clients.ChatService
 import gg.strims.android.clients.StreamsService
 import gg.strims.android.fragments.AngelThumpFragment
@@ -71,7 +72,7 @@ class ChatActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
-//        RedScreenOfDeath.init(this.application)
+        RedScreenOfDeath.init(this.application)
 
         if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             supportActionBar?.hide()

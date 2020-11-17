@@ -9,7 +9,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.YouTubePlayerCallback
-import gg.strims.android.CurrentUser
 import gg.strims.android.R
 import gg.strims.android.hideChildFragment
 import gg.strims.android.viewmodels.YouTubeViewModel

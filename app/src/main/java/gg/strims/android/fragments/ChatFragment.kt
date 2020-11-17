@@ -334,11 +334,23 @@ class ChatFragment : Fragment() {
         youTubeViewModel = ViewModelProvider(requireActivity()).get(YouTubeViewModel::class.java)
         profileViewModel = ViewModelProvider(requireActivity()).get(ProfileViewModel::class.java)
 
-        chatViewModel.latestMessage.value = null
+//        chatViewModel.latestMessage.value = null
 
-        chatViewModel.latestMessage.observe(viewLifecycleOwner, {
+//        chatViewModel.latestMessage.observe(viewLifecycleOwner, {
+//            if (it != null) {
+//                printMessage(it)
+//            }
+//        })
+
+        chatViewModel.messages.observe(viewLifecycleOwner, {
             if (it != null) {
-                printMessage(it)
+                if (it.size > chatViewModel.oldMessageCount) {
+                    val diff = it.size - chatViewModel.oldMessageCount
+                    for (i in 0 until diff) {
+                        printMessage(it[chatViewModel.oldMessageCount + i])
+                        chatViewModel.oldMessageCount = chatViewModel.oldMessageCount + 1
+                    }
+                }
             }
         })
 
@@ -390,6 +402,8 @@ class ChatFragment : Fragment() {
 
         if (missedMessages.isNotEmpty()) {
             missedMessages.forEach {
+                chatViewModel.addMessage(it)
+                chatViewModel.oldMessageCount = chatViewModel.oldMessageCount + 1
                 printMessage(it)
             }
             missedMessages.clear()

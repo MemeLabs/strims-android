@@ -8,7 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import gg.strims.android.CurrentUser
 import gg.strims.android.R
 import gg.strims.android.hideChildFragment
 import gg.strims.android.viewmodels.TwitchViewModel

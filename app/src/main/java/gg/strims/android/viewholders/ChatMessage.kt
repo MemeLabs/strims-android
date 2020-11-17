@@ -25,7 +25,7 @@ class ChatMessage(
     var adapter: GroupAdapter<GroupieViewHolder>?,
     val messageData: Message,
     private val isConsecutive: Boolean = false,
-    var sendMessageText: EditText? = null
+    private var sendMessageText: EditText? = null
 ) :
     Item<GroupieViewHolder>() {
     override fun getLayout(): Int {

@@ -27,7 +27,7 @@ class PrivateChatMessage(
     var adapter: GroupAdapter<GroupieViewHolder>?,
     private val messageData: Message,
     private val isReceived: Boolean = false,
-    var sendMessageText: EditText? = null
+    private var sendMessageText: EditText? = null
 ) :
     Item<GroupieViewHolder>() {
     override fun getLayout(): Int = R.layout.private_chat_message_item
