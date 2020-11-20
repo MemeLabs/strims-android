@@ -20,10 +20,11 @@ import gg.strims.android.CurrentUser
 import gg.strims.android.R
 import gg.strims.android.createMessageTextView
 import gg.strims.android.customspans.MarginItemDecoration
+import gg.strims.android.databinding.FragmentUserWhispersBinding
 import gg.strims.android.room.PrivateMessage
+import gg.strims.android.viewBinding
 import gg.strims.android.viewmodels.PrivateMessagesViewModel
 import io.ktor.util.*
-import kotlinx.android.synthetic.main.fragment_user_whispers.*
 import kotlinx.android.synthetic.main.whisper_message_item_left.view.*
 import kotlinx.android.synthetic.main.whisper_message_item_right.view.*
 import kotlinx.android.synthetic.main.whisper_message_item_right.view.messageWhisperMessageItemLeft
@@ -32,6 +33,8 @@ import java.text.SimpleDateFormat
 @SuppressLint("SetTextI18n", "SimpleDateFormat")
 @KtorExperimentalAPI
 class WhispersUserFragment : Fragment() {
+
+    private val binding by viewBinding(FragmentUserWhispersBinding::bind)
 
     private val whispersUserAdapter = GroupAdapter<GroupieViewHolder>()
 
@@ -48,16 +51,16 @@ class WhispersUserFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_user_whispers, container, false)
+        return FragmentUserWhispersBinding.inflate(layoutInflater).root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val layoutManager = LinearLayoutManager(view.context)
         layoutManager.stackFromEnd = true
-        recyclerViewWhispersUser.layoutManager = layoutManager
-        recyclerViewWhispersUser.adapter = whispersUserAdapter
+        binding.recyclerViewWhispersUser.layoutManager = layoutManager
+        binding.recyclerViewWhispersUser.adapter = whispersUserAdapter
 
-        recyclerViewWhispersUser.addItemDecoration(
+        binding.recyclerViewWhispersUser.addItemDecoration(
             MarginItemDecoration(
                 (TypedValue.applyDimension(
                     TypedValue.COMPLEX_UNIT_DIP,
@@ -67,40 +70,40 @@ class WhispersUserFragment : Fragment() {
             )
         )
 
-        recyclerViewWhispersUser.itemAnimator = null
+        binding.recyclerViewWhispersUser.itemAnimator = null
 
-        recyclerViewWhispersUser.setOnScrollChangeListener { _, _, _, _, _ ->
-            val layoutTest = recyclerViewWhispersUser.layoutManager as LinearLayoutManager
+        binding.recyclerViewWhispersUser.setOnScrollChangeListener { _, _, _, _, _ ->
+            val layoutTest = binding.recyclerViewWhispersUser.layoutManager as LinearLayoutManager
             val lastItem = layoutTest.findLastVisibleItemPosition()
-            if (lastItem < recyclerViewWhispersUser.adapter!!.itemCount - 1) {
-                goToBottomLayout.visibility = View.VISIBLE
-                goToBottom.isEnabled = true
+            if (lastItem < binding.recyclerViewWhispersUser.adapter!!.itemCount - 1) {
+                binding.goToBottomLayout.visibility = View.VISIBLE
+                binding.goToBottom.isEnabled = true
             } else {
-                goToBottomLayout.visibility = View.GONE
-                goToBottom.isEnabled = false
+                binding.goToBottomLayout.visibility = View.GONE
+                binding.goToBottom.isEnabled = false
             }
         }
 
-        goToBottom.setOnClickListener {
-            recyclerViewWhispersUser.scrollToPosition(whispersUserAdapter.itemCount - 1)
+        binding.goToBottom.setOnClickListener {
+            binding.recyclerViewWhispersUser.scrollToPosition(whispersUserAdapter.itemCount - 1)
         }
 
-        sendMessageTextWhisper.hint = "Write something ${CurrentUser.user?.username} ..."
+        binding.sendMessageTextWhisper.hint = "Write something ${CurrentUser.user?.username} ..."
 
-        sendMessageButtonWhisper.setOnClickListener {
+        binding.sendMessageButtonWhisper.setOnClickListener {
             val intent = Intent("gg.strims.android.SEND_MESSAGE")
             intent.putExtra(
                 "gg.strims.android.SEND_MESSAGE_TEXT",
-                "PRIVMSG {\"nick\":\"${args.username}\", \"data\":\"${sendMessageTextWhisper.text}\"}"
+                "PRIVMSG {\"nick\":\"${args.username}\", \"data\":\"${binding.sendMessageTextWhisper.text}\"}"
             )
             requireActivity().sendBroadcast(intent)
-            sendMessageTextWhisper.text.clear()
+            binding.sendMessageTextWhisper.text.clear()
         }
 
-        sendMessageTextWhisper.addTextChangedListener(object :
+        binding.sendMessageTextWhisper.addTextChangedListener(object :
             TextWatcher {
             override fun afterTextChanged(s: Editable?) {
-                sendMessageButtonWhisper.isEnabled = sendMessageTextWhisper.text.isNotEmpty()
+                binding.sendMessageButtonWhisper.isEnabled = binding.sendMessageTextWhisper.text.isNotEmpty()
             }
 
             override fun beforeTextChanged(
@@ -109,11 +112,11 @@ class WhispersUserFragment : Fragment() {
                 count: Int,
                 after: Int
             ) {
-                sendMessageButtonWhisper.isEnabled = sendMessageTextWhisper.text.isNotEmpty()
+                binding.sendMessageButtonWhisper.isEnabled = binding.sendMessageTextWhisper.text.isNotEmpty()
             }
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                sendMessageButtonWhisper.isEnabled = sendMessageTextWhisper.text.isNotEmpty()
+                binding.sendMessageButtonWhisper.isEnabled = binding.sendMessageTextWhisper.text.isNotEmpty()
             }
         })
 
@@ -129,21 +132,21 @@ class WhispersUserFragment : Fragment() {
                     conversation.add(it.id)
                     whispersUserAdapter.add(WhisperMessageItem(it))
                     val layoutTest =
-                        recyclerViewWhispersUser.layoutManager as LinearLayoutManager
+                        binding.recyclerViewWhispersUser.layoutManager as LinearLayoutManager
                     val lastItem = layoutTest.findLastVisibleItemPosition()
                     if (lastItem >= whispersUserAdapter.itemCount - 3) {
-                        recyclerViewWhispersUser.scrollToPosition(whispersUserAdapter.itemCount - 1)
+                        binding.recyclerViewWhispersUser.scrollToPosition(whispersUserAdapter.itemCount - 1)
                     }
                 }
             }
 
             if (open) {
-                recyclerViewWhispersUser.scrollToPosition(whispersUserAdapter.itemCount - 1)
+                binding.recyclerViewWhispersUser.scrollToPosition(whispersUserAdapter.itemCount - 1)
                 open = false
             }
         })
 
-        recyclerViewWhispersUser.scrollToPosition(whispersUserAdapter.itemCount - 1)
+        binding.recyclerViewWhispersUser.scrollToPosition(whispersUserAdapter.itemCount - 1)
     }
 
     inner class WhisperMessageItem(val message: PrivateMessage) : Item<GroupieViewHolder>() {

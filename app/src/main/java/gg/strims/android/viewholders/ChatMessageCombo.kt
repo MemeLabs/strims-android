@@ -14,7 +14,6 @@ import android.view.animation.ScaleAnimation
 import android.view.animation.TranslateAnimation
 import android.widget.ImageView
 import android.widget.TextView
-import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
 import gg.strims.android.CurrentUser
@@ -30,7 +29,7 @@ import java.text.SimpleDateFormat
 class ChatMessageCombo(
     private val messageData: Message,
     private val context: Context,
-    private val adapter: GroupAdapter<GroupieViewHolder>,
+    private val adapter: CustomAdapter,
     private var count: Int = 2
 ) :
     Item<GroupieViewHolder>() {
@@ -60,13 +59,13 @@ class ChatMessageCombo(
             viewHolder.itemView.timestampChatMessageCombo.visibility = View.VISIBLE
             viewHolder.itemView.timestampChatMessageCombo.text = time
         }
-        if (CurrentUser.tempHighlightNick != null) {
+        if (adapter.tempHighlightNick != null) {
             viewHolder.itemView.alpha = 0.5f
         } else {
             viewHolder.itemView.alpha = 1f
         }
         viewHolder.itemView.setOnClickListener {
-            CurrentUser.tempHighlightNick = null
+            adapter.tempHighlightNick = null
             adapter.notifyDataSetChanged()
         }
 

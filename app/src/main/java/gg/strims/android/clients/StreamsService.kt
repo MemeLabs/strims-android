@@ -14,6 +14,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.PRIORITY_MIN
+import gg.strims.android.CurrentUser
 import gg.strims.android.R
 import io.ktor.client.*
 import io.ktor.client.features.websocket.*
@@ -23,7 +24,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.launch
-
 
 @KtorExperimentalAPI
 class StreamsService: Service() {
@@ -39,6 +39,7 @@ class StreamsService: Service() {
         try {
             job = GlobalScope.launch {
                 try {
+                    Log.d("TAG", "STARTING STREAMS SERVICE ${(System.currentTimeMillis() - CurrentUser.time)}")
                     StreamsClient().onConnect()
                 } catch (e: ClosedReceiveChannelException) {
                     job?.cancel()
@@ -80,14 +81,14 @@ class StreamsService: Service() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun createNotificationChannel(channelId: String, channelName: String): String {
-        val chan = NotificationChannel(
+        val channel = NotificationChannel(
             channelId,
             channelName, NotificationManager.IMPORTANCE_NONE
         )
-        chan.lightColor = Color.BLUE
-        chan.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+        channel.lightColor = Color.BLUE
+        channel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
         val service = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        service.createNotificationChannel(chan)
+        service.createNotificationChannel(channel)
         return channelId
     }
 

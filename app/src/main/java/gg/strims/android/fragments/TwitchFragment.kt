@@ -8,16 +8,17 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import gg.strims.android.R
+import gg.strims.android.databinding.FragmentTwitchBinding
 import gg.strims.android.hideChildFragment
+import gg.strims.android.viewBinding
 import gg.strims.android.viewmodels.TwitchViewModel
 import io.ktor.util.*
-import kotlinx.android.synthetic.main.fragment_chat.*
-import kotlinx.android.synthetic.main.fragment_twitch.*
 
 @SuppressLint("SetJavaScriptEnabled")
 @KtorExperimentalAPI
 class TwitchFragment: Fragment() {
+
+    val binding by viewBinding(FragmentTwitchBinding::bind)
 
     private lateinit var twitchViewModel: TwitchViewModel
 
@@ -26,7 +27,7 @@ class TwitchFragment: Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_twitch, container, false)
+        return FragmentTwitchBinding.inflate(layoutInflater).root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -34,11 +35,11 @@ class TwitchFragment: Fragment() {
 
         twitchViewModel = ViewModelProvider(requireActivity()).get(TwitchViewModel::class.java)
 
-        webViewTwitch.settings.domStorageEnabled = true
-        webViewTwitch.settings.javaScriptEnabled = true
+        binding.webViewTwitch.settings.domStorageEnabled = true
+        binding.webViewTwitch.settings.javaScriptEnabled = true
 
-        twitchClose.setOnClickListener {
-            webViewTwitch.loadUrl("")
+        binding.twitchClose.setOnClickListener {
+            binding.webViewTwitch.loadUrl("")
             twitchViewModel.channel.value = null
             twitchViewModel.vod = false
 
@@ -47,7 +48,7 @@ class TwitchFragment: Fragment() {
                 .commit()
 
             if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                (requireParentFragment() as ChatFragment).constraintLayoutStreamFragment.visibility =
+                (requireParentFragment() as ChatFragment).binding.constraintLayoutStreamFragment?.visibility =
                     View.GONE
             }
         }
@@ -56,12 +57,12 @@ class TwitchFragment: Fragment() {
     override fun onHiddenChanged(hidden: Boolean) {
         if (twitchViewModel.channel.value != null && !hidden) {
             if (twitchViewModel.vod) {
-                webViewTwitch.loadUrl("https://player.twitch.tv/?video=${twitchViewModel.channel.value}&parent=strims.gg")
+                binding.webViewTwitch.loadUrl("https://player.twitch.tv/?video=${twitchViewModel.channel.value}&parent=strims.gg")
             } else {
-                webViewTwitch.loadUrl("https://player.twitch.tv/?channel=${twitchViewModel.channel.value}&parent=strims.gg")
+                binding.webViewTwitch.loadUrl("https://player.twitch.tv/?channel=${twitchViewModel.channel.value}&parent=strims.gg")
             }
         } else {
-            webViewTwitch.loadUrl("")
+            binding.webViewTwitch.loadUrl("")
         }
     }
 }

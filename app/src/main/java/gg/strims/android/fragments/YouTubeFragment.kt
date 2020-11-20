@@ -9,28 +9,27 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.YouTubePlayerCallback
-import gg.strims.android.R
+import gg.strims.android.databinding.FragmentYoutubeBinding
 import gg.strims.android.hideChildFragment
+import gg.strims.android.viewBinding
 import gg.strims.android.viewmodels.YouTubeViewModel
 import io.ktor.util.*
-import kotlinx.android.synthetic.main.fragment_chat.*
-import kotlinx.android.synthetic.main.fragment_youtube.*
 
 @KtorExperimentalAPI
 class YouTubeFragment: Fragment() {
 
+    val binding by viewBinding(FragmentYoutubeBinding::bind)
+
     private lateinit var youTubeViewModel: YouTubeViewModel
 
     override fun onDestroy() {
-        if (youTubeView != null) {
-            youTubeView.release()
-        }
+        binding.youTubeView.release()
         super.onDestroy()
     }
 
     override fun onResume() {
         super.onResume()
-        youTubeView.getYouTubePlayerWhenReady(object : YouTubePlayerCallback {
+        binding.youTubeView.getYouTubePlayerWhenReady(object : YouTubePlayerCallback {
             override fun onYouTubePlayer(youTubePlayer: YouTubePlayer) {
                 youTubePlayer.play()
             }
@@ -42,7 +41,7 @@ class YouTubeFragment: Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_youtube, container, false)
+        return FragmentYoutubeBinding.inflate(layoutInflater).root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -50,10 +49,10 @@ class YouTubeFragment: Fragment() {
 
         youTubeViewModel = ViewModelProvider(requireActivity()).get(YouTubeViewModel::class.java)
 
-        lifecycle.addObserver(youTubeView)
+        lifecycle.addObserver(binding.youTubeView)
 
-        youTubeClose.setOnClickListener {
-            youTubeView.getYouTubePlayerWhenReady(object : YouTubePlayerCallback {
+        binding.youTubeClose.setOnClickListener {
+            binding.youTubeView.getYouTubePlayerWhenReady(object : YouTubePlayerCallback {
                 override fun onYouTubePlayer(youTubePlayer: YouTubePlayer) {
                     youTubePlayer.pause()
                 }
@@ -67,14 +66,14 @@ class YouTubeFragment: Fragment() {
 
             if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
                 val parentFragment = requireParentFragment() as ChatFragment
-                parentFragment.constraintLayoutStreamFragment.visibility = View.GONE
+                parentFragment.binding.constraintLayoutStreamFragment?.visibility = View.GONE
             }
         }
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
         if (youTubeViewModel.videoId.value != null && !hidden) {
-            youTubeView.getYouTubePlayerWhenReady(object : YouTubePlayerCallback {
+            binding.youTubeView.getYouTubePlayerWhenReady(object : YouTubePlayerCallback {
                 override fun onYouTubePlayer(youTubePlayer: YouTubePlayer) {
                     youTubePlayer.loadVideo(youTubeViewModel.videoId.value!!, 0f)
                 }

@@ -13,20 +13,12 @@ import java.util.HashMap
 object CurrentUser {
     var user: Profile? = null // Current user
     var optionsLiveData = MutableLiveData<Options>() // LiveData of Options
-    var tempHighlightNick: MutableList<String>? = null // List of nicks to highlight in chat when a user clicks on them
-    var users = mutableListOf<String>() // List of all users in chat
-    var streams: MutableList<Stream>? = null // List of all active streams from STREAMS_SET
     var emotes: MutableList<Emote>? = null // Collection of all emote models
-    var jwt: String? = null // JSON Web Token of current user
-    var viewerStates: MutableList<ViewerState>? = null // Collection of ViewerStates
+
     lateinit var bitmapMemoryCache: HashMap<String, Bitmap> // Collection of all emote Bitmaps
     lateinit var gifMemoryCache: HashMap<String, GifDrawable> // Collection of all animated emote GifDrawables
 
     val time = System.currentTimeMillis()
-
-    private fun <T> MutableLiveData<T>.notifyObserver() {
-        this.value = this.value
-    }
 
     fun addIgnore(user: String) {
         optionsLiveData.value?.ignoreList?.add(user)

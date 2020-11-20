@@ -5,10 +5,8 @@ import android.content.Context
 import android.graphics.Color
 import android.text.method.LinkMovementMethod
 import android.view.View
-import android.widget.EditText
 import android.widget.PopupMenu
 import androidx.appcompat.view.ContextThemeWrapper
-import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
 import gg.strims.android.CurrentUser
@@ -24,10 +22,9 @@ import java.text.SimpleDateFormat
 @KtorExperimentalAPI
 class PrivateChatMessage(
     private val context: Context,
-    var adapter: GroupAdapter<GroupieViewHolder>?,
+    var adapter: CustomAdapter,
     private val messageData: Message,
-    private val isReceived: Boolean = false,
-    private var sendMessageText: EditText? = null
+    private val isReceived: Boolean = false
 ) :
     Item<GroupieViewHolder>() {
     override fun getLayout(): Int = R.layout.private_chat_message_item
@@ -54,16 +51,17 @@ class PrivateChatMessage(
             CurrentUser.optionsLiveData.value?.customHighlights!!.forEach {
                 if (messageData.nick == it) {
                     viewHolder.itemView.setBackgroundColor(Color.parseColor("#001D36"))
+                    return@forEach
                 }
             }
         }
 
-        if (CurrentUser.tempHighlightNick != null) {
+        if (adapter.tempHighlightNick != null) {
             when {
-                CurrentUser.tempHighlightNick!!.contains(messageData.nick) -> {
+                adapter.tempHighlightNick!!.contains(messageData.nick) -> {
                     viewHolder.itemView.alpha = 1f
                 }
-                CurrentUser.tempHighlightNick!!.isEmpty() -> {
+                adapter.tempHighlightNick!!.isEmpty() -> {
                     viewHolder.itemView.alpha = 1f
                 }
                 else -> {
@@ -87,14 +85,14 @@ class PrivateChatMessage(
         )
 
         viewHolder.itemView.usernamePrivateMessage.setOnClickListener {
-            if (CurrentUser.tempHighlightNick == null) {
-                CurrentUser.tempHighlightNick = mutableListOf()
+            if (adapter.tempHighlightNick == null) {
+                adapter.tempHighlightNick = mutableListOf()
             }
-            CurrentUser.tempHighlightNick!!.add(messageData.nick)
-            adapter?.notifyDataSetChanged()
+            adapter.tempHighlightNick!!.add(messageData.nick)
+            adapter.notifyDataSetChanged()
         }
 
-        if (sendMessageText != null) {
+        if (adapter.sendMessageText != null) {
             viewHolder.itemView.usernamePrivateMessage.setOnLongClickListener {
                 val wrapper = ContextThemeWrapper(context, R.style.PopupMenu)
                 val pop = PopupMenu(wrapper, it)
@@ -102,29 +100,27 @@ class PrivateChatMessage(
                 pop.setOnMenuItemClickListener { itMenuItem ->
                     when (itMenuItem.itemId) {
                         R.id.chatWhisper -> {
-                            sendMessageText!!.setText("/w ${messageData.nick} ")
-                            keyRequestFocus(sendMessageText!!, context)
-                            sendMessageText!!.setSelection(sendMessageText!!.text.length)
+                            adapter.sendMessageText!!.setText("/w ${messageData.nick} ")
+                            keyRequestFocus(adapter.sendMessageText!!, context)
+                            adapter.sendMessageText!!.setSelection(adapter.sendMessageText!!.text.length)
                         }
                         R.id.chatMention -> {
-                            val currentMessage = sendMessageText!!.text.toString()
+                            val currentMessage = adapter.sendMessageText!!.text.toString()
                             if (currentMessage.isNotEmpty()) {
                                 if (currentMessage.last() == ' ') {
-                                    sendMessageText!!.setText(currentMessage.plus("${messageData.nick} "))
+                                    adapter.sendMessageText!!.setText(currentMessage.plus("${messageData.nick} "))
                                 } else {
-                                    sendMessageText!!.setText(currentMessage.plus(" ${messageData.nick} "))
+                                    adapter.sendMessageText!!.setText(currentMessage.plus(" ${messageData.nick} "))
                                 }
                             } else {
-                                sendMessageText!!.setText("${messageData.nick} ")
+                                adapter.sendMessageText!!.setText("${messageData.nick} ")
                             }
-                            keyRequestFocus(sendMessageText!!, context)
-                            sendMessageText!!.setSelection(sendMessageText!!.text.length)
+                            keyRequestFocus(adapter.sendMessageText!!, context)
+                            adapter.sendMessageText!!.setSelection(adapter.sendMessageText!!.text.length)
                         }
                         R.id.chatIgnore -> {
-//                            CurrentUser.optionsLiveData.value?.ignoreList?.add(messageData.nick)
                             CurrentUser.addIgnore(messageData.nick)
-//                            CurrentUser.saveOptions(context)
-                            adapter?.notifyDataSetChanged()
+                            adapter.notifyDataSetChanged()
                         }
                     }
                     true
@@ -135,17 +131,13 @@ class PrivateChatMessage(
         }
 
         viewHolder.itemView.messagePrivateMessage.setOnClickListener {
-            CurrentUser.tempHighlightNick = null
-            adapter?.notifyDataSetChanged()
+            adapter.tempHighlightNick = null
+            adapter.notifyDataSetChanged()
         }
 
         viewHolder.itemView.setOnClickListener {
-            CurrentUser.tempHighlightNick = null
-            adapter?.notifyDataSetChanged()
+            adapter.tempHighlightNick = null
+            adapter.notifyDataSetChanged()
         }
-    }
-
-    fun isNickSame(nick: String): Boolean {
-        return nick == messageData.nick
     }
 }

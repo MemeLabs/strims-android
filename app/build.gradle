@@ -72,6 +72,10 @@ android {
         exclude 'META-INF/ASL2.0'
         exclude("META-INF/*.kotlin_module")
     }
+
+    buildFeatures {
+        viewBinding true
+    }
 }
 
 dependencies {
@@ -106,7 +110,9 @@ dependencies {
     implementation 'com.google.android.exoplayer:exoplayer-hls:2.12.1'
     implementation 'com.google.android.exoplayer:exoplayer-smoothstreaming:2.12.1'
     implementation 'com.google.android.exoplayer:extension-mediasession:2.12.1'
+    implementation 'jp.wasabeef:blurry:4.0.0'
 
+    // DataStore components
     implementation "androidx.datastore:datastore-preferences:1.0.0-alpha03"
 
     // Room components

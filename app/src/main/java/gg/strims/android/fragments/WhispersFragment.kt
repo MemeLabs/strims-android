@@ -17,19 +17,24 @@ import gg.strims.android.CurrentUser
 import gg.strims.android.R
 import gg.strims.android.createMessageTextView
 import gg.strims.android.customspans.MarginItemDecoration
+import gg.strims.android.databinding.FragmentWhispersBinding
 import gg.strims.android.room.PrivateMessage
+import gg.strims.android.viewBinding
+import gg.strims.android.viewmodels.ChatViewModel
 import gg.strims.android.viewmodels.PrivateMessagesViewModel
 import io.ktor.util.*
-import kotlinx.android.synthetic.main.fragment_whispers.*
 import kotlinx.android.synthetic.main.whisper_user_item.view.*
 
 @SuppressLint("SetTextI18n")
 @KtorExperimentalAPI
 class WhispersFragment : Fragment() {
 
+    private val binding by viewBinding(FragmentWhispersBinding::bind)
+
     private var whispersAdapter: GroupAdapter<GroupieViewHolder>? = GroupAdapter<GroupieViewHolder>()
 
     private lateinit var privateMessagesViewModel: PrivateMessagesViewModel
+    private lateinit var chatViewModel: ChatViewModel
 
     private var newMap: HashMap<String, PrivateMessage> = hashMapOf()
 
@@ -43,15 +48,15 @@ class WhispersFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_whispers, container, false)
+        return FragmentWhispersBinding.inflate(layoutInflater).root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         whispersAdapter = GroupAdapter<GroupieViewHolder>()
-        recyclerViewWhispers.layoutManager = LinearLayoutManager(view.context)
-        recyclerViewWhispers.adapter = whispersAdapter
+        binding.recyclerViewWhispers.layoutManager = LinearLayoutManager(view.context)
+        binding.recyclerViewWhispers.adapter = whispersAdapter
 
-        recyclerViewWhispers.addItemDecoration(
+        binding.recyclerViewWhispers.addItemDecoration(
             MarginItemDecoration(
                 (TypedValue.applyDimension(
                     TypedValue.COMPLEX_UNIT_DIP,
@@ -61,6 +66,7 @@ class WhispersFragment : Fragment() {
             )
         )
 
+        chatViewModel = ViewModelProvider(requireActivity()).get(ChatViewModel::class.java)
         privateMessagesViewModel = ViewModelProvider(requireActivity()).get(PrivateMessagesViewModel::class.java)
         privateMessagesViewModel.privateMessages.observe(viewLifecycleOwner, { messages ->
             whispersAdapter!!.clear()
@@ -90,7 +96,7 @@ class WhispersFragment : Fragment() {
             viewHolder.itemView.usernameWhisperUser.text = otherUser
 
             var online = false
-            CurrentUser.users.forEach { user ->
+            chatViewModel.users.forEach { user ->
                 if (user == otherUser) {
                     viewHolder.itemView.onlineWhisperUser.visibility = View.VISIBLE
                     online = true
@@ -103,9 +109,6 @@ class WhispersFragment : Fragment() {
             createMessageTextView(context!!, message.toMessage(), viewHolder.itemView.latestMessageWhisperUser)
 
             viewHolder.itemView.setOnClickListener {
-//                parentFragmentManager.beginTransaction()
-//                    .replace(R.id.nav_host_fragment, WhispersUserFragment(), "WhispersUserFragment")
-//                    .addToBackStack("WhispersUserFragment").commit()
                 val action = WhispersFragmentDirections.actionNavWhispersToWhispersUserFragment(otherUser)
                 findNavController().navigate(action)
             }

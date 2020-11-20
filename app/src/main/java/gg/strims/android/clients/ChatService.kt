@@ -14,7 +14,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.PRIORITY_MIN
 import com.beust.klaxon.Klaxon
-import gg.strims.android.ChatActivity
+import gg.strims.android.MainActivity
 import gg.strims.android.CurrentUser
 import gg.strims.android.R
 import gg.strims.android.models.ViewerState
@@ -46,7 +46,7 @@ class ChatService: Service() {
         try {
             job = GlobalScope.launch {
                 try {
-                    Log.d("TAG", "STARTING SERVICE ${(System.currentTimeMillis() - CurrentUser.time)}")
+                    Log.d("TAG", "STARTING CHAT SERVICE ${(System.currentTimeMillis() - CurrentUser.time)}")
                     ChatClient().onConnect()
                 } catch (e: ClosedReceiveChannelException) {
                     job?.cancel()
@@ -111,18 +111,26 @@ class ChatService: Service() {
         private fun retrieveHistory() {
             val messageHistory =
                 Klaxon().parseArray<String>(URL("https://chat.strims.gg/api/chat/history").readText())
-            CurrentUser.viewerStates =
+            val viewerStates =
                 Klaxon().parseArray<ViewerState>(URL("https://chat.strims.gg/api/chat/viewer-states").readText())
                     ?.toMutableList()
             val intent = Intent("gg.strims.android.MESSAGE_HISTORY")
-            val arrayList = arrayListOf<String>()
+            val historyArrayList = arrayListOf<String>()
             if (messageHistory != null) {
-                arrayList.addAll(messageHistory)
+                historyArrayList.addAll(messageHistory)
+            }
+            val viewerStatesArrayList = arrayListOf<ViewerState>()
+            if (viewerStates != null) {
+                viewerStatesArrayList.addAll(viewerStates)
             }
             intent.putStringArrayListExtra(
                 "gg.strims.android.MESSAGE_HISTORY_TEXT", ArrayList(
-                    arrayList
+                    historyArrayList
                 )
+            )
+            intent.putParcelableArrayListExtra(
+                "gg.strims.android.VIEWERSTATES",
+                viewerStatesArrayList
             )
             sendBroadcast(intent)
         }
@@ -135,7 +143,6 @@ class ChatService: Service() {
                 val jwt = cookies.substringAfter("jwt=").substringBefore(" ")
                 if (jwt != cookies) {
                     this.jwt = jwt
-                    CurrentUser.jwt = jwt
                 }
             }
         }
@@ -145,7 +152,9 @@ class ChatService: Service() {
                 header("Cookie", "jwt=$jwt")
             }
             CurrentUser.user = Klaxon().parse(text)
-            sendBroadcast(Intent("gg.strims.android.PROFILE"))
+            val intent = Intent("gg.strims.android.PROFILE")
+            intent.putExtra("gg.strims.android.JWT", jwt)
+            sendBroadcast(intent)
         }
 
         suspend fun onConnect() = client.wss(
@@ -180,13 +189,13 @@ class ChatService: Service() {
                         } else if (intent.action == "gg.strims.android.SEND_NOT_MESSAGE") {
                             val nick = intent.getStringExtra("gg.strims.android.SEND_MESSAGE_NICK")
                             val remoteInput = RemoteInput.getResultsFromIntent(intent)
-                            val message = remoteInput.getCharSequence(ChatActivity.NOTIFICATION_REPLY_KEY)
+                            val message = remoteInput.getCharSequence(MainActivity.NOTIFICATION_REPLY_KEY)
                             if (nick != null) {
                                 launch {
                                     send("PRIVMSG {\"nick\":\"$nick\", \"data\":\"$message\"}")
 
                                     val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                                    nm.cancel(ChatActivity.NOTIFICATION_ID)
+                                    nm.cancel(MainActivity.NOTIFICATION_ID)
                                 }
                             }
                         }

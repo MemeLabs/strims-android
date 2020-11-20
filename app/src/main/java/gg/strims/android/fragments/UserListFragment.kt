@@ -8,15 +8,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
-import gg.strims.android.CurrentUser
 import gg.strims.android.R
+import gg.strims.android.databinding.FragmentUserListBinding
 import gg.strims.android.keyRequestFocus
+import gg.strims.android.viewBinding
+import gg.strims.android.viewmodels.ChatViewModel
 import io.ktor.util.*
-import kotlinx.android.synthetic.main.fragment_user_list.*
 import kotlinx.android.synthetic.main.chat_user_item.view.*
 import kotlinx.android.synthetic.main.fragment_chat.*
 import java.util.*
@@ -24,28 +26,32 @@ import java.util.*
 @KtorExperimentalAPI
 @SuppressLint("SetTextI18n")
 class UserListFragment : Fragment() {
-    private val userListAdapter =
-        GroupAdapter<GroupieViewHolder>()
+
+    private val binding by viewBinding(FragmentUserListBinding::bind)
+
+    private val userListAdapter = GroupAdapter<GroupieViewHolder>()
+    
+    private lateinit var chatViewModel: ChatViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_user_list, container, false)
+        return FragmentUserListBinding.inflate(layoutInflater).root
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
         userListAdapter.clear()
-        CurrentUser.users.sortBy { it }
-        CurrentUser.users.forEach {
+        chatViewModel.users.sortBy { it }
+        chatViewModel.users.forEach {
             if (it.isNotEmpty()) {
                 userListAdapter.add(UserListItem(it))
             }
         }
-        recyclerViewUserList.scrollToPosition(1)
+        binding.recyclerViewUserList.scrollToPosition(1)
 
-        userListSearch.addTextChangedListener(object :
+        binding.userListSearch.addTextChangedListener(object :
             TextWatcher {
             override fun afterTextChanged(s: Editable?) {
             }
@@ -60,10 +66,10 @@ class UserListFragment : Fragment() {
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 userListAdapter.clear()
-                CurrentUser.users.forEach {
-                    if (userListSearch.text.isNotEmpty()) {
+                chatViewModel.users.forEach {
+                    if (binding.userListSearch.text.isNotEmpty()) {
                         if (it.toLowerCase(Locale.ROOT).contains(
-                                userListSearch.text.toString().toLowerCase(
+                                binding.userListSearch.text.toString().toLowerCase(
                                     Locale.ROOT
                                 )
                             )
@@ -79,16 +85,18 @@ class UserListFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        chatViewModel = ViewModelProvider(requireActivity()).get(ChatViewModel::class.java)
+
         requireParentFragment().childFragmentManager.beginTransaction()
             .hide(this)
             .commit()
         val layoutManager =
             LinearLayoutManager(view.context)
         layoutManager.stackFromEnd = true
-        recyclerViewUserList.layoutManager = layoutManager
-        recyclerViewUserList.adapter = userListAdapter
+        binding.recyclerViewUserList.layoutManager = layoutManager
+        binding.recyclerViewUserList.adapter = userListAdapter
 
-        closeUserListButton.setOnClickListener {
+        binding.closeUserListButton.setOnClickListener {
             requireParentFragment().childFragmentManager.beginTransaction()
                 .setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
                 .hide(this)

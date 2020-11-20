@@ -8,12 +8,14 @@ import android.net.Uri
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.*
+import android.view.LayoutInflater
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.MutableLiveData
+import androidx.viewbinding.ViewBinding
 import gg.strims.android.customspans.CenteredImageSpan
 import gg.strims.android.customspans.ColouredUnderlineSpan
 import gg.strims.android.customspans.DrawableCallback
@@ -26,6 +28,18 @@ import java.io.IOException
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
+
+inline fun <T : ViewBinding> Activity.viewBinder(
+    crossinline bindingInflater: (LayoutInflater) -> T) =
+    lazy(LazyThreadSafetyMode.NONE) {
+        bindingInflater.invoke(layoutInflater)
+    }
+
+//inline fun <T : ViewBinding> Fragment.viewBinder(
+//    crossinline bindingInflater: (LayoutInflater) -> T) =
+//    lazy(LazyThreadSafetyMode.NONE) {
+//        bindingInflater.invoke(layoutInflater)
+//    }
 
 fun keyRequestFocus(editText: EditText, context: Context) {
     editText.requestFocus()
@@ -43,24 +57,10 @@ fun hideKeyboardFrom(context: Context, view: View) {
     imm.hideSoftInputFromWindow(view.windowToken, 0)
 }
 
-fun hideFragment(activity: FragmentActivity, fragment: Fragment) {
-    activity.supportFragmentManager.beginTransaction()
-        .setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
-        .hide(fragment)
-        .commit()
-}
-
 fun hideChildFragment(fragment: Fragment, fragmentToHide: Fragment) {
     fragment.childFragmentManager.beginTransaction()
         .setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
         .hide(fragmentToHide)
-        .commit()
-}
-
-fun showFragment(activity: FragmentActivity, fragment: Fragment) {
-    activity.supportFragmentManager.beginTransaction()
-        .setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
-        .show(fragment)
         .commit()
 }
 
@@ -69,19 +69,6 @@ fun showChildFragment(fragment: Fragment, fragmentToShow: Fragment) {
         .setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
         .show(fragmentToShow)
         .commit()
-}
-
-fun showHideFragment(activity: FragmentActivity, fragment: Fragment) {
-    val fragmentTransaction = activity.supportFragmentManager.beginTransaction()
-    fragmentTransaction.setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
-
-    if (fragment.isHidden) {
-        fragmentTransaction.show(fragment)
-    } else if (!fragment.isHidden) {
-        fragmentTransaction.hide(fragment)
-    }
-
-    fragmentTransaction.commit()
 }
 
 fun Bitmap.flip(degrees: Float): Bitmap {
@@ -124,6 +111,10 @@ fun getGifFromURL(src: String?): GifDrawable? {
     }
 }
 
+fun <T> MutableLiveData<T>.notifyObserver() {
+    this.value = this.value
+}
+
 @KtorExperimentalAPI
 fun createMessageTextView(
     context: Context,
@@ -143,9 +134,10 @@ fun createMessageTextView(
         if (messageData.entities.emotes != null && messageData.entities.emotes!!.isNotEmpty() && messageData.entities.emotes!![0].name != "") {
             messageData.entities.emotes!!.forEach {
                 var animated = false
-                CurrentUser.emotes!!.forEach { it2 ->
+                CurrentUser.emotes?.forEach { it2 ->
                     if (it.name == it2.name && it2.versions[0].animated) {
                         animated = true
+                        return@forEach
                     }
                 }
                 if (!animated) {
@@ -190,7 +182,7 @@ fun createMessageTextView(
                     while (gif == null) {
                         gif = CurrentUser.gifMemoryCache[it.name]
                     }
-//                        gif.loopCount = 1
+//                    gif.loopCount = 1
                     gif.callback = DrawableCallback(messageTextView)
                     gif.setBounds(0, 0, gif.minimumWidth, gif.minimumHeight)
                     gif.start()
@@ -244,13 +236,10 @@ fun createMessageTextView(
                                         if (channel.startsWith("angelthump")) {
                                             channel = channel.substringAfter("angelthump/")
                                         }
-                                        CurrentUser.streams?.forEach { stream ->
-                                            if (stream.channel == channel && (stream.service == "angelthump" || stream.service == "m3u8")) {
-                                                val intent = Intent("gg.strims.android.SHOWSTREAM")
-                                                intent.putExtra("gg.strims.android.STREAM", stream)
-                                                context.sendBroadcast(intent)
-                                            }
-                                        }
+                                        val intent = Intent("gg.strims.android.SHOWSTREAM")
+                                        intent.putExtra("gg.strims.android.STREAM", channel)
+                                        context.sendBroadcast(intent)
+                                        return
                                     } else if (!it.url!!.startsWith("http://") && !it.url!!.startsWith(
                                             "https://"
                                         )
@@ -259,9 +248,7 @@ fun createMessageTextView(
                                     }
 
                                     val intent = Intent(Intent.ACTION_VIEW, webpage)
-                                    if (intent.resolveActivity(context.packageManager) != null) {
-                                        context.startActivity(intent)
-                                    }
+                                    context.startActivity(intent)
                                 }
                             }
                         }
@@ -273,13 +260,10 @@ fun createMessageTextView(
                             if (channel.startsWith("angelthump")) {
                                 channel = channel.substringAfter("angelthump/")
                             }
-                            CurrentUser.streams?.forEach { stream ->
-                                if (stream.channel == channel && (stream.service == "angelthump" || stream.service == "m3u8")) {
-                                    val intent = Intent("gg.strims.android.SHOWSTREAM")
-                                    intent.putExtra("gg.strims.android.STREAM", stream)
-                                    context.sendBroadcast(intent)
-                                }
-                            }
+                            val intent = Intent("gg.strims.android.SHOWSTREAM")
+                            intent.putExtra("gg.strims.android.STREAM", channel)
+                            context.sendBroadcast(intent)
+                            return
                         } else if (!it.url!!.startsWith("http://") && !it.url!!.startsWith(
                                 "https://"
                             )
@@ -288,9 +272,7 @@ fun createMessageTextView(
                         }
 
                         val intent = Intent(Intent.ACTION_VIEW, webpage)
-                        if (intent.resolveActivity(context.packageManager) != null) {
-                            context.startActivity(intent)
-                        }
+                        context.startActivity(intent)
                     }
                 }
             }
@@ -317,7 +299,7 @@ fun createMessageTextView(
             }
         }
 
-        with (messageData.data) {
+        with(messageData.data) {
             when {
                 contains("nsfl") -> {
                     messageData.entities.links!!.forEach {

@@ -9,31 +9,33 @@ import android.view.ViewGroup
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.fragment.app.Fragment
-import gg.strims.android.ChatActivity
-import gg.strims.android.R
+import gg.strims.android.MainActivity
+import gg.strims.android.databinding.FragmentLoginBinding
+import gg.strims.android.viewBinding
 import io.ktor.util.*
-import kotlinx.android.synthetic.main.fragment_login.*
 
 @SuppressLint("SetJavaScriptEnabled")
 @KtorExperimentalAPI
 class LoginFragment: Fragment() {
+
+    private val binding by viewBinding(FragmentLoginBinding::bind)
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_login, container, false)
+        return FragmentLoginBinding.inflate(layoutInflater).root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        loginWebView.settings.javaScriptEnabled = true
-        loginWebView.settings.domStorageEnabled = true
-        loginWebView.loadUrl("https://strims.gg/login")
-        loginWebView.webViewClient = object: WebViewClient() {
+        binding.loginWebView.settings.javaScriptEnabled = true
+        binding.loginWebView.settings.domStorageEnabled = true
+        binding.loginWebView.loadUrl("https://strims.gg/login")
+        binding.loginWebView.webViewClient = object: WebViewClient() {
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                 if (url == "https://strims.gg/" || url == "https://chat.strims.gg/") {
-                    val activity = requireActivity() as ChatActivity
+                    val activity = requireActivity() as MainActivity
                     activity.onBackPressed()
                     activity.stopService(activity.chatSocketIntent)
                     activity.startService(activity.chatSocketIntent)

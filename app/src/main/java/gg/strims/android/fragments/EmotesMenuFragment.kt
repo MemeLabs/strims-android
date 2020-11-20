@@ -14,15 +14,16 @@ import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
 import gg.strims.android.*
+import gg.strims.android.databinding.FragmentEmoteMenuBinding
 import io.ktor.util.*
 import kotlinx.android.synthetic.main.emote_menu_item.view.*
-import kotlinx.android.synthetic.main.fragment_chat.*
-import kotlinx.android.synthetic.main.fragment_emote_menu.*
 import pl.droidsonroids.gif.GifDrawable
 import java.util.*
 
 @KtorExperimentalAPI
 class EmotesMenuFragment : Fragment() {
+
+    private val binding by viewBinding(FragmentEmoteMenuBinding::bind)
 
     private val emoteMenuAdapter = GroupAdapter<GroupieViewHolder>()
 
@@ -30,7 +31,7 @@ class EmotesMenuFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_emote_menu, container, false)
+        return FragmentEmoteMenuBinding.inflate(layoutInflater).root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -38,20 +39,20 @@ class EmotesMenuFragment : Fragment() {
             .hide(this)
             .commit()
 
-        recyclerViewEmoteMenu.layoutManager = GridLayoutManager(
+        binding.recyclerViewEmoteMenu.layoutManager = GridLayoutManager(
             view.context,
             if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) 8 else 5
         )
-        recyclerViewEmoteMenu.adapter = emoteMenuAdapter
+        binding.recyclerViewEmoteMenu.adapter = emoteMenuAdapter
 
-        closeEmoteMenuButton.setOnClickListener {
+        binding.closeEmoteMenuButton.setOnClickListener {
             requireParentFragment().childFragmentManager.beginTransaction()
                 .setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
                 .hide(this)
                 .commit()
         }
 
-        emoteMenuSearch.addTextChangedListener(object :
+        binding.emoteMenuSearch.addTextChangedListener(object :
             TextWatcher {
             override fun afterTextChanged(s: Editable?) {
             }
@@ -67,9 +68,9 @@ class EmotesMenuFragment : Fragment() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 emoteMenuAdapter.clear()
                 CurrentUser.bitmapMemoryCache.forEach {
-                    if (emoteMenuSearch.text.isNotEmpty()) {
+                    if (binding.emoteMenuSearch.text.isNotEmpty()) {
                         if (it.key.toLowerCase(Locale.ROOT).contains(
-                                emoteMenuSearch.text.toString().toLowerCase(
+                                binding.emoteMenuSearch.text.toString().toLowerCase(
                                     Locale.ROOT
                                 )
                             )
@@ -82,9 +83,9 @@ class EmotesMenuFragment : Fragment() {
                 }
 
                 CurrentUser.gifMemoryCache.forEach {
-                    if (emoteMenuSearch.text.isNotEmpty()) {
+                    if (binding.emoteMenuSearch.text.isNotEmpty()) {
                         if (it.key.toLowerCase(Locale.ROOT).contains(
-                                emoteMenuSearch.text.toString().toLowerCase(
+                                binding.emoteMenuSearch.text.toString().toLowerCase(
                                     Locale.ROOT
                                 )
                             )
@@ -125,16 +126,17 @@ class EmotesMenuFragment : Fragment() {
             }
 
             viewHolder.itemView.imageViewEmote.setOnClickListener {
-                parentFragment!!.sendMessageText.append("$name ")
+                val parentFragment = requireParentFragment() as ChatFragment
+                parentFragment.binding.sendMessageText.append("$name ")
                 keyRequestFocus(
-                    parentFragment!!.sendMessageText,
+                    parentFragment.binding.sendMessageText,
                     context!!
                 )
                 requireParentFragment().childFragmentManager.beginTransaction()
                     .setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
                     .hide(this@EmotesMenuFragment)
                     .commit()
-                parentFragment!!.sendMessageText.setSelection(parentFragment!!.sendMessageText.text.length)
+                parentFragment.binding.sendMessageText.setSelection(parentFragment.binding.sendMessageText.text.length)
             }
         }
     }
