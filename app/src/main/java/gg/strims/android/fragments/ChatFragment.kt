@@ -1,6 +1,5 @@
 package gg.strims.android.fragments
 
-import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -34,25 +33,27 @@ import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.YouTubePlayerCallback
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
-import com.xwray.groupie.Item
+import com.xwray.groupie.viewbinding.BindableItem
 import gg.strims.android.*
+import gg.strims.android.adapters.CustomAdapter
+import gg.strims.android.databinding.AutofillItemBinding
+import gg.strims.android.databinding.AutofillItemEmoteBinding
 import gg.strims.android.databinding.FragmentChatBinding
 import gg.strims.android.models.Message
 import gg.strims.android.models.NamesMessage
 import gg.strims.android.models.ViewerState
 import gg.strims.android.room.PrivateMessage
+import gg.strims.android.singletons.CurrentUser
 import gg.strims.android.viewholders.*
 import gg.strims.android.viewmodels.*
 import io.ktor.util.*
-import kotlinx.android.synthetic.main.autofill_item.view.textViewAutofill
-import kotlinx.android.synthetic.main.autofill_item_emote.view.*
+import kotlinx.android.synthetic.main.fragment_chat.*
 import kotlinx.android.synthetic.main.nav_header_main.view.*
 import java.util.*
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 @KtorExperimentalAPI
-@SuppressLint("SetTextI18n")
 class ChatFragment : Fragment() {
 
     val binding by viewBinding(FragmentChatBinding::bind)
@@ -95,7 +96,6 @@ class ChatFragment : Fragment() {
                 adapter.add(
                     ChatMessageCombo(
                         message,
-                        requireContext(),
                         adapter,
                     )
                 )
@@ -195,22 +195,26 @@ class ChatFragment : Fragment() {
                         } else {
                             missedMessages.add(message)
                         }
-                        val recycler = binding.recyclerViewChat
-                        val layoutTest =
-                            recycler.layoutManager as LinearLayoutManager
-                        val lastItem = layoutTest.findLastVisibleItemPosition()
-                        if (lastItem >= adapter.itemCount - 3) {
-                            recycler.scrollToPosition(adapter.itemCount - 1)
+                        if (view != null) {
+                            val recycler = binding.recyclerViewChat
+                            val layoutTest =
+                                recycler.layoutManager as LinearLayoutManager
+                            val lastItem = layoutTest.findLastVisibleItemPosition()
+                            if (lastItem >= adapter.itemCount - 3) {
+                                recycler.scrollToPosition(adapter.itemCount - 1)
+                            }
                         }
                     }
                 } else if (intent.action == "gg.strims.android.PROFILE") {
                     profileViewModel.jwt = intent.getStringExtra("gg.strims.android.JWT")
                     binding.sendMessageText.hint = "Write something ${CurrentUser.user!!.username} ..."
                     val activity = (requireActivity() as MainActivity)
-                    activity.binding.navView.navHeaderUsername.text = CurrentUser.user!!.username
-                    activity.binding.navView.menu.findItem(R.id.nav_Profile).isVisible = true
-                    activity.binding.navView.menu.findItem(R.id.nav_Whispers).isVisible = true
-                    activity.binding.navView.setCheckedItem(R.id.nav_Chat)
+                    with (activity.binding.navView) {
+                        navHeaderUsername.text = CurrentUser.user!!.username
+                        menu.findItem(R.id.nav_Profile).isVisible = true
+                        menu.findItem(R.id.nav_Whispers).isVisible = true
+                        setCheckedItem(R.id.nav_Chat)
+                    }
                     activity.invalidateOptionsMenu()
                 } else if (intent.action == "gg.strims.android.CHAT_SOCKET_CLOSE") {
                     val message = Message(
@@ -219,17 +223,15 @@ class ChatFragment : Fragment() {
                         "Disconnected, reconnecting..."
                     )
                     chatViewModel.addMessage(message)
-                    parentActivity.stopService(parentActivity.chatSocketIntent)
-                    parentActivity.startService(parentActivity.chatSocketIntent)
+                    parentActivity.restartChatService()
                 } else if (intent.action == "gg.strims.android.STREAMS_SOCKET_CLOSE") {
-                    //TODO: INVESTIGATE BELOW NULL OBJECT REFERENCE
-                    parentActivity.stopService(parentActivity.streamsSocketIntent)
-                    parentActivity.startService(parentActivity.streamsSocketIntent)
+                    parentActivity.restartStreamsService()
                 } else if (intent.action == "gg.strims.android.STREAMS") {
                     val streams = intent.getStringExtra("gg.strims.android.STREAMS_TEXT")
-                    streamsViewModel.parseStreams(streams!!)
+                    if (::streamsViewModel.isInitialized) {
+                        streamsViewModel.parseStreams(streams!!)
+                    }
                 } else if (intent.action == "gg.strims.android.SHOWSTREAM") {
-                    Log.d("TAG", "GOT SHOW STREAM")
                     val channel = intent.getStringExtra("gg.strims.android.STREAM")
 
                     streamsViewModel.streams.value?.forEach {
@@ -252,9 +254,11 @@ class ChatFragment : Fragment() {
                                     currentlyPlaying = channel
                                 }
 
-                                angelThumpFragment.binding.angelThumpStreamTitle.text = it.title
-                                angelThumpFragment.player = exoPlayerViewModel.player
-                                angelThumpFragment.binding.angelThumpVideoView.player = exoPlayerViewModel.player
+                                with (angelThumpFragment) {
+                                    binding.angelThumpStreamTitle.text = it.title
+                                    player = exoPlayerViewModel.player
+                                    binding.angelThumpVideoView.player = exoPlayerViewModel.player
+                                }
                             }
                             return
                         }
@@ -268,6 +272,10 @@ class ChatFragment : Fragment() {
     private var scrollUponResume = false
 
     override fun onPause() {
+        if (binding.sendMessageText.text.isNotEmpty()) {
+            chatViewModel.currentMessage = binding.sendMessageText.text.toString()
+        }
+
         val layoutTest = binding.recyclerViewChat.layoutManager as LinearLayoutManager
         val lastItem = layoutTest.findLastVisibleItemPosition()
         if (lastItem < binding.recyclerViewChat.adapter!!.itemCount - 1) {
@@ -288,12 +296,14 @@ class ChatFragment : Fragment() {
 
         val layoutTest = binding.recyclerViewChat.layoutManager as LinearLayoutManager
         val lastItem = layoutTest.findLastVisibleItemPosition()
-        if (lastItem < binding.recyclerViewChat.adapter!!.itemCount - 1) {
-            binding.goToBottomLayout.visibility = View.VISIBLE
-            binding.goToBottom.isEnabled = true
-        } else {
-            binding.goToBottomLayout.visibility = View.GONE
-            binding.goToBottom.isEnabled = false
+        with (binding) {
+            if (lastItem < binding.recyclerViewChat.adapter!!.itemCount - 1) {
+                goToBottomLayout.visibility = View.VISIBLE
+                goToBottom.isEnabled = true
+            } else {
+                goToBottomLayout.visibility = View.GONE
+                goToBottom.isEnabled = false
+            }
         }
     }
 
@@ -303,54 +313,34 @@ class ChatFragment : Fragment() {
         super.onDestroy()
     }
 
+    override fun onDestroyView() {
+        Log.d("TAG", "DESTROYING CHAT FRAGMENT VIEW")
+        recyclerViewChat.adapter = null
+        recyclerViewAutofill.adapter = null
+        super.onDestroyView()
+    }
+
     override fun onStop() {
-        Log.d("TAG", "STOPPING FRAGMENT")
+        Log.d("TAG", "STOPPING CHAT FRAGMENT")
         adapter.sendMessageText = null
         super.onStop()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        Log.d("TAG", "SAVING")
-
-        if (binding.sendMessageText.text.isNotEmpty()) {
-            chatViewModel.currentMessage = binding.sendMessageText.text.toString()
-        }
-
+        Log.d("TAG", "SAVING CHAT FRAGMENT")
         super.onSaveInstanceState(outState)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Log.d("TAG", "ONCREATE")
+        Log.d("TAG", "ONCREATE CHAT FRAGMENT")
 
         modifiersArray = resources.getStringArray(R.array.modifiersArray)
         commandsArray = resources.getStringArray(R.array.commandsArray)
 
+        chatViewModel = ViewModelProvider(requireActivity()).get(ChatViewModel::class.java)
         privateMessagesViewModel =
             ViewModelProvider(requireActivity()).get(PrivateMessagesViewModel::class.java)
-
-        val intentFilter = IntentFilter()
-        intentFilter.addAction("gg.strims.android.MESSAGE")
-        intentFilter.addAction("gg.strims.android.MESSAGE_HISTORY")
-        intentFilter.addAction("gg.strims.android.PROFILE")
-        intentFilter.addAction("gg.strims.android.CHAT_SOCKET_CLOSE")
-        intentFilter.addAction("gg.strims.android.STREAMS_SOCKET_CLOSE")
-        intentFilter.addAction("gg.strims.android.STREAMS")
-        intentFilter.addAction("gg.strims.android.SHOWSTREAM")
-        requireActivity().registerReceiver(broadcastReceiver, intentFilter)
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        Log.d("TAG", "ONCREATEVIEW")
-        return FragmentChatBinding.inflate(layoutInflater).root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        Log.d("TAG", "ONVIEWCREATED")
-        chatViewModel = ViewModelProvider(requireActivity()).get(ChatViewModel::class.java)
         exoPlayerViewModel =
             ViewModelProvider(requireActivity()).get(ExoPlayerViewModel::class.java)
         twitchViewModel = ViewModelProvider(requireActivity()).get(TwitchViewModel::class.java)
@@ -358,7 +348,30 @@ class ChatFragment : Fragment() {
         profileViewModel = ViewModelProvider(requireActivity()).get(ProfileViewModel::class.java)
         streamsViewModel = ViewModelProvider(requireActivity()).get(StreamsViewModel::class.java)
 
-        chatViewModel.oldMessageCount = adapter.itemCount
+        val intentFilter = IntentFilter()
+        with (intentFilter) {
+            addAction("gg.strims.android.MESSAGE")
+            addAction("gg.strims.android.MESSAGE_HISTORY")
+            addAction("gg.strims.android.PROFILE")
+            addAction("gg.strims.android.CHAT_SOCKET_CLOSE")
+            addAction("gg.strims.android.STREAMS_SOCKET_CLOSE")
+            addAction("gg.strims.android.STREAMS")
+            addAction("gg.strims.android.SHOWSTREAM")
+        }
+        requireActivity().registerReceiver(broadcastReceiver, intentFilter)
+    }
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        Log.d("TAG", "ONCREATEVIEW CHAT FRAGMENT")
+        return FragmentChatBinding.inflate(layoutInflater).root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        Log.d("TAG", "ONVIEWCREATED CHAT FRAGMENT")
+        chatViewModel.oldMessageCount = 0
 
         chatViewModel.viewerStates.observe(viewLifecycleOwner, {
             if (it.isNotEmpty()) {
@@ -415,18 +428,16 @@ class ChatFragment : Fragment() {
             }
         })
 
+        if (chatViewModel.currentMessage != null) {
+            binding.sendMessageText.setText(chatViewModel.currentMessage)
+            chatViewModel.currentMessage = null
+        }
+
         if (CurrentUser.user != null) {
             binding.sendMessageText.hint = "Write something ${CurrentUser.user!!.username} ..."
         }
 
         if (savedInstanceState != null) {
-            Log.d("TAG", "SAVESTATE NOT NULL")
-
-            if (chatViewModel.currentMessage != null) {
-                binding.sendMessageText.setText(chatViewModel.currentMessage)
-                chatViewModel.currentMessage = null
-            }
-
             binding.progressBarFragment.visibility = View.GONE
         }
 
@@ -456,6 +467,7 @@ class ChatFragment : Fragment() {
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 binding.sendMessageButton.isEnabled = binding.sendMessageText.text.isNotEmpty()
+                chatViewModel.currentMessage = binding.sendMessageText.text.toString()
                 autofillAdapter.clear()
                 if (binding.sendMessageText.text.isNotEmpty() && binding.sendMessageText.text.last() != ' ') {
                     binding.recyclerViewAutofill.visibility = View.VISIBLE
@@ -464,7 +476,7 @@ class ChatFragment : Fragment() {
                         val currentWord = binding.sendMessageText.text.toString().substringAfter('/')
 
                         commandsArray.forEach {
-                            if (it.contains(currentWord, true)) {
+                            if (it.startsWith(currentWord, true)) {
                                 autofillAdapter.add(AutofillItemCommand(it))
                             }
                         }
@@ -475,7 +487,7 @@ class ChatFragment : Fragment() {
                             CurrentUser.emotes!!.forEach { emote ->
                                 if (binding.sendMessageText.text.contains(emote.name)) {
                                     modifiersArray.forEach {
-                                        if (it.contains(currentWord.substringAfterLast(':'))) {
+                                        if (it.startsWith(currentWord.substringAfterLast(':'))) {
                                             autofillAdapter.add(AutofillItemModifier(it))
                                         }
                                     }
@@ -489,13 +501,13 @@ class ChatFragment : Fragment() {
                         }
 
                         chatViewModel.users.forEach {
-                            if (it.contains(currentWord, true)) {
+                            if (it.startsWith(currentWord, true)) {
                                 autofillAdapter.add(AutofillItemUser(it))
                             }
                         }
 
                         CurrentUser.bitmapMemoryCache.forEach {
-                            if (it.key.contains(currentWord, true)) {
+                            if (it.key.startsWith(currentWord, true)) {
                                 autofillAdapter.add(AutofillItemEmote(it.key, it.value))
                             }
                         }
@@ -637,6 +649,7 @@ class ChatFragment : Fragment() {
                             if (message.trim() == "") {
                                 adapter.add(ErrorChatMessage("The message was invalid"))
                                 binding.sendMessageText.text.clear()
+                                chatViewModel.currentMessage = null
                                 return@setOnClickListener
                             } else {
                                 val intent = Intent("gg.strims.android.SEND_MESSAGE")
@@ -748,6 +761,7 @@ class ChatFragment : Fragment() {
                 requireContext().sendBroadcast(intent)
             }
             binding.sendMessageText.text.clear()
+            chatViewModel.currentMessage = null
             binding.recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
         }
     }
@@ -757,11 +771,9 @@ class ChatFragment : Fragment() {
             childFragmentManager.findFragmentById(R.id.twitch_fragment)!! as TwitchFragment
 
         if (twitchFragment.isVisible) {
-            with (twitchFragment) {
-                binding.webViewTwitch.loadUrl("")
-                twitchViewModel.channel.value = null
-                twitchViewModel.vod = false
-            }
+            twitchFragment.binding.webViewTwitch.loadUrl("")
+            twitchViewModel.channel.value = null
+            twitchViewModel.vod = false
 
             hideChildFragment(this@ChatFragment, twitchFragment)
         }
@@ -790,9 +802,11 @@ class ChatFragment : Fragment() {
     private fun closeAngelThump() {
         val angelThumpFragment = childFragmentManager.findFragmentById(R.id.angelthump_fragment)!! as AngelThumpFragment
 
-        exoPlayerViewModel.player?.release()
-        exoPlayerViewModel.player = null
-        exoPlayerViewModel.liveDataStream.value = null
+        with (exoPlayerViewModel) {
+            player?.release()
+            player = null
+            liveDataStream.value = null
+        }
 
         hideChildFragment(this, angelThumpFragment)
     }
@@ -855,106 +869,169 @@ class ChatFragment : Fragment() {
         )
     }
 
-    inner class AutofillItemCommand(private val command: String) : Item<GroupieViewHolder>() {
+    inner class AutofillItemCommand(private val command: String) : BindableItem<AutofillItemBinding>() {
         override fun getLayout(): Int = R.layout.autofill_item
 
-        override fun bind(viewHolder: GroupieViewHolder, position: Int) {
-            viewHolder.itemView.textViewAutofill.text = "/$command"
+        override fun bind(viewBinding: AutofillItemBinding, position: Int) {
+            with (viewBinding) {
+                textViewAutofill.text =
+                    resources.getString(R.string.autofill_whisper_command1, command)
 
-            viewHolder.itemView.textViewAutofill.setOnClickListener {
-
-                binding.sendMessageText.setText("/$command ")
-                binding.sendMessageText.setSelection(binding.sendMessageText.length())
+                textViewAutofill.setOnClickListener {
+                    binding.sendMessageText.setText(
+                        resources.getString(
+                            R.string.autofill_whisper_command2,
+                            command
+                        )
+                    )
+                    binding.sendMessageText.setSelection(binding.sendMessageText.length())
+                }
             }
+        }
+
+        override fun initializeViewBinding(view: View): AutofillItemBinding {
+            return AutofillItemBinding.bind(view)
         }
     }
 
-    inner class AutofillItemUser(private val user: String) : Item<GroupieViewHolder>() {
+    inner class AutofillItemUser(private val user: String) : BindableItem<AutofillItemBinding>() {
         override fun getLayout(): Int = R.layout.autofill_item
 
-        override fun bind(viewHolder: GroupieViewHolder, position: Int) {
-            viewHolder.itemView.textViewAutofill.text = user
+        override fun bind(viewBinding: AutofillItemBinding, position: Int) {
+            with (viewBinding) {
+                textViewAutofill.text = user
 
-            viewHolder.itemView.textViewAutofill.setOnClickListener {
-                val currentWord = binding.sendMessageText.text.toString().substringAfterLast(' ')
-                val currentMessage =
-                    binding.sendMessageText.text.toString().substringBeforeLast(" $currentWord")
-                if (!user.toLowerCase(Locale.ROOT)
-                        .contains(currentMessage.toLowerCase(Locale.ROOT))
-                ) {
-                    binding.sendMessageText.setText("$currentMessage $user ")
-                } else {
-                    binding.sendMessageText.setText("$user ")
+                textViewAutofill.setOnClickListener {
+                    val currentWord =
+                        binding.sendMessageText.text.toString().substringAfterLast(' ')
+                    val currentMessage =
+                        binding.sendMessageText.text.toString().substringBeforeLast(" $currentWord")
+                    if (!user.toLowerCase(Locale.getDefault())
+                            .contains(currentMessage.toLowerCase(Locale.getDefault()))
+                    ) {
+                        binding.sendMessageText.setText(
+                            resources.getString(
+                                R.string.autofill_user_item1,
+                                currentMessage,
+                                user
+                            )
+                        )
+                    } else {
+                        binding.sendMessageText.setText(
+                            resources.getString(
+                                R.string.autofill_user_item2,
+                                user
+                            )
+                        )
+                    }
+                    binding.sendMessageText.setSelection(binding.sendMessageText.length())
                 }
-                binding.sendMessageText.setSelection(binding.sendMessageText.length())
             }
+        }
+
+        override fun initializeViewBinding(view: View): AutofillItemBinding {
+            return AutofillItemBinding.bind(view)
         }
     }
 
     inner class AutofillItemEmote(private val emote: String, private val bitmap: Bitmap) :
-        Item<GroupieViewHolder>() {
+        BindableItem<AutofillItemEmoteBinding>() {
+
         override fun getLayout(): Int = R.layout.autofill_item_emote
 
-        override fun bind(viewHolder: GroupieViewHolder, position: Int) {
-            viewHolder.itemView.textViewAutofill.text = emote
-            viewHolder.itemView.imageViewEmoteAutofill.setImageBitmap(bitmap)
-            viewHolder.itemView.setOnClickListener {
-                val currentWord = binding.sendMessageText.text.toString().substringAfterLast(' ')
-                val currentMessage =
-                    binding.sendMessageText.text.toString().substringBeforeLast(" $currentWord")
-                if (!emote.toLowerCase(Locale.ROOT)
-                        .contains(currentMessage.toLowerCase(Locale.ROOT))
-                ) {
-                    binding.sendMessageText.setText("$currentMessage $emote ")
-                } else {
-                    binding.sendMessageText.setText("$emote ")
+        override fun bind(viewBinding: AutofillItemEmoteBinding, position: Int) {
+            with (viewBinding) {
+                textViewAutofill.text = emote
+                imageViewEmoteAutofill.setImageBitmap(bitmap)
+                root.setOnClickListener {
+                    val currentWord =
+                        binding.sendMessageText.text.toString().substringAfterLast(' ')
+                    val currentMessage =
+                        binding.sendMessageText.text.toString().substringBeforeLast(" $currentWord")
+                    if (!emote.toLowerCase(Locale.getDefault())
+                            .contains(currentMessage.toLowerCase(Locale.getDefault()))
+                    ) {
+                        binding.sendMessageText.setText(
+                            resources.getString(
+                                R.string.autofill_user_item1,
+                                currentMessage,
+                                emote
+                            )
+                        )
+                    } else {
+                        binding.sendMessageText.setText(
+                            resources.getString(
+                                R.string.autofill_user_item2,
+                                emote
+                            )
+                        )
+                    }
+                    binding.sendMessageText.setSelection(binding.sendMessageText.length())
                 }
-                binding.sendMessageText.setSelection(binding.sendMessageText.length())
             }
+        }
+
+        override fun initializeViewBinding(view: View): AutofillItemEmoteBinding {
+            return AutofillItemEmoteBinding.bind(view)
         }
     }
 
-    inner class AutofillItemModifier(private val modifier: String) : Item<GroupieViewHolder>() {
+    inner class AutofillItemModifier(private val modifier: String) : BindableItem<AutofillItemBinding>() {
         override fun getLayout(): Int = R.layout.autofill_item
 
-        override fun bind(viewHolder: GroupieViewHolder, position: Int) {
-            viewHolder.itemView.textViewAutofill.text = modifier
+        override fun bind(viewBinding: AutofillItemBinding, position: Int) {
+            with (viewBinding) {
+                textViewAutofill.text = modifier
 
-            viewHolder.itemView.textViewAutofill.setOnClickListener {
-                var currentWord = binding.sendMessageText.text.toString().substringAfterLast(':')
-                if (currentWord.isEmpty()) {
-                    currentWord = ":"
-                }
-                var currentMessage =
-                    binding.sendMessageText.text.toString().substringBeforeLast(currentWord)
+                textViewAutofill.setOnClickListener {
+                    var currentWord =
+                        binding.sendMessageText.text.toString().substringAfterLast(':')
+                    if (currentWord.isEmpty()) {
+                        currentWord = ":"
+                    }
+                    var currentMessage =
+                        binding.sendMessageText.text.toString().substringBeforeLast(":$currentWord")
 
-                if (currentMessage.last() == ' ') {
-                    currentMessage = currentMessage.trimEnd(' ')
-                }
+                    if (currentMessage.last() == ' ') {
+                        currentMessage = currentMessage.trimEnd(' ')
+                    }
 
-                if (currentMessage.last() != ':') {
-                    currentMessage = currentMessage.plus(':')
+                    if (currentMessage.last() != ':') {
+                        currentMessage = currentMessage.plus(':')
+                    }
+                    binding.sendMessageText.setText(
+                        resources.getString(
+                            R.string.autofill_item_modifier,
+                            currentMessage,
+                            modifier
+                        )
+                    )
+                    binding.sendMessageText.setSelection(binding.sendMessageText.length())
                 }
-                binding.sendMessageText.setText("${currentMessage}${modifier} ")
-                binding.sendMessageText.setSelection(binding.sendMessageText.length())
             }
+        }
+
+        override fun initializeViewBinding(view: View): AutofillItemBinding {
+            return AutofillItemBinding.bind(view)
         }
     }
 
     private fun savePrivateMessage(message: Message) {
         if (CurrentUser.user != null) {
-            privateMessagesViewModel.addMessage(
-                PrivateMessage(
-                    0,
-                    message.privMsg,
-                    message.nick,
-                    message.data,
-                    message.timestamp,
-                    message.features,
-                    message.entities,
-                    message.targetNick!!
+            with (message) {
+                privateMessagesViewModel.addMessage(
+                    PrivateMessage(
+                        0,
+                        privMsg,
+                        nick,
+                        data,
+                        timestamp,
+                        features,
+                        entities,
+                        targetNick!!
+                    )
                 )
-            )
+            }
         }
     }
 

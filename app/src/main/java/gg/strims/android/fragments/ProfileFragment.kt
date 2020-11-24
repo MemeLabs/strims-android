@@ -10,7 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.google.gson.Gson
 import gg.strims.android.MainActivity
-import gg.strims.android.CurrentUser
+import gg.strims.android.singletons.CurrentUser
 import gg.strims.android.R
 import gg.strims.android.databinding.FragmentProfileBinding
 import gg.strims.android.viewBinding
@@ -34,21 +34,27 @@ class ProfileFragment: Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         return FragmentProfileBinding.inflate(layoutInflater).root
     }
 
     private fun fetchProfile() {
         if (CurrentUser.user != null) {
-            binding.usernameEditTextProfile.text = CurrentUser.user!!.username
-            binding.streamPathEditTextProfile.setText(CurrentUser.user!!.stream_path)
-            binding.channelEditTextProfile.setText(CurrentUser.user!!.channel)
-            binding.checkBoxUserViewerState.isChecked = CurrentUser.user!!.enable_public_state
+            with (binding) {
+                usernameEditTextProfile.text = CurrentUser.user!!.username
+                streamPathEditTextProfile.setText(CurrentUser.user!!.stream_path)
+                channelEditTextProfile.setText(CurrentUser.user!!.channel)
+                checkBoxUserViewerState.isChecked = CurrentUser.user!!.enable_public_state
 
-            val array = resources.getStringArray(R.array.streaming_service_spinner_names)
-            array.forEach {
-                if (CurrentUser.user!!.service == it) {
-                    binding.streamingServiceSpinnerProfile.setSelection(resources.getStringArray(R.array.streaming_service_spinner_names).indexOf(it))
+                val array = resources.getStringArray(R.array.streaming_service_spinner_names)
+                array.forEach {
+                    if (CurrentUser.user!!.service == it) {
+                        streamingServiceSpinnerProfile.setSelection(
+                            resources.getStringArray(
+                                R.array.streaming_service_spinner_names
+                            ).indexOf(it)
+                        )
+                    }
                 }
             }
         }
@@ -90,20 +96,21 @@ class ProfileFragment: Fragment() {
                     }
                 }
             }
-            requireActivity().onBackPressed()
+            (requireActivity() as MainActivity).onBackPressed()
         }
 
         binding.logOutProfile.setOnClickListener {
             CurrentUser.user = null
             deleteCookie()
-            val activity = requireActivity() as MainActivity
-            activity.stopService(activity.chatSocketIntent)
-            activity.startService(activity.chatSocketIntent)
-            activity.onBackPressed()
-            activity.invalidateOptionsMenu()
-            activity.navHeaderUsername.text = resources.getString(R.string.anonymous)
-            activity.binding.navView.menu.findItem(R.id.nav_Profile).isVisible = false
-            activity.binding.navView.menu.findItem(R.id.nav_Whispers).isVisible = false
+            with (requireActivity() as MainActivity) {
+                stopService(chatSocketIntent)
+                startService(chatSocketIntent)
+                onBackPressed()
+                invalidateOptionsMenu()
+                navHeaderUsername.text = resources.getString(R.string.anonymous)
+                binding.navView.menu.findItem(R.id.nav_Profile).isVisible = false
+                binding.navView.menu.findItem(R.id.nav_Whispers).isVisible = false
+            }
             profileViewModel.logOut.value = true
         }
 

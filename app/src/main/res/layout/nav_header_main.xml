@@ -9,7 +9,7 @@
     android:theme="@style/ThemeOverlay.AppCompat.Dark">
 
     <ImageView
-        android:id="@+id/imageView"
+        android:id="@+id/imageViewApe"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -27,12 +27,14 @@
         android:paddingTop="@dimen/nav_header_vertical_spacing"
         android:text="@string/anonymous"
         android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-        app:layout_constraintStart_toStartOf="@+id/imageView"
-        app:layout_constraintTop_toBottomOf="@+id/imageView" />
+        app:layout_constraintStart_toStartOf="@+id/imageViewApe"
+        app:layout_constraintTop_toBottomOf="@+id/imageViewApe" />
 
     <ImageView
+        android:id="@+id/imageViewDivider"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:contentDescription="@string/white_divider_between_navigation_drawer_header_and_drawer_items"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

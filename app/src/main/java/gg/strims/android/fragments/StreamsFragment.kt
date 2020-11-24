@@ -1,6 +1,5 @@
 package gg.strims.android.fragments
 
-import android.annotation.SuppressLint
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.os.Bundle
@@ -15,24 +14,21 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.squareup.picasso.Picasso
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
-import com.xwray.groupie.Item
-import gg.strims.android.CurrentUser
-import gg.strims.android.R
+import com.xwray.groupie.viewbinding.BindableItem
+import gg.strims.android.*
 import gg.strims.android.databinding.FragmentStreamsBinding
-import gg.strims.android.getBitmapFromURL
+import gg.strims.android.databinding.StreamItemBinding
 import gg.strims.android.models.Stream
-import gg.strims.android.viewBinding
+import gg.strims.android.singletons.CurrentUser
 import gg.strims.android.viewmodels.ExoPlayerViewModel
 import gg.strims.android.viewmodels.StreamsViewModel
 import gg.strims.android.viewmodels.TwitchViewModel
 import gg.strims.android.viewmodels.YouTubeViewModel
 import io.ktor.util.*
 import jp.wasabeef.blurry.Blurry
-import kotlinx.android.synthetic.main.stream_item.view.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
-@SuppressLint("SetTextI18n")
 @KtorExperimentalAPI
 class StreamsFragment : Fragment() {
 
@@ -49,7 +45,7 @@ class StreamsFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         return FragmentStreamsBinding.inflate(layoutInflater).root
     }
 
@@ -115,78 +111,96 @@ class StreamsFragment : Fragment() {
     }
 
     private fun closeAngelThump() {
-        exoPlayerViewModel.player?.release()
-        exoPlayerViewModel.player = null
-        exoPlayerViewModel.liveDataStream.value = null
+        with (exoPlayerViewModel) {
+            player?.release()
+            player = null
+            liveDataStream.value = null
+        }
     }
 
-    inner class StreamItem(private val stream: Stream): Item<GroupieViewHolder>() {
+    inner class StreamItem(private val stream: Stream): BindableItem<StreamItemBinding>() {
 
         override fun getLayout(): Int = R.layout.stream_item
 
-        override fun bind(viewHolder: GroupieViewHolder, position: Int) {
-            if (stream.thumbnail.isNotEmpty() && !stream.nsfw) {
-                Picasso.get().load(stream.thumbnail).into(viewHolder.itemView.streamThumbnail)
-            } else if (stream.thumbnail.isNotEmpty() && stream.nsfw) {
-                var bitmap: Bitmap?
-                GlobalScope.launch {
-                    bitmap = getBitmapFromURL(stream.thumbnail)
+        override fun bind(viewBinding: StreamItemBinding, position: Int) {
+            with (viewBinding) {
+                if (stream.thumbnail.isNotEmpty() && !stream.nsfw) {
+                    Picasso.get().load(stream.thumbnail).into(streamThumbnail)
+                } else if (stream.thumbnail.isNotEmpty() && stream.nsfw) {
+                    var bitmap: Bitmap?
+                    GlobalScope.launch {
+                        bitmap = getBitmapFromURL(stream.thumbnail)
 
-                    requireActivity().runOnUiThread {
-                        Blurry.with(requireContext())
-                            .radius(35)
-                            .from(bitmap)
-                            .into(viewHolder.itemView.streamThumbnail)
+                        requireActivity().runOnUiThread {
+                            Blurry.with(requireContext())
+                                .radius(35)
+                                .from(bitmap)
+                                .into(streamThumbnail)
+                        }
                     }
+                } else {
+                    Picasso.get().load(R.drawable.jigglymonkey)
+                        .into(streamThumbnail)
                 }
-            } else {
-                Picasso.get().load(R.drawable.jigglymonkey).into(viewHolder.itemView.streamThumbnail)
-            }
-            viewHolder.itemView.streamTitle.text = "${stream.channel} presents ${stream.title} via ${stream.service}"
-            viewHolder.itemView.streamViewerCount.text = stream.rustlers.toString()
-            viewHolder.itemView.streamViewerState.setColorFilter(stream.colour)
-            if (stream.live) {
-                viewHolder.itemView.constraintLayoutStreamViewers.background =
-                    ResourcesCompat.getDrawable(
-                        resources,
-                        R.drawable.rounded_text_viewers_online,
-                        null
-                    )
-            } else {
-                viewHolder.itemView.constraintLayoutStreamViewers.background =
-                    ResourcesCompat.getDrawable(
-                        resources,
-                        R.drawable.rounded_text_viewers_offline,
-                        null
-                    )
-            }
-
-            viewHolder.itemView.setOnClickListener {
-
-                when (stream.service) {
-                    "angelthump", "m3u8" -> {
-                        exoPlayerViewModel.liveDataStream.value = stream
-                        closeTwitch()
-                        closeYouTube()
-                    }
-                    "twitch" -> {
-                        twitchViewModel.channel.value = stream.channel
-                        closeAngelThump()
-                        closeYouTube()
-                    }
-                    "youtube" -> {
-                        youTubeViewModel.videoId.value = stream.channel
-                        closeAngelThump()
-                        closeTwitch()
-                    }
-                    "twitch-vod" -> {
-                        twitchViewModel.channel.value = stream.channel
-                        twitchViewModel.vod = true
-                    }
+                streamTitle.text = resources.getString(
+                    R.string.channel_presents_title_via_service,
+                    stream.channel,
+                    stream.title,
+                    stream.service
+                )
+                streamViewerCount.text = stream.rustlers.toString()
+                streamViewerState.setColorFilter(stream.colour)
+                if (stream.live) {
+                    constraintLayoutStreamViewers.background =
+                        ResourcesCompat.getDrawable(
+                            resources,
+                            R.drawable.rounded_text_viewers_online,
+                            null
+                        )
+                } else {
+                    constraintLayoutStreamViewers.background =
+                        ResourcesCompat.getDrawable(
+                            resources,
+                            R.drawable.rounded_text_viewers_offline,
+                            null
+                        )
                 }
 
-                requireActivity().onBackPressed()
+                if (stream.live) {
+                    root.setOnClickListener {
+
+                        when (stream.service) {
+                            "angelthump", "m3u8" -> {
+                                exoPlayerViewModel.liveDataStream.value = stream
+                                closeTwitch()
+                                closeYouTube()
+                            }
+                            "twitch" -> {
+                                twitchViewModel.channel.value = stream.channel
+                                closeAngelThump()
+                                closeYouTube()
+                            }
+                            "youtube" -> {
+                                youTubeViewModel.videoId.value = stream.channel
+                                closeAngelThump()
+                                closeTwitch()
+                            }
+                            "twitch-vod" -> {
+                                twitchViewModel.channel.value = stream.channel
+                                twitchViewModel.vod = true
+                            }
+                        }
+
+                        (requireActivity() as MainActivity).onBackPressed()
+                    }
+                } else {
+                    root.setOnClickListener(null)
+                }
             }
+        }
+
+        override fun initializeViewBinding(view: View): StreamItemBinding {
+            return StreamItemBinding.bind(view)
         }
     }
 }

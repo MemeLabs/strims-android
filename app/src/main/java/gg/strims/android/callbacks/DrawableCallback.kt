@@ -1,4 +1,4 @@
-package gg.strims.android.customspans
+package gg.strims.android.callbacks
 
 import android.graphics.drawable.Drawable
 import android.widget.TextView

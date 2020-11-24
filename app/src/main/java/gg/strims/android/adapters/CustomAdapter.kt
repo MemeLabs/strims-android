@@ -1,4 +1,4 @@
-package gg.strims.android.viewholders
+package gg.strims.android.adapters
 
 import android.widget.EditText
 import com.xwray.groupie.GroupAdapter

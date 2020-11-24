@@ -14,8 +14,8 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.PRIORITY_MIN
-import gg.strims.android.CurrentUser
 import gg.strims.android.R
+import gg.strims.android.singletons.CurrentUser
 import io.ktor.client.*
 import io.ktor.client.features.websocket.*
 import io.ktor.http.cio.websocket.*

@@ -31,19 +31,27 @@ class AngelThumpFragment: Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         return FragmentAngelthumpBinding.inflate(layoutInflater).root
+    }
+
+    override fun onStop() {
+        binding.angelThumpVideoView.player = null
+        super.onStop()
     }
 
     override fun onResume() {
         super.onResume()
-        if (!requireActivity().isInPictureInPictureMode) {
-            binding.angelThumpStreamTitle.visibility = View.VISIBLE
-            if (exoPlayerViewModel.liveDataStream.value?.service != "m3u8") {
-                binding.angelThumpStreamTitle.text = exoPlayerViewModel.liveDataStream.value?.title
+        with (binding) {
+            if (!requireActivity().isInPictureInPictureMode) {
+                angelThumpStreamTitle.visibility = View.VISIBLE
+                if (exoPlayerViewModel.liveDataStream.value?.service != "m3u8") {
+                    angelThumpStreamTitle.text =
+                        exoPlayerViewModel.liveDataStream.value?.title
+                }
+                angelThumpSeparator.visibility = View.VISIBLE
+                angelThumpClose.visibility = View.VISIBLE
             }
-            binding.angelThumpSeparator.visibility = View.VISIBLE
-            binding.angelThumpClose.visibility = View.VISIBLE
         }
     }
 
@@ -53,9 +61,11 @@ class AngelThumpFragment: Fragment() {
         exoPlayerViewModel = ViewModelProvider(requireActivity()).get(ExoPlayerViewModel::class.java)
 
         binding.angelThumpClose.setOnClickListener {
-            exoPlayerViewModel.player?.release()
-            exoPlayerViewModel.player = null
-            exoPlayerViewModel.liveDataStream.value = null
+            with (exoPlayerViewModel) {
+                player?.release()
+                player = null
+                liveDataStream.value = null
+            }
 
             parentFragmentManager.beginTransaction()
                 .hide(this)
@@ -69,12 +79,14 @@ class AngelThumpFragment: Fragment() {
     }
 
     fun enterPIPMode() {
-        binding.angelThumpVideoView.useController = false
-        val params = PictureInPictureParams.Builder()
-        requireActivity().enterPictureInPictureMode(params.build())
-        binding.angelThumpStreamTitle.visibility = View.GONE
-        binding.angelThumpSeparator.visibility = View.GONE
-        binding.angelThumpClose.visibility = View.GONE
+        with (binding) {
+            angelThumpVideoView.useController = false
+            val params = PictureInPictureParams.Builder()
+            requireActivity().enterPictureInPictureMode(params.build())
+            angelThumpStreamTitle.visibility = View.GONE
+            angelThumpSeparator.visibility = View.GONE
+            angelThumpClose.visibility = View.GONE
+        }
     }
 
     override fun onHiddenChanged(hidden: Boolean) {

@@ -39,6 +39,7 @@
         android:layout_height="12dp"
         android:layout_marginStart="4dp"
         android:visibility="visible"
+        android:contentDescription="@string/chat_error_message"
         app:layout_constraintBottom_toBottomOf="@+id/timestampErrorChatMessage"
         app:layout_constraintStart_toEndOf="@id/timestampErrorChatMessage"
         app:layout_constraintTop_toTopOf="@id/timestampErrorChatMessage"

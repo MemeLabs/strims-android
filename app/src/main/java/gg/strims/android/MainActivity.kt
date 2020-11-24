@@ -1,6 +1,5 @@
 package gg.strims.android
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
@@ -23,10 +22,10 @@ import com.melegy.redscreenofdeath.RedScreenOfDeath
 import gg.strims.android.clients.ChatService
 import gg.strims.android.clients.StreamsService
 import gg.strims.android.databinding.ActivityNavigationDrawerBinding
-import gg.strims.android.databinding.AppBarMainBinding
 import gg.strims.android.fragments.AngelThumpFragment
 import gg.strims.android.models.EmotesParsed
 import gg.strims.android.models.Options
+import gg.strims.android.singletons.CurrentUser
 import gg.strims.android.viewmodels.ChatViewModel
 import gg.strims.android.viewmodels.ExoPlayerViewModel
 import io.ktor.util.*
@@ -37,13 +36,12 @@ import kotlinx.coroutines.launch
 import java.net.URL
 
 @KtorExperimentalAPI
-@SuppressLint("SetTextI18n", "SimpleDateFormat", "WrongViewCast")
 class MainActivity : AppCompatActivity() {
 
     val binding by viewBinder(ActivityNavigationDrawerBinding::inflate)
 
     var chatSocketIntent: Intent? = null
-    var streamsSocketIntent: Intent? = null
+    private var streamsSocketIntent: Intent? = null
 
     companion object {
         var channelId = "chat_notifications"
@@ -98,15 +96,10 @@ class MainActivity : AppCompatActivity() {
                 header.navHeaderUsername.text = CurrentUser.user!!.username
             }
 
-            binding.navView.setCheckedItem(R.id.nav_Chat)
-
             streamsSocketIntent = chatViewModel.streamsSocketIntent
             chatSocketIntent = chatViewModel.chatSocketIntent
 
         } else {
-            CurrentUser.bitmapMemoryCache = HashMap()
-            CurrentUser.gifMemoryCache = HashMap()
-
             chatSocketIntent = Intent(this, ChatService::class.java)
             streamsSocketIntent = Intent(this, StreamsService::class.java)
             startService(chatSocketIntent)
@@ -126,6 +119,22 @@ class MainActivity : AppCompatActivity() {
                 Log.d("TAG", "EMOTES ENDING ${(System.currentTimeMillis() - CurrentUser.time)}")
             }
         }
+    }
+
+    fun restartChatService() {
+        stopService(chatSocketIntent)
+        chatSocketIntent = Intent(this, ChatService::class.java)
+        chatViewModel.chatSocketIntent = chatSocketIntent
+        Thread.sleep(100)
+        startService(chatSocketIntent)
+    }
+
+    fun restartStreamsService() {
+        stopService(streamsSocketIntent)
+        streamsSocketIntent = Intent(this, StreamsService::class.java)
+        chatViewModel.streamsSocketIntent = streamsSocketIntent
+        Thread.sleep(100)
+        startService(streamsSocketIntent)
     }
 
     private fun retrieveEmotes() {

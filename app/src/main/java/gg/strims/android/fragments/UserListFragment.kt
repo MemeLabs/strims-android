@@ -1,6 +1,5 @@
 package gg.strims.android.fragments
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -12,8 +11,9 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
-import com.xwray.groupie.Item
+import com.xwray.groupie.viewbinding.BindableItem
 import gg.strims.android.R
+import gg.strims.android.databinding.ChatUserItemBinding
 import gg.strims.android.databinding.FragmentUserListBinding
 import gg.strims.android.keyRequestFocus
 import gg.strims.android.viewBinding
@@ -24,12 +24,11 @@ import kotlinx.android.synthetic.main.fragment_chat.*
 import java.util.*
 
 @KtorExperimentalAPI
-@SuppressLint("SetTextI18n")
 class UserListFragment : Fragment() {
 
     private val binding by viewBinding(FragmentUserListBinding::bind)
 
-    private val userListAdapter = GroupAdapter<GroupieViewHolder>()
+    private var userListAdapter: GroupAdapter<GroupieViewHolder>? = null
     
     private lateinit var chatViewModel: ChatViewModel
 
@@ -37,51 +36,24 @@ class UserListFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         return FragmentUserListBinding.inflate(layoutInflater).root
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
-        userListAdapter.clear()
-        chatViewModel.users.sortBy { it }
-        chatViewModel.users.forEach {
-            if (it.isNotEmpty()) {
-                userListAdapter.add(UserListItem(it))
-            }
-        }
-        binding.recyclerViewUserList.scrollToPosition(1)
-
-        binding.userListSearch.addTextChangedListener(object :
-            TextWatcher {
-            override fun afterTextChanged(s: Editable?) {
-            }
-
-            override fun beforeTextChanged(
-                s: CharSequence?,
-                start: Int,
-                count: Int,
-                after: Int
-            ) {
-            }
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                userListAdapter.clear()
-                chatViewModel.users.forEach {
-                    if (binding.userListSearch.text.isNotEmpty()) {
-                        if (it.toLowerCase(Locale.ROOT).contains(
-                                binding.userListSearch.text.toString().toLowerCase(
-                                    Locale.ROOT
-                                )
-                            )
-                        ) {
-                            userListAdapter.add(UserListItem(it))
-                        }
-                    } else {
-                        userListAdapter.add(UserListItem(it))
-                    }
+        if (hidden) {
+            userListAdapter = null
+        } else {
+            userListAdapter = GroupAdapter<GroupieViewHolder>()
+            chatViewModel.users.sortBy { it }
+            chatViewModel.users.forEach {
+                if (it.isNotEmpty() && userListAdapter != null) {
+                    userListAdapter?.add(UserListItem(it))
                 }
             }
-        })
+            binding.recyclerViewUserList.adapter = userListAdapter
+            binding.recyclerViewUserList.scrollToPosition(1)
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -94,7 +66,6 @@ class UserListFragment : Fragment() {
             LinearLayoutManager(view.context)
         layoutManager.stackFromEnd = true
         binding.recyclerViewUserList.layoutManager = layoutManager
-        binding.recyclerViewUserList.adapter = userListAdapter
 
         binding.closeUserListButton.setOnClickListener {
             requireParentFragment().childFragmentManager.beginTransaction()
@@ -102,27 +73,69 @@ class UserListFragment : Fragment() {
                 .hide(this)
                 .commit()
         }
+
+        binding.userListSearch.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+            }
+
+            override fun beforeTextChanged(
+                s: CharSequence?,
+                start: Int,
+                count: Int,
+                after: Int
+            ) {
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                userListAdapter?.clear()
+                chatViewModel.users.forEach {
+                    if (binding.userListSearch.text.isNotEmpty()) {
+                        if (it.toLowerCase(Locale.getDefault()).contains(
+                                binding.userListSearch.text.toString().toLowerCase(
+                                    Locale.getDefault()
+                                )
+                            )
+                        ) {
+                            userListAdapter?.add(UserListItem(it))
+                        }
+                    } else {
+                        userListAdapter?.add(UserListItem(it))
+                    }
+                }
+            }
+        })
     }
 
-    inner class UserListItem(val user: String) : Item<GroupieViewHolder>() {
+    inner class UserListItem(val user: String) : BindableItem<ChatUserItemBinding>() {
 
         override fun getLayout(): Int = R.layout.chat_user_item
 
-        override fun bind(viewHolder: GroupieViewHolder, position: Int) {
-            viewHolder.itemView.chatUserUsername.text = user
+        override fun bind(viewBinding: ChatUserItemBinding, position: Int) {
+            with (viewBinding) {
+                chatUserUsername.text = user
 
-            viewHolder.itemView.chatUserUsername.setOnClickListener {
-                parentFragment!!.sendMessageText.setText("/w $user ")
-                keyRequestFocus(
-                    parentFragment!!.sendMessageText,
-                    context!!
-                )
-                requireParentFragment().childFragmentManager.beginTransaction()
-                    .setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
-                    .hide(this@UserListFragment)
-                    .commit()
-                parentFragment!!.sendMessageText.setSelection(parentFragment!!.sendMessageText.text.length)
+                chatUserUsername.setOnClickListener {
+                    parentFragment!!.sendMessageText.setText(
+                        resources.getString(
+                            R.string.chat_whisper_popup,
+                            user
+                        )
+                    )
+                    keyRequestFocus(
+                        parentFragment!!.sendMessageText,
+                        context!!
+                    )
+                    requireParentFragment().childFragmentManager.beginTransaction()
+                        .setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
+                        .hide(this@UserListFragment)
+                        .commit()
+                    parentFragment!!.sendMessageText.setSelection(parentFragment!!.sendMessageText.text.length)
+                }
             }
+        }
+
+        override fun initializeViewBinding(view: View): ChatUserItemBinding {
+            return ChatUserItemBinding.bind(view)
         }
     }
 }

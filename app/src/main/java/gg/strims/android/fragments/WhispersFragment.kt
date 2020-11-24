@@ -1,6 +1,5 @@
 package gg.strims.android.fragments
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.LayoutInflater
@@ -12,20 +11,20 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
-import com.xwray.groupie.Item
-import gg.strims.android.CurrentUser
+import com.xwray.groupie.viewbinding.BindableItem
 import gg.strims.android.R
 import gg.strims.android.createMessageTextView
 import gg.strims.android.customspans.MarginItemDecoration
 import gg.strims.android.databinding.FragmentWhispersBinding
+import gg.strims.android.databinding.WhisperUserItemBinding
 import gg.strims.android.room.PrivateMessage
+import gg.strims.android.singletons.CurrentUser
 import gg.strims.android.viewBinding
 import gg.strims.android.viewmodels.ChatViewModel
 import gg.strims.android.viewmodels.PrivateMessagesViewModel
 import io.ktor.util.*
 import kotlinx.android.synthetic.main.whisper_user_item.view.*
 
-@SuppressLint("SetTextI18n")
 @KtorExperimentalAPI
 class WhispersFragment : Fragment() {
 
@@ -47,24 +46,25 @@ class WhispersFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         return FragmentWhispersBinding.inflate(layoutInflater).root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         whispersAdapter = GroupAdapter<GroupieViewHolder>()
-        binding.recyclerViewWhispers.layoutManager = LinearLayoutManager(view.context)
-        binding.recyclerViewWhispers.adapter = whispersAdapter
-
-        binding.recyclerViewWhispers.addItemDecoration(
-            MarginItemDecoration(
-                (TypedValue.applyDimension(
-                    TypedValue.COMPLEX_UNIT_DIP,
-                    5f,
-                    resources.displayMetrics
-                )).toInt()
+        with (binding) {
+            recyclerViewWhispers.layoutManager = LinearLayoutManager(view.context)
+            recyclerViewWhispers.adapter = whispersAdapter
+            recyclerViewWhispers.addItemDecoration(
+                MarginItemDecoration(
+                    (TypedValue.applyDimension(
+                        TypedValue.COMPLEX_UNIT_DIP,
+                        5f,
+                        resources.displayMetrics
+                    )).toInt()
+                )
             )
-        )
+        }
 
         chatViewModel = ViewModelProvider(requireActivity()).get(ChatViewModel::class.java)
         privateMessagesViewModel = ViewModelProvider(requireActivity()).get(PrivateMessagesViewModel::class.java)
@@ -86,32 +86,43 @@ class WhispersFragment : Fragment() {
         })
     }
 
-    inner class WhisperUserItem(var message: PrivateMessage) : Item<GroupieViewHolder>() {
+    inner class WhisperUserItem(var message: PrivateMessage) : BindableItem<WhisperUserItemBinding>() {
 
         override fun getLayout(): Int = R.layout.whisper_user_item
 
-        override fun bind(viewHolder: GroupieViewHolder, position: Int) {
+        override fun bind(viewBinding: WhisperUserItemBinding, position: Int) {
+            with (viewBinding) {
+                val otherUser =
+                    if (CurrentUser.user!!.username == message.nick) message.targetNick else message.nick
+                usernameWhisperUser.text = otherUser
 
-            val otherUser = if (CurrentUser.user!!.username == message.nick) message.targetNick else message.nick
-            viewHolder.itemView.usernameWhisperUser.text = otherUser
+                var online = false
+                chatViewModel.users.forEach { user ->
+                    if (user == otherUser) {
+                        onlineWhisperUser.visibility = View.VISIBLE
+                        online = true
+                        return@forEach
+                    }
+                }
+                if (!online) {
+                    onlineWhisperUser.visibility = View.GONE
+                }
+                createMessageTextView(
+                    context!!,
+                    message.toMessage(),
+                    latestMessageWhisperUser
+                )
 
-            var online = false
-            chatViewModel.users.forEach { user ->
-                if (user == otherUser) {
-                    viewHolder.itemView.onlineWhisperUser.visibility = View.VISIBLE
-                    online = true
-                    return@forEach
+                root.setOnClickListener {
+                    val action =
+                        WhispersFragmentDirections.actionNavWhispersToWhispersUserFragment(otherUser)
+                    findNavController().navigate(action)
                 }
             }
-            if (!online) {
-                viewHolder.itemView.onlineWhisperUser.visibility = View.GONE
-            }
-            createMessageTextView(context!!, message.toMessage(), viewHolder.itemView.latestMessageWhisperUser)
+        }
 
-            viewHolder.itemView.setOnClickListener {
-                val action = WhispersFragmentDirections.actionNavWhispersToWhispersUserFragment(otherUser)
-                findNavController().navigate(action)
-            }
+        override fun initializeViewBinding(view: View): WhisperUserItemBinding {
+            return WhisperUserItemBinding.bind(view)
         }
     }
 }

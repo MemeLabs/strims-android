@@ -26,7 +26,7 @@ class TwitchFragment: Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         return FragmentTwitchBinding.inflate(layoutInflater).root
     }
 
@@ -35,21 +35,23 @@ class TwitchFragment: Fragment() {
 
         twitchViewModel = ViewModelProvider(requireActivity()).get(TwitchViewModel::class.java)
 
-        binding.webViewTwitch.settings.domStorageEnabled = true
-        binding.webViewTwitch.settings.javaScriptEnabled = true
+        with (binding) {
+            webViewTwitch.settings.domStorageEnabled = true
+            webViewTwitch.settings.javaScriptEnabled = true
 
-        binding.twitchClose.setOnClickListener {
-            binding.webViewTwitch.loadUrl("")
-            twitchViewModel.channel.value = null
-            twitchViewModel.vod = false
+            twitchClose.setOnClickListener {
+                webViewTwitch.loadUrl("")
+                twitchViewModel.channel.value = null
+                twitchViewModel.vod = false
 
-            parentFragmentManager.beginTransaction()
-                .hide(this)
-                .commit()
+                parentFragmentManager.beginTransaction()
+                    .hide(this@TwitchFragment)
+                    .commit()
 
-            if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                (requireParentFragment() as ChatFragment).binding.constraintLayoutStreamFragment?.visibility =
-                    View.GONE
+                if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                    (requireParentFragment() as ChatFragment).binding.constraintLayoutStreamFragment?.visibility =
+                        View.GONE
+                }
             }
         }
     }

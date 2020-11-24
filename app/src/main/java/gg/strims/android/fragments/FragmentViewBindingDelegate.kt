@@ -1,4 +1,4 @@
-package gg.strims.android
+package gg.strims.android.fragments
 
 import android.view.View
 import androidx.fragment.app.Fragment
@@ -44,6 +44,3 @@ class FragmentViewBindingDelegate<T : ViewBinding>(
         return viewBindingFactory(thisRef.requireView()).also { this.binding = it }
     }
 }
-
-fun <T : ViewBinding> Fragment.viewBinding(viewBindingFactory: (View) -> T) =
-    FragmentViewBindingDelegate(this, viewBindingFactory)

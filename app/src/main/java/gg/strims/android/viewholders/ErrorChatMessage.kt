@@ -1,27 +1,31 @@
 package gg.strims.android.viewholders
 
-import android.annotation.SuppressLint
 import android.view.View
-import com.xwray.groupie.GroupieViewHolder
-import com.xwray.groupie.Item
-import gg.strims.android.CurrentUser
+import com.xwray.groupie.viewbinding.BindableItem
 import gg.strims.android.R
+import gg.strims.android.databinding.ErrorChatMessageItemBinding
+import gg.strims.android.singletons.CurrentUser
 import io.ktor.util.*
-import kotlinx.android.synthetic.main.error_chat_message_item.view.*
 import java.text.SimpleDateFormat
+import java.util.*
 
-@SuppressLint("SimpleDateFormat")
 @KtorExperimentalAPI
-class ErrorChatMessage(private val message: String) : Item<GroupieViewHolder>() {
+class ErrorChatMessage(private val message: String) : BindableItem<ErrorChatMessageItemBinding>() {
     override fun getLayout(): Int = R.layout.error_chat_message_item
 
-    override fun bind(viewHolder: GroupieViewHolder, position: Int) {
-        if (CurrentUser.optionsLiveData.value?.showTime!!) {
-            val dateFormat = SimpleDateFormat("HH:mm")
-            val time = dateFormat.format(System.currentTimeMillis())
-            viewHolder.itemView.timestampErrorChatMessage.visibility = View.VISIBLE
-            viewHolder.itemView.timestampErrorChatMessage.text = time
+    override fun bind(viewBinding: ErrorChatMessageItemBinding, position: Int) {
+        with (viewBinding) {
+            if (CurrentUser.optionsLiveData.value?.showTime!!) {
+                val dateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+                val time = dateFormat.format(System.currentTimeMillis())
+                timestampErrorChatMessage.visibility = View.VISIBLE
+                timestampErrorChatMessage.text = time
+            }
+            messageErrorChatMessage.text = message
         }
-        viewHolder.itemView.messageErrorChatMessage.text = message
+    }
+
+    override fun initializeViewBinding(view: View): ErrorChatMessageItemBinding {
+        return ErrorChatMessageItemBinding.bind(view)
     }
 }

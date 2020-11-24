@@ -2,6 +2,7 @@ package gg.strims.android.fragments
 
 import android.content.res.Configuration
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -22,25 +23,29 @@ class YouTubeFragment: Fragment() {
 
     private lateinit var youTubeViewModel: YouTubeViewModel
 
-    override fun onDestroy() {
-        binding.youTubeView.release()
-        super.onDestroy()
-    }
-
     override fun onResume() {
         super.onResume()
-        binding.youTubeView.getYouTubePlayerWhenReady(object : YouTubePlayerCallback {
-            override fun onYouTubePlayer(youTubePlayer: YouTubePlayer) {
-                youTubePlayer.play()
-            }
-        })
+        if (youTubeViewModel.videoId.value != null) {
+            binding.youTubeView.getYouTubePlayerWhenReady(object : YouTubePlayerCallback {
+                override fun onYouTubePlayer(youTubePlayer: YouTubePlayer) {
+                    youTubePlayer.loadVideo(youTubeViewModel.videoId.value!!, 0f)
+                    youTubePlayer.play()
+                }
+            })
+        }
+    }
+
+    override fun onStop() {
+        binding.youTubeView.release()
+        Log.d("TAG", "RELEASING YOUTUBE")
+        super.onStop()
     }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         return FragmentYoutubeBinding.inflate(layoutInflater).root
     }
 
@@ -48,8 +53,6 @@ class YouTubeFragment: Fragment() {
         hideChildFragment(requireParentFragment(), this)
 
         youTubeViewModel = ViewModelProvider(requireActivity()).get(YouTubeViewModel::class.java)
-
-        lifecycle.addObserver(binding.youTubeView)
 
         binding.youTubeClose.setOnClickListener {
             binding.youTubeView.getYouTubePlayerWhenReady(object : YouTubePlayerCallback {

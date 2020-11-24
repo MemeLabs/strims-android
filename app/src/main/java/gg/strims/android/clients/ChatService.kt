@@ -15,9 +15,9 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.PRIORITY_MIN
 import com.beust.klaxon.Klaxon
 import gg.strims.android.MainActivity
-import gg.strims.android.CurrentUser
 import gg.strims.android.R
 import gg.strims.android.models.ViewerState
+import gg.strims.android.singletons.CurrentUser
 import io.ktor.client.*
 import io.ktor.client.features.websocket.*
 import io.ktor.client.request.get

@@ -18,9 +18,11 @@ import androidx.lifecycle.MutableLiveData
 import androidx.viewbinding.ViewBinding
 import gg.strims.android.customspans.CenteredImageSpan
 import gg.strims.android.customspans.ColouredUnderlineSpan
-import gg.strims.android.customspans.DrawableCallback
+import gg.strims.android.callbacks.DrawableCallback
 import gg.strims.android.customspans.NoUnderlineClickableSpan
+import gg.strims.android.fragments.FragmentViewBindingDelegate
 import gg.strims.android.models.Message
+import gg.strims.android.singletons.CurrentUser
 import io.ktor.util.*
 import pl.droidsonroids.gif.GifDrawable
 import java.io.BufferedInputStream
@@ -35,11 +37,8 @@ inline fun <T : ViewBinding> Activity.viewBinder(
         bindingInflater.invoke(layoutInflater)
     }
 
-//inline fun <T : ViewBinding> Fragment.viewBinder(
-//    crossinline bindingInflater: (LayoutInflater) -> T) =
-//    lazy(LazyThreadSafetyMode.NONE) {
-//        bindingInflater.invoke(layoutInflater)
-//    }
+fun <T : ViewBinding> Fragment.viewBinding(viewBindingFactory: (View) -> T) =
+    FragmentViewBindingDelegate(this, viewBindingFactory)
 
 fun keyRequestFocus(editText: EditText, context: Context) {
     editText.requestFocus()
@@ -299,7 +298,7 @@ fun createMessageTextView(
             }
         }
 
-        with(messageData.data) {
+        with (messageData.data) {
             when {
                 contains("nsfl") -> {
                     messageData.entities.links!!.forEach {
@@ -352,7 +351,7 @@ fun createMessageTextView(
     if (messageData.entities.codes!!.isNotEmpty() && codes) {
         messageData.entities.codes!!.forEach {
             ssb.setSpan(
-                BackgroundColorSpan(Color.parseColor("#353535")),
+                BackgroundColorSpan(Color.parseColor("#2B2B2B")),
                 it.bounds[0],
                 it.bounds[1],
                 Spannable.SPAN_INCLUSIVE_INCLUSIVE

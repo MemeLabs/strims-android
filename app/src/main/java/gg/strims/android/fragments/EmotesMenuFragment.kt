@@ -12,11 +12,12 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.GridLayoutManager
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
-import com.xwray.groupie.Item
+import com.xwray.groupie.viewbinding.BindableItem
 import gg.strims.android.*
+import gg.strims.android.databinding.EmoteMenuItemBinding
 import gg.strims.android.databinding.FragmentEmoteMenuBinding
+import gg.strims.android.singletons.CurrentUser
 import io.ktor.util.*
-import kotlinx.android.synthetic.main.emote_menu_item.view.*
 import pl.droidsonroids.gif.GifDrawable
 import java.util.*
 
@@ -25,12 +26,12 @@ class EmotesMenuFragment : Fragment() {
 
     private val binding by viewBinding(FragmentEmoteMenuBinding::bind)
 
-    private val emoteMenuAdapter = GroupAdapter<GroupieViewHolder>()
+    private var emoteMenuAdapter: GroupAdapter<GroupieViewHolder>? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         return FragmentEmoteMenuBinding.inflate(layoutInflater).root
     }
 
@@ -43,7 +44,6 @@ class EmotesMenuFragment : Fragment() {
             view.context,
             if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) 8 else 5
         )
-        binding.recyclerViewEmoteMenu.adapter = emoteMenuAdapter
 
         binding.closeEmoteMenuButton.setOnClickListener {
             requireParentFragment().childFragmentManager.beginTransaction()
@@ -66,34 +66,34 @@ class EmotesMenuFragment : Fragment() {
             }
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                emoteMenuAdapter.clear()
+                emoteMenuAdapter?.clear()
                 CurrentUser.bitmapMemoryCache.forEach {
                     if (binding.emoteMenuSearch.text.isNotEmpty()) {
-                        if (it.key.toLowerCase(Locale.ROOT).contains(
+                        if (it.key.toLowerCase(Locale.getDefault()).contains(
                                 binding.emoteMenuSearch.text.toString().toLowerCase(
-                                    Locale.ROOT
+                                    Locale.getDefault()
                                 )
                             )
                         ) {
-                            emoteMenuAdapter.add(EmoteMenuItem(it.key, it.value))
+                            emoteMenuAdapter?.add(EmoteMenuItem(it.key, it.value))
                         }
                     } else {
-                        emoteMenuAdapter.add(EmoteMenuItem(it.key, it.value))
+                        emoteMenuAdapter?.add(EmoteMenuItem(it.key, it.value))
                     }
                 }
 
                 CurrentUser.gifMemoryCache.forEach {
                     if (binding.emoteMenuSearch.text.isNotEmpty()) {
-                        if (it.key.toLowerCase(Locale.ROOT).contains(
+                        if (it.key.toLowerCase(Locale.getDefault()).contains(
                                 binding.emoteMenuSearch.text.toString().toLowerCase(
-                                    Locale.ROOT
+                                    Locale.getDefault()
                                 )
                             )
                         ) {
-                            emoteMenuAdapter.add(EmoteMenuItem(it.key, it.value))
+                            emoteMenuAdapter?.add(EmoteMenuItem(it.key, it.value))
                         }
                     } else {
-                        emoteMenuAdapter.add(EmoteMenuItem(it.key, it.value))
+                        emoteMenuAdapter?.add(EmoteMenuItem(it.key, it.value))
                     }
                 }
             }
@@ -101,31 +101,36 @@ class EmotesMenuFragment : Fragment() {
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
-        emoteMenuAdapter.clear()
-        if (CurrentUser.bitmapMemoryCache.isNotEmpty()) {
-            CurrentUser.bitmapMemoryCache.forEach {
-                emoteMenuAdapter.add(EmoteMenuItem(it.key, it.value))
-            }
+        if (hidden) {
+            emoteMenuAdapter = null
+        } else {
+            emoteMenuAdapter = GroupAdapter<GroupieViewHolder>()
+            if (CurrentUser.bitmapMemoryCache.isNotEmpty() && emoteMenuAdapter != null) {
+                CurrentUser.bitmapMemoryCache.forEach {
+                    emoteMenuAdapter?.add(EmoteMenuItem(it.key, it.value))
+                }
 
-            CurrentUser.gifMemoryCache.forEach {
-                emoteMenuAdapter.add(EmoteMenuItem(it.key, it.value))
+                CurrentUser.gifMemoryCache.forEach {
+                    emoteMenuAdapter?.add(EmoteMenuItem(it.key, it.value))
+                }
             }
+            binding.recyclerViewEmoteMenu.adapter = emoteMenuAdapter
         }
     }
 
     inner class EmoteMenuItem<T>(val name: String, private val emote: T) :
-        Item<GroupieViewHolder>() {
+        BindableItem<EmoteMenuItemBinding>() {
 
         override fun getLayout(): Int = R.layout.emote_menu_item
 
-        override fun bind(viewHolder: GroupieViewHolder, position: Int) {
+        override fun bind(viewBinding: EmoteMenuItemBinding, position: Int) {
             if (emote is Bitmap) {
-                viewHolder.itemView.imageViewEmote.setImageBitmap(emote as Bitmap)
+                viewBinding.imageViewEmote.setImageBitmap(emote as Bitmap)
             } else {
-                viewHolder.itemView.imageViewEmote.setImageDrawable(emote as GifDrawable)
+                viewBinding.imageViewEmote.setImageDrawable(emote as GifDrawable)
             }
 
-            viewHolder.itemView.imageViewEmote.setOnClickListener {
+            viewBinding.imageViewEmote.setOnClickListener {
                 val parentFragment = requireParentFragment() as ChatFragment
                 parentFragment.binding.sendMessageText.append("$name ")
                 keyRequestFocus(
@@ -139,6 +144,9 @@ class EmotesMenuFragment : Fragment() {
                 parentFragment.binding.sendMessageText.setSelection(parentFragment.binding.sendMessageText.text.length)
             }
         }
-    }
 
+        override fun initializeViewBinding(view: View): EmoteMenuItemBinding {
+            return EmoteMenuItemBinding.bind(view)
+        }
+    }
 }

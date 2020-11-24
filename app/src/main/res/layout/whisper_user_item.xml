@@ -13,11 +13,11 @@
         android:layout_height="20dp"
         android:layout_marginStart="4dp"
         android:visibility="gone"
+        android:contentDescription="@string/user_online_indicator"
         app:layout_constraintBottom_toBottomOf="@+id/usernameWhisperUser"
         app:layout_constraintStart_toEndOf="@id/usernameWhisperUser"
         app:layout_constraintTop_toTopOf="@+id/usernameWhisperUser"
-        app:srcCompat="@drawable/ic_online_green_24dp"
-        tools:visibility="gone" />
+        app:srcCompat="@drawable/ic_online_green_24dp" />
 
     <TextView
         android:id="@+id/usernameWhisperUser"

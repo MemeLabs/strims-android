@@ -38,14 +38,18 @@
         app:layout_constraintStart_toStartOf="@+id/recyclerViewUserList"
         android:importantForAutofill="no" />
 
-    <ImageView
+    <Button
         android:id="@+id/closeUserListButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
+        android:minHeight="0dp"
+        android:minWidth="0dp"
+        android:height="25dp"
+        android:width="25dp"
+        android:background="@drawable/ic_close_orange_24dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_close_orange_24dp" />
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
