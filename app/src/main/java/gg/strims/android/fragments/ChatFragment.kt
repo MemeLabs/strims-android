@@ -1103,11 +1103,6 @@ class ChatFragment : Fragment() {
                 chatViewModel.addMessage(message)
                 binding.progressBarFragment.visibility = View.GONE
                 Log.d("TAG", "ENDING BAR ${(System.currentTimeMillis() - CurrentUser.time)}")
-                Toast.makeText(
-                    requireContext(),
-                    "ENDING BAR ${(System.currentTimeMillis() - CurrentUser.time)}",
-                    Toast.LENGTH_SHORT
-                ).show()
                 binding.recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
             }
             "JOIN" -> {
