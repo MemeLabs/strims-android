@@ -106,12 +106,12 @@ class ChatMessageCombo(
                             scaleValue = 1.10
                         }
                     }
-                    comboCountChatMessageCombo.textSize =
-                        (comboCountInitialSize * scaleValue).toFloat()
-                    xChatMessageCombo.textSize =
-                        (xInitialSize * scaleValue).toFloat()
-                    hitsComboChatMessageCombo.textSize =
-                        (hitsInitialSize * scaleValue).toFloat()
+//                    comboCountChatMessageCombo.textSize =
+//                        (comboCountInitialSize * scaleValue).toFloat()
+//                    xChatMessageCombo.textSize =
+//                        (xInitialSize * scaleValue).toFloat()
+//                    hitsComboChatMessageCombo.textSize =
+//                        (hitsInitialSize * scaleValue).toFloat()
                     if (count >= 10) {
                         redSplatChatMessageCombo.visibility = View.VISIBLE
                         graySplatChatMessageCombo.visibility = View.VISIBLE
@@ -362,10 +362,10 @@ class ChatMessageCombo(
                         })
                         red.startAnimation(redStaticAnim)
                     }
-                    hitsComboChatMessageCombo.textSize =
-                        (hitsInitialSize * 1.25).toFloat()
-                    xChatMessageCombo.textSize =
-                        (xInitialSize * 1.25).toFloat()
+//                    hitsComboChatMessageCombo.textSize =
+//                        (hitsInitialSize * 1.25).toFloat()
+//                    xChatMessageCombo.textSize =
+//                        (xInitialSize * 1.25).toFloat()
                     fun TextView.comboAnimation() {
                         val comboColorAnimation =
                             ObjectAnimator.ofInt(
@@ -391,13 +391,12 @@ class ChatMessageCombo(
                             override fun onAnimationStart(animation: Animation?) {
                                 this@comboAnimation.text =
                                     context.resources.getString(R.string.combo_ccccombo)
+                                this@comboAnimation.typeface = Typeface.DEFAULT
                             }
 
                             override fun onAnimationRepeat(animation: Animation?) {
                                 comboColorAnimation.start()
                                 this@comboAnimation.startAnimation(slideLeft)
-
-
                             }
                         })
                         this.startAnimation(anim)

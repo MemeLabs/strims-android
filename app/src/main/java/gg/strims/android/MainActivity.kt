@@ -71,7 +71,7 @@ class MainActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
-//        RedScreenOfDeath.init(this.application)
+        RedScreenOfDeath.init(this.application)
 
         if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             supportActionBar?.hide()
