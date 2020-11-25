@@ -91,16 +91,13 @@ class AngelThumpFragment: Fragment() {
         if (exoPlayerViewModel.liveDataStream.value != null && !hidden) {
 
             if (exoPlayerViewModel.player != null && exoPlayerViewModel.liveDataStream.value?.channel == exoPlayerViewModel.currentlyPlaying) {
-                Log.d("TAG", "EXISTING PLAYER")
                 binding.angelThumpVideoView.player = exoPlayerViewModel.player
             } else {
-                Log.d("TAG", "NEW PLAYER")
                 player = SimpleExoPlayer.Builder(binding.root.context).build()
                 binding.angelThumpVideoView.player = player
 
                 exoPlayerViewModel.liveDataStream.observe(viewLifecycleOwner, {
                     if (it != null) {
-                        Log.d("TAG", "OBSERVED NOT NULL")
                         exoPlayerViewModel.player?.release()
 
                         if (it.service == "m3u8") {

@@ -322,7 +322,7 @@ class ChatFragment : Fragment() {
     }
 
     override fun onDestroy() {
-        Log.d("TAG", "DESTROYING FRAGMENT")
+        Log.d("TAG", "DESTROYING CHAT FRAGMENT")
         requireActivity().unregisterReceiver(broadcastReceiver)
         super.onDestroy()
     }

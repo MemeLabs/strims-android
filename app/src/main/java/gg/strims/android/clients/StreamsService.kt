@@ -66,7 +66,7 @@ class StreamsService: Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     private fun startForeground() {
-        val channelId = createNotificationChannel("strims_chat_service", "Strims Chat Service")
+        val channelId = createNotificationChannel()
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
         val notification = notificationBuilder.setOngoing(true)
             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
@@ -78,16 +78,16 @@ class StreamsService: Service() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun createNotificationChannel(channelId: String, channelName: String): String {
+    private fun createNotificationChannel(): String {
         val channel = NotificationChannel(
-            channelId,
-            channelName, NotificationManager.IMPORTANCE_NONE
+            "strims_chat_service",
+            "Strims Chat Service", NotificationManager.IMPORTANCE_NONE
         )
         channel.lightColor = Color.BLUE
         channel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
         val service = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         service.createNotificationChannel(channel)
-        return channelId
+        return channel.id
     }
 
     inner class StreamsClient {
@@ -107,7 +107,6 @@ class StreamsService: Service() {
                         val intent = Intent("gg.strims.android.STREAMS")
                         intent.putExtra("gg.strims.android.STREAMS_TEXT", frame.readText())
                         sendBroadcast(intent)
-//                        Log.d("TAG", "Sending broadcast with ${frame.readText()}")
                     }
                     is Frame.Binary -> println(frame.readBytes())
                 }

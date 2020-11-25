@@ -74,7 +74,7 @@ class ChatService: Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     private fun startForeground() {
-        val channelId = createNotificationChannel("strims_chat_service", "Strims Chat Service")
+        val channelId = createNotificationChannel()
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
         val notification = notificationBuilder.setOngoing(true)
             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
@@ -86,16 +86,16 @@ class ChatService: Service() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun createNotificationChannel(channelId: String, channelName: String): String {
-        val chan = NotificationChannel(
-            channelId,
-            channelName, NotificationManager.IMPORTANCE_NONE
+    private fun createNotificationChannel(): String {
+        val channel = NotificationChannel(
+            "strims_chat_service",
+            "Strims Chat Service", NotificationManager.IMPORTANCE_NONE
         )
-        chan.lightColor = Color.BLUE
-        chan.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+        channel.lightColor = Color.BLUE
+        channel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
         val service = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        service.createNotificationChannel(chan)
-        return channelId
+        service.createNotificationChannel(channel)
+        return channel.id
     }
 
     inner class ChatClient {

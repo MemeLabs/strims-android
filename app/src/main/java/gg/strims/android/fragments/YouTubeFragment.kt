@@ -35,7 +35,6 @@ class YouTubeFragment: Fragment() {
 
                     override fun onCurrentSecond(youTubePlayer: YouTubePlayer, second: Float) {
                         youTubeViewModel.currentPosition = second.roundToInt()
-                        Log.d("TAG", youTubeViewModel.currentPosition.toString())
                     }
 
                     override fun onError(
@@ -71,7 +70,6 @@ class YouTubeFragment: Fragment() {
                 })
             }
         })
-        Log.d("TAG", "RELEASING YOUTUBE")
         super.onStop()
     }
 
