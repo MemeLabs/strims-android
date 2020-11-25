@@ -5,4 +5,5 @@ import androidx.lifecycle.ViewModel
 
 class YouTubeViewModel: ViewModel() {
     var videoId = MutableLiveData<String?>()
+    var currentPosition: Int? = null
 }

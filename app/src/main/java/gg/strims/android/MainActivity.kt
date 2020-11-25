@@ -46,6 +46,7 @@ class MainActivity : AppCompatActivity() {
         var NOTIFICATION_REPLY_KEY = "Text"
     }
 
+    private lateinit var navHostFragment: NavHostFragment
     private lateinit var appBarConfiguration: AppBarConfiguration
 
     lateinit var chatViewModel: ChatViewModel
@@ -53,14 +54,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val view = binding.root
-        setContentView(view)
+        setContentView(binding.root)
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
 
         val drawerLayout: DrawerLayout = binding.drawerLayout
         val navView: NavigationView = binding.navView
-        val navHostFragment =
+        navHostFragment =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         val navController = navHostFragment.navController
         appBarConfiguration = AppBarConfiguration(
@@ -71,7 +71,7 @@ class MainActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
-        RedScreenOfDeath.init(this.application)
+        RedScreenOfDeath.init(application)
 
         if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             supportActionBar?.hide()
@@ -183,8 +183,6 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.nav_LogIn -> {
-                val navHostFragment =
-                    supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
                 val navController = navHostFragment.navController
                 navController.navigate(R.id.nav_LogIn)
             }
@@ -193,15 +191,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onSupportNavigateUp(): Boolean {
-        val navHostFragment =
-            supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         val navController = navHostFragment.navController
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
 
     override fun onBackPressed() {
-        val navHostFragment =
-            supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         val childFragment = navHostFragment.childFragmentManager.fragments[0]
         childFragment.childFragmentManager.fragments.forEach {
             if (it.tag == "EmotesMenuFragment" || it.tag == "UserListFragment" && it.isVisible) {
@@ -218,8 +212,6 @@ class MainActivity : AppCompatActivity() {
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
         if (CurrentUser.optionsLiveData.value?.pictureInPicture!!) {
-            val navHostFragment =
-                supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
             val childFragment = navHostFragment.childFragmentManager.fragments[0]
             if (exoPlayerViewModel.liveDataStream.value != null) {
                 childFragment.childFragmentManager.fragments.forEach {

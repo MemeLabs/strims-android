@@ -31,9 +31,7 @@ class AngelThumpFragment: Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-        return FragmentAngelthumpBinding.inflate(layoutInflater).root
-    }
+    ): View = FragmentAngelthumpBinding.inflate(layoutInflater).root
 
     override fun onStop() {
         binding.angelThumpVideoView.player = null

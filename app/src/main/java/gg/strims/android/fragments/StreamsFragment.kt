@@ -45,9 +45,7 @@ class StreamsFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-        return FragmentStreamsBinding.inflate(layoutInflater).root
-    }
+    ): View = FragmentStreamsBinding.inflate(layoutInflater).root
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         exoPlayerViewModel = ViewModelProvider(requireActivity()).get(ExoPlayerViewModel::class.java)
@@ -108,6 +106,7 @@ class StreamsFragment : Fragment() {
 
     fun closeYouTube() {
         youTubeViewModel.videoId.value = null
+        youTubeViewModel.currentPosition = null
     }
 
     private fun closeAngelThump() {

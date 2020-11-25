@@ -47,9 +47,7 @@ class WhispersUserFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-        return FragmentUserWhispersBinding.inflate(layoutInflater).root
-    }
+    ): View = FragmentUserWhispersBinding.inflate(layoutInflater).root
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val layoutManager = LinearLayoutManager(view.context)

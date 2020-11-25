@@ -69,8 +69,6 @@ class StreamsService: Service() {
         val channelId = createNotificationChannel("strims_chat_service", "Strims Chat Service")
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
         val notification = notificationBuilder.setOngoing(true)
-            .setColor(Color.parseColor("#F58851"))
-            .setColorized(true)
             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
             .setSmallIcon(R.mipmap.ic_launcher_foreground)
             .setPriority(PRIORITY_MIN)

@@ -31,9 +31,7 @@ class EmotesMenuFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-        return FragmentEmoteMenuBinding.inflate(layoutInflater).root
-    }
+    ): View = FragmentEmoteMenuBinding.inflate(layoutInflater).root
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         requireParentFragment().childFragmentManager.beginTransaction()

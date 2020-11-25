@@ -34,9 +34,7 @@ class UserListFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-        return FragmentUserListBinding.inflate(layoutInflater).root
-    }
+    ): View = FragmentUserListBinding.inflate(layoutInflater).root
 
     override fun onHiddenChanged(hidden: Boolean) {
         if (hidden) {

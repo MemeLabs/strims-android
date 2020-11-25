@@ -8,4 +8,5 @@
     android:gravity="start"
     android:textColor="#FFFFFF"
     android:paddingStart="8dp"
+    android:paddingEnd="8dp"
     />

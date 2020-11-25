@@ -20,9 +20,7 @@ class OptionsFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-        return FragmentChatOptionsBinding.inflate(layoutInflater).root
-    }
+    ): View = FragmentChatOptionsBinding.inflate(layoutInflater).root
 
     private fun retrieveOptions() {
         with (binding) {

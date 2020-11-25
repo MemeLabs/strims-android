@@ -26,9 +26,7 @@ class TwitchFragment: Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-        return FragmentTwitchBinding.inflate(layoutInflater).root
-    }
+    ): View = FragmentTwitchBinding.inflate(layoutInflater).root
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         hideChildFragment(requireParentFragment(), this)

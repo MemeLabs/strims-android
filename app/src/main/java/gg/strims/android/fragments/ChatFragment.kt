@@ -835,6 +835,7 @@ class ChatFragment : Fragment() {
                 })
 
                 youTubeViewModel.videoId.value = null
+                youTubeViewModel.currentPosition = null
             }
         }
 
@@ -911,7 +912,9 @@ class ChatFragment : Fragment() {
         )
     }
 
-    inner class AutofillItemCommand(private val command: String) : BindableItem<AutofillItemBinding>() {
+    inner class AutofillItemCommand(private val command: String) :
+        BindableItem<AutofillItemBinding>() {
+
         override fun getLayout(): Int = R.layout.autofill_item
 
         override fun bind(viewBinding: AutofillItemBinding, position: Int) {
@@ -937,6 +940,7 @@ class ChatFragment : Fragment() {
     }
 
     inner class AutofillItemUser(private val user: String) : BindableItem<AutofillItemBinding>() {
+
         override fun getLayout(): Int = R.layout.autofill_item
 
         override fun bind(viewBinding: AutofillItemBinding, position: Int) {
@@ -1022,7 +1026,9 @@ class ChatFragment : Fragment() {
         }
     }
 
-    inner class AutofillItemModifier(private val modifier: String) : BindableItem<AutofillItemBinding>() {
+    inner class AutofillItemModifier(private val modifier: String) :
+        BindableItem<AutofillItemBinding>() {
+
         override fun getLayout(): Int = R.layout.autofill_item
 
         override fun bind(viewBinding: AutofillItemBinding, position: Int) {

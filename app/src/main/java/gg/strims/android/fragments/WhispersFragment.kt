@@ -45,9 +45,7 @@ class WhispersFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-        return FragmentWhispersBinding.inflate(layoutInflater).root
-    }
+    ): View = FragmentWhispersBinding.inflate(layoutInflater).root
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         whispersAdapter = GroupAdapter<GroupieViewHolder>()

@@ -4,15 +4,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="#111111">
+    android:background="#111111"
+    android:minHeight="30dp">
 
     <ImageView
         android:id="@+id/graySplatChatMessageCombo"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:contentDescription="@string/combo_animation"
         android:scaleType="fitXY"
         android:visibility="gone"
-        android:contentDescription="@string/combo_animation"
         app:layout_constraintBottom_toBottomOf="@+id/comboCountChatMessageCombo"
         app:layout_constraintEnd_toEndOf="@id/hitsComboChatMessageCombo"
         app:layout_constraintStart_toEndOf="@+id/messageChatMessageCombo"
@@ -25,9 +26,9 @@
         android:id="@+id/redSplatChatMessageCombo"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:contentDescription="@string/combo_animation"
         android:scaleType="fitXY"
         android:visibility="gone"
-        android:contentDescription="@string/combo_animation"
         app:layout_constraintBottom_toBottomOf="@+id/comboCountChatMessageCombo"
         app:layout_constraintEnd_toEndOf="@id/hitsComboChatMessageCombo"
         app:layout_constraintStart_toEndOf="@+id/messageChatMessageCombo"

@@ -5,7 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/rounded_whisper_user"
-    android:paddingEnd="4dp">
+    android:paddingEnd="4dp"
+    android:paddingStart="0dp">
 
     <ImageView
         android:id="@+id/onlineWhisperUser"

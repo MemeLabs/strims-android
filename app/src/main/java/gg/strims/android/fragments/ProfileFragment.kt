@@ -34,9 +34,7 @@ class ProfileFragment: Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-        return FragmentProfileBinding.inflate(layoutInflater).root
-    }
+    ): View = FragmentProfileBinding.inflate(layoutInflater).root
 
     private fun fetchProfile() {
         if (CurrentUser.user != null) {
