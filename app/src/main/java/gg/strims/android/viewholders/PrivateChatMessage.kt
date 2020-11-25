@@ -1,27 +1,24 @@
 package gg.strims.android.viewholders
 
-import android.content.Context
 import android.graphics.Color
 import android.text.method.LinkMovementMethod
 import android.view.View
 import android.widget.PopupMenu
 import androidx.appcompat.view.ContextThemeWrapper
 import com.xwray.groupie.viewbinding.BindableItem
-import gg.strims.android.singletons.CurrentUser
 import gg.strims.android.R
 import gg.strims.android.adapters.CustomAdapter
 import gg.strims.android.createMessageTextView
 import gg.strims.android.databinding.PrivateChatMessageItemBinding
 import gg.strims.android.keyRequestFocus
 import gg.strims.android.models.Message
+import gg.strims.android.singletons.CurrentUser
 import io.ktor.util.*
-import kotlinx.android.synthetic.main.private_chat_message_item.view.*
 import java.text.SimpleDateFormat
 import java.util.*
 
 @KtorExperimentalAPI
 class PrivateChatMessage(
-    private val context: Context,
     var adapter: CustomAdapter,
     private val messageData: Message,
     private val isReceived: Boolean = false
@@ -80,7 +77,7 @@ class PrivateChatMessage(
                 LinkMovementMethod.getInstance()
 
             createMessageTextView(
-                context,
+                root.context,
                 messageData,
                 messagePrivateMessage
             )
@@ -95,19 +92,19 @@ class PrivateChatMessage(
 
             if (adapter.sendMessageText != null) {
                 usernamePrivateMessage.setOnLongClickListener {
-                    val wrapper = ContextThemeWrapper(context, R.style.PopupMenu)
+                    val wrapper = ContextThemeWrapper(root.context, R.style.PopupMenu)
                     val pop = PopupMenu(wrapper, it)
                     pop.inflate(R.menu.chat_message_username_menu)
                     pop.setOnMenuItemClickListener { itMenuItem ->
                         when (itMenuItem.itemId) {
                             R.id.chatWhisper -> {
                                 adapter.sendMessageText!!.setText(
-                                    context.resources.getString(
+                                    root.context.resources.getString(
                                         R.string.chat_whisper_popup,
                                         messageData.nick
                                     )
                                 )
-                                keyRequestFocus(adapter.sendMessageText!!, context)
+                                keyRequestFocus(adapter.sendMessageText!!, root.context)
                                 adapter.sendMessageText!!.setSelection(adapter.sendMessageText!!.text.length)
                             }
                             R.id.chatMention -> {
@@ -120,13 +117,13 @@ class PrivateChatMessage(
                                     }
                                 } else {
                                     adapter.sendMessageText!!.setText(
-                                        context.resources.getString(
+                                        root.context.resources.getString(
                                             R.string.chat_mention_popup,
                                             messageData.nick
                                         )
                                     )
                                 }
-                                keyRequestFocus(adapter.sendMessageText!!, context)
+                                keyRequestFocus(adapter.sendMessageText!!, root.context)
                                 adapter.sendMessageText!!.setSelection(adapter.sendMessageText!!.text.length)
                             }
                             R.id.chatIgnore -> {

@@ -40,9 +40,6 @@ class MainActivity : AppCompatActivity() {
 
     val binding by viewBinder(ActivityNavigationDrawerBinding::inflate)
 
-    var chatSocketIntent: Intent? = null
-    private var streamsSocketIntent: Intent? = null
-
     companion object {
         var channelId = "chat_notifications"
         var NOTIFICATION_ID = 1
@@ -51,7 +48,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
 
-    private lateinit var chatViewModel: ChatViewModel
+    lateinit var chatViewModel: ChatViewModel
     private lateinit var exoPlayerViewModel: ExoPlayerViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -74,7 +71,7 @@ class MainActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
-        RedScreenOfDeath.init(this.application)
+//        RedScreenOfDeath.init(this.application)
 
         if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             supportActionBar?.hide()
@@ -88,24 +85,18 @@ class MainActivity : AppCompatActivity() {
             Log.d("TAG", "SAVING OPTIONS")
         })
 
-        if (savedInstanceState != null) {
-            if (CurrentUser.user != null) {
-                binding.navView.menu.findItem(R.id.nav_Profile).isVisible = true
-                binding.navView.menu.findItem(R.id.nav_Whispers).isVisible = true
-                val header = navView.getHeaderView(0)
-                header.navHeaderUsername.text = CurrentUser.user!!.username
-            }
-
-            streamsSocketIntent = chatViewModel.streamsSocketIntent
-            chatSocketIntent = chatViewModel.chatSocketIntent
-
+        if (savedInstanceState != null && CurrentUser.user != null) {
+            binding.navView.menu.findItem(R.id.nav_Profile).isVisible = true
+            binding.navView.menu.findItem(R.id.nav_Whispers).isVisible = true
+            val header = navView.getHeaderView(0)
+            header.navHeaderUsername.text = CurrentUser.user!!.username
         } else {
-            chatSocketIntent = Intent(this, ChatService::class.java)
-            streamsSocketIntent = Intent(this, StreamsService::class.java)
-            startService(chatSocketIntent)
-            startService(streamsSocketIntent)
-            chatViewModel.chatSocketIntent = chatSocketIntent
-            chatViewModel.streamsSocketIntent = streamsSocketIntent
+            with (chatViewModel) {
+                chatSocketIntent = Intent(this@MainActivity, ChatService::class.java)
+                streamsSocketIntent = Intent(this@MainActivity, StreamsService::class.java)
+                startService(chatSocketIntent)
+                startService(streamsSocketIntent)
+            }
 
             GlobalScope.launch(Dispatchers.IO) {
                 Log.d("TAG", "OPTIONS ${(System.currentTimeMillis() - CurrentUser.time)}")
@@ -122,19 +113,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun restartChatService() {
-        stopService(chatSocketIntent)
-        chatSocketIntent = Intent(this, ChatService::class.java)
-        chatViewModel.chatSocketIntent = chatSocketIntent
-        Thread.sleep(100)
-        startService(chatSocketIntent)
+        with (chatViewModel) {
+            stopService(chatSocketIntent)
+            chatSocketIntent = Intent(this@MainActivity, ChatService::class.java)
+            Thread.sleep(100)
+            startService(chatSocketIntent)
+        }
     }
 
     fun restartStreamsService() {
-        stopService(streamsSocketIntent)
-        streamsSocketIntent = Intent(this, StreamsService::class.java)
-        chatViewModel.streamsSocketIntent = streamsSocketIntent
-        Thread.sleep(100)
-        startService(streamsSocketIntent)
+        with (chatViewModel) {
+            stopService(streamsSocketIntent)
+            streamsSocketIntent = Intent(this@MainActivity, StreamsService::class.java)
+            Thread.sleep(100)
+            startService(streamsSocketIntent)
+        }
     }
 
     private fun retrieveEmotes() {

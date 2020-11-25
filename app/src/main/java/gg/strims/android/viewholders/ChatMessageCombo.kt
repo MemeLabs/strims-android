@@ -20,7 +20,6 @@ import gg.strims.android.createMessageTextView
 import gg.strims.android.databinding.ChatMessageItemEmoteComboBinding
 import gg.strims.android.models.Message
 import io.ktor.util.*
-import kotlinx.android.synthetic.main.chat_message_item_emote_combo.view.*
 import java.text.SimpleDateFormat
 import java.util.*
 

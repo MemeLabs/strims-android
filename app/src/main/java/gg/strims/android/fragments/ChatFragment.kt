@@ -49,6 +49,7 @@ import gg.strims.android.viewmodels.*
 import io.ktor.util.*
 import kotlinx.android.synthetic.main.fragment_chat.*
 import kotlinx.android.synthetic.main.nav_header_main.view.*
+import pl.droidsonroids.gif.GifDrawable
 import java.util.*
 import java.util.regex.Matcher
 import java.util.regex.Pattern
@@ -77,14 +78,16 @@ class ChatFragment : Fragment() {
     private fun printMessage(message: Message) {
         var consecutiveMessage = false
         /** Check for consecutive message **/
-        if (message.nick == "Info") {
-            consecutiveMessage = false
-        } else if (adapter.itemCount > 0) {
+        if (adapter.itemCount > 0 && message.nick != "Info") {
             val item = adapter.getItem(adapter.itemCount - 1)
-            if (item.layout == R.layout.chat_message_item || item.layout == R.layout.chat_message_item_consecutive_nick
-            ) {
+            if (item.layout == R.layout.chat_message_item) {
                 val lastMessage =
                     adapter.getItem(adapter.itemCount - 1) as ChatMessage
+                consecutiveMessage =
+                    lastMessage.isNickSame(message.nick)
+            } else if (item.layout == R.layout.chat_message_item_consecutive_nick) {
+                val lastMessage =
+                    adapter.getItem(adapter.itemCount - 1) as ConsecutiveChatMessage
                 consecutiveMessage =
                     lastMessage.isNickSame(message.nick)
             }
@@ -119,7 +122,6 @@ class ChatFragment : Fragment() {
                 val isReceived = message.nick != CurrentUser.user?.username
                 adapter.add(
                     PrivateChatMessage(
-                        requireContext(),
                         adapter,
                         message,
                         isReceived
@@ -129,15 +131,22 @@ class ChatFragment : Fragment() {
                     displayNotification(message)
                 }
             } else {
-                adapter.add(
-                    ChatMessage(
-                        requireContext(),
-                        adapter,
-                        message,
-                        consecutiveMessage,
-                        streamsViewModel.streams.value!!
+                if (!consecutiveMessage) {
+                    adapter.add(
+                        ChatMessage(
+                            adapter,
+                            message,
+                            streamsViewModel.streams.value!!
+                        )
                     )
-                )
+                } else {
+                    adapter.add(
+                        ConsecutiveChatMessage(
+                            adapter,
+                            message
+                        )
+                    )
+                }
             }
         }
     }
@@ -178,10 +187,15 @@ class ChatFragment : Fragment() {
                     if (adapter.itemCount > 1 && message != null) {
                         // TODO: LOOK AT THIS BELOW: "Wanted item at position -1 but an Item is a Group of size 1"
                         val item = adapter.getItem(adapter.itemCount - 2)
-                        if (item.layout == R.layout.chat_message_item || item.layout == R.layout.chat_message_item_consecutive_nick
-                        ) {
+                        if (item.layout == R.layout.chat_message_item) {
                             val lastMessage =
                                 adapter.getItem(adapter.itemCount - 2) as ChatMessage
+                            if (lastMessage.messageData.nick == message.nick && lastMessage.messageData.data == message.data) {
+                                return
+                            }
+                        } else if (item.layout == R.layout.chat_message_item_consecutive_nick) {
+                            val lastMessage =
+                                adapter.getItem(adapter.itemCount - 2) as ConsecutiveChatMessage
                             if (lastMessage.messageData.nick == message.nick && lastMessage.messageData.data == message.data) {
                                 return
                             }
@@ -370,399 +384,427 @@ class ChatFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        Log.d("TAG", "ONVIEWCREATED CHAT FRAGMENT")
-        chatViewModel.oldMessageCount = 0
+        with (binding) {
+            Log.d("TAG", "ONVIEWCREATED CHAT FRAGMENT")
+            chatViewModel.oldMessageCount = 0
 
-        chatViewModel.viewerStates.observe(viewLifecycleOwner, {
-            if (it.isNotEmpty()) {
-                adapter.viewerStates = it
-            }
-        })
-
-        chatViewModel.messages.observe(viewLifecycleOwner, {
-            if (it != null) {
-                if (it.size > chatViewModel.oldMessageCount) {
-                    val diff = it.size - chatViewModel.oldMessageCount
-                    for (i in 0 until diff) {
-                        printMessage(it[chatViewModel.oldMessageCount + i])
-                    }
-                    chatViewModel.oldMessageCount = chatViewModel.oldMessageCount + diff
-                    binding.progressBarFragment.visibility = View.GONE
+            chatViewModel.viewerStates.observe(viewLifecycleOwner, {
+                if (it.isNotEmpty()) {
+                    adapter.viewerStates = it
                 }
-            }
-        })
+            })
 
-        exoPlayerViewModel.liveDataStream.observe(viewLifecycleOwner, {
-            if (it != null &&
-                !(childFragmentManager.findFragmentById(R.id.angelthump_fragment)!! as AngelThumpFragment).isVisible) {
-                closeYouTube()
-                closeTwitch()
-                val fragment = childFragmentManager.findFragmentById(R.id.angelthump_fragment)
-                showChildFragment(this@ChatFragment, fragment!!)
-            }
-        })
-
-        twitchViewModel.channel.observe(viewLifecycleOwner, {
-            if (it != null) {
-                closeAngelThump()
-                closeYouTube()
-                val fragment = childFragmentManager.findFragmentById(R.id.twitch_fragment)
-                showChildFragment(this@ChatFragment, fragment!!)
-            }
-        })
-
-        youTubeViewModel.videoId.observe(viewLifecycleOwner, {
-            if (it != null) {
-                closeAngelThump()
-                closeTwitch()
-                val fragment = childFragmentManager.findFragmentById(R.id.youtube_fragment)
-                showChildFragment(this@ChatFragment, fragment!!)
-            }
-        })
-
-        profileViewModel.logOut.observe(viewLifecycleOwner, {
-            if (it) {
-                binding.sendMessageText.hint = resources.getString(R.string.log_in_to_send_messages)
-                binding.progressBarFragment.visibility = View.VISIBLE
-                profileViewModel.logOut.value = false
-            }
-        })
-
-        if (chatViewModel.currentMessage != null) {
-            binding.sendMessageText.setText(chatViewModel.currentMessage)
-            chatViewModel.currentMessage = null
-        }
-
-        if (CurrentUser.user != null) {
-            binding.sendMessageText.hint = "Write something ${CurrentUser.user!!.username} ..."
-        }
-
-        if (savedInstanceState != null) {
-            binding.progressBarFragment.visibility = View.GONE
-        }
-
-        if (missedMessages.isNotEmpty()) {
-            missedMessages.forEach {
-                chatViewModel.addMessage(it)
-            }
-            missedMessages.clear()
-        }
-
-        if ((exoPlayerViewModel.liveDataStream.value != null ||
-                    twitchViewModel.channel.value != null ||
-                    youTubeViewModel.videoId.value != null)
-            && resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-        ) {
-            binding.constraintLayoutStreamFragment?.visibility = View.VISIBLE
-        }
-
-        binding.sendMessageText.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {
-                binding.sendMessageButton.isEnabled = binding.sendMessageText.text.isNotEmpty()
-            }
-
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-                binding.sendMessageButton.isEnabled = binding.sendMessageText.text.isNotEmpty()
-            }
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                binding.sendMessageButton.isEnabled = binding.sendMessageText.text.isNotEmpty()
-                chatViewModel.currentMessage = binding.sendMessageText.text.toString()
-                autofillAdapter.clear()
-                if (binding.sendMessageText.text.isNotEmpty() && binding.sendMessageText.text.last() != ' ') {
-                    binding.recyclerViewAutofill.visibility = View.VISIBLE
-                    binding.goToBottomLayout.visibility = View.GONE
-                    if (binding.sendMessageText.text.first() == '/' && !binding.sendMessageText.text.contains(' ')) {
-                        val currentWord = binding.sendMessageText.text.toString().substringAfter('/')
-
-                        commandsArray.forEach {
-                            if (it.startsWith(currentWord, true)) {
-                                autofillAdapter.add(AutofillItemCommand(it))
-                            }
+            chatViewModel.messages.observe(viewLifecycleOwner, {
+                if (it != null) {
+                    if (it.size > chatViewModel.oldMessageCount) {
+                        val diff = it.size - chatViewModel.oldMessageCount
+                        for (i in 0 until diff) {
+                            printMessage(it[chatViewModel.oldMessageCount + i])
                         }
-                    } else {
-                        val currentWord = binding.sendMessageText.text.toString().substringAfterLast(' ')
+                        chatViewModel.oldMessageCount = chatViewModel.oldMessageCount + diff
+                        progressBarFragment.visibility = View.GONE
+                    }
+                }
+            })
 
-                        if (currentWord.contains(':')) {
-                            CurrentUser.emotes!!.forEach { emote ->
-                                if (binding.sendMessageText.text.contains(emote.name)) {
-                                    modifiersArray.forEach {
-                                        if (it.startsWith(currentWord.substringAfterLast(':'))) {
-                                            autofillAdapter.add(AutofillItemModifier(it))
+            exoPlayerViewModel.liveDataStream.observe(viewLifecycleOwner, {
+                if (it != null &&
+                    !(childFragmentManager.findFragmentById(R.id.angelthump_fragment)!! as AngelThumpFragment).isVisible
+                ) {
+                    closeYouTube()
+                    closeTwitch()
+                    val fragment = childFragmentManager.findFragmentById(R.id.angelthump_fragment)
+                    showChildFragment(this@ChatFragment, fragment!!)
+                }
+            })
+
+            twitchViewModel.channel.observe(viewLifecycleOwner, {
+                if (it != null) {
+                    closeAngelThump()
+                    closeYouTube()
+                    val fragment = childFragmentManager.findFragmentById(R.id.twitch_fragment)
+                    showChildFragment(this@ChatFragment, fragment!!)
+                }
+            })
+
+            youTubeViewModel.videoId.observe(viewLifecycleOwner, {
+                if (it != null) {
+                    closeAngelThump()
+                    closeTwitch()
+                    val fragment = childFragmentManager.findFragmentById(R.id.youtube_fragment)
+                    showChildFragment(this@ChatFragment, fragment!!)
+                }
+            })
+
+            profileViewModel.logOut.observe(viewLifecycleOwner, {
+                if (it) {
+                    sendMessageText.hint =
+                        resources.getString(R.string.log_in_to_send_messages)
+                    progressBarFragment.visibility = View.VISIBLE
+                    profileViewModel.logOut.value = false
+                }
+            })
+
+            if (chatViewModel.currentMessage != null) {
+                sendMessageText.setText(chatViewModel.currentMessage)
+                chatViewModel.currentMessage = null
+            }
+
+            if (CurrentUser.user != null) {
+                sendMessageText.hint = "Write something ${CurrentUser.user!!.username} ..."
+            }
+
+            if (savedInstanceState != null) {
+                progressBarFragment.visibility = View.GONE
+            }
+
+            if (missedMessages.isNotEmpty()) {
+                missedMessages.forEach {
+                    chatViewModel.addMessage(it)
+                }
+                missedMessages.clear()
+            }
+
+            if ((exoPlayerViewModel.liveDataStream.value != null ||
+                        twitchViewModel.channel.value != null ||
+                        youTubeViewModel.videoId.value != null)
+                && resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+            ) {
+                constraintLayoutStreamFragment?.visibility = View.VISIBLE
+            }
+
+            sendMessageText.addTextChangedListener(object : TextWatcher {
+                override fun afterTextChanged(s: Editable?) {
+                    sendMessageButton.isEnabled = sendMessageText.text.isNotEmpty()
+                }
+
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) {
+                    sendMessageButton.isEnabled = sendMessageText.text.isNotEmpty()
+                }
+
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    sendMessageButton.isEnabled = sendMessageText.text.isNotEmpty()
+                    chatViewModel.currentMessage = sendMessageText.text.toString()
+                    autofillAdapter.clear()
+                    if (sendMessageText.text.isNotEmpty() && sendMessageText.text.last() != ' ') {
+                        recyclerViewAutofill.visibility = View.VISIBLE
+                        goToBottomLayout.visibility = View.GONE
+                        if (sendMessageText.text.first() == '/' && !sendMessageText.text.contains(
+                                ' '
+                            )
+                        ) {
+                            val currentWord =
+                                sendMessageText.text.toString().substringAfter('/')
+
+                            commandsArray.forEach {
+                                if (it.startsWith(currentWord, true)) {
+                                    autofillAdapter.add(AutofillItemCommand(it))
+                                }
+                            }
+                        } else {
+                            val currentWord =
+                                sendMessageText.text.toString().substringAfterLast(' ')
+
+                            if (currentWord.contains(':')) {
+                                CurrentUser.emotes!!.forEach { emote ->
+                                    if (sendMessageText.text.contains(emote.name)) {
+                                        modifiersArray.forEach {
+                                            if (it.startsWith(currentWord.substringAfterLast(':'))) {
+                                                autofillAdapter.add(AutofillItemModifier(it))
+                                            }
                                         }
+                                        return@forEach
                                     }
-                                    return@forEach
+                                }
+                            }
+
+                            chatViewModel.users.sortByDescending {
+                                it
+                            }
+
+                            chatViewModel.users.forEach {
+                                if (it.startsWith(currentWord, true)) {
+                                    autofillAdapter.add(AutofillItemUser(it))
+                                }
+                            }
+
+                            CurrentUser.bitmapMemoryCache.forEach {
+                                if (it.key.startsWith(currentWord, true)) {
+                                    autofillAdapter.add(AutofillItemEmote(it.key, it.value))
+                                }
+                            }
+
+                            CurrentUser.gifMemoryCache.forEach {
+                                if (it.key.startsWith(currentWord, true)) {
+                                    autofillAdapter.add(AutofillItemEmote(it.key, it.value))
                                 }
                             }
                         }
-
-                        chatViewModel.users.sortByDescending {
-                            it
+                    } else if (sendMessageText.text.isEmpty()) {
+                        recyclerViewAutofill.visibility = View.GONE
+                        val layoutTest =
+                            recyclerViewChat.layoutManager as LinearLayoutManager
+                        val lastItem = layoutTest.findLastVisibleItemPosition()
+                        if (lastItem < recyclerViewChat.adapter!!.itemCount - 1) {
+                            goToBottomLayout.visibility = View.VISIBLE
+                        } else {
+                            goToBottomLayout.visibility = View.GONE
                         }
-
-                        chatViewModel.users.forEach {
-                            if (it.startsWith(currentWord, true)) {
-                                autofillAdapter.add(AutofillItemUser(it))
-                            }
-                        }
-
-                        CurrentUser.bitmapMemoryCache.forEach {
-                            if (it.key.startsWith(currentWord, true)) {
-                                autofillAdapter.add(AutofillItemEmote(it.key, it.value))
-                            }
-                        }
-                    }
-                } else if (binding.sendMessageText.text.isEmpty()) {
-                    binding.recyclerViewAutofill.visibility = View.GONE
-                    val layoutTest = binding.recyclerViewChat.layoutManager as LinearLayoutManager
-                    val lastItem = layoutTest.findLastVisibleItemPosition()
-                    if (lastItem < binding.recyclerViewChat.adapter!!.itemCount - 1) {
-                        binding.goToBottomLayout.visibility = View.VISIBLE
-                    } else {
-                        binding.goToBottomLayout.visibility = View.GONE
                     }
                 }
-            }
-        })
+            })
 
-        binding.sendMessageText.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_SEND) {
-                binding.sendMessageButton.performClick()
-            }
-            true
-        }
-
-        binding.sendMessageText.setOnKeyListener { _, keyCode, _ ->
-            if (keyCode == KeyEvent.KEYCODE_ENTER) {
-                binding.sendMessageButton.performClick()
-            }
-            false
-        }
-
-        val layoutManager = LinearLayoutManager(requireContext())
-        layoutManager.stackFromEnd = true
-        binding.recyclerViewChat.layoutManager = layoutManager
-        binding.recyclerViewChat.adapter = adapter
-        adapter.sendMessageText = binding.sendMessageText
-
-        binding.recyclerViewChat.setOnScrollChangeListener { _, _, _, _, _ ->
-            val layoutTest = binding.recyclerViewChat.layoutManager as LinearLayoutManager
-            val lastItem = layoutTest.findLastVisibleItemPosition()
-            if (lastItem < binding.recyclerViewChat.adapter!!.itemCount - 1) {
-                binding.goToBottomLayout.visibility = View.VISIBLE
-                binding.goToBottom.isEnabled = true
-            } else {
-                binding.goToBottomLayout.visibility = View.GONE
-                binding.goToBottom.isEnabled = false
-            }
-        }
-
-        binding.recyclerViewChat.itemAnimator = null
-
-        binding.recyclerViewAutofill.adapter = autofillAdapter
-        binding.recyclerViewAutofill.layoutManager =
-            LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
-
-        binding.goToBottom.setOnClickListener {
-            binding.recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
-        }
-
-        binding.userListButtonFragment.setOnClickListener {
-            if (childFragmentManager.findFragmentById(R.id.emote_menu_fragment)!!.isVisible) {
-                hideChildFragment(
-                    this,
-                    childFragmentManager.findFragmentById(R.id.emote_menu_fragment)!!
-                )
-            }
-            hideKeyboardFrom(requireContext(), binding.sendMessageText)
-            if (childFragmentManager.findFragmentById(R.id.user_list_fragment)!!.isVisible) {
-                hideChildFragment(
-                    this,
-                    childFragmentManager.findFragmentById(R.id.user_list_fragment)!!
-                )
-            } else {
-                showChildFragment(
-                    this,
-                    childFragmentManager.findFragmentById(R.id.user_list_fragment)!!
-                )
-            }
-        }
-
-        binding.emoteMenuButtonFragment.setOnClickListener {
-            if (childFragmentManager.findFragmentById(R.id.user_list_fragment)!!.isVisible) {
-                hideChildFragment(
-                    this,
-                    childFragmentManager.findFragmentById(R.id.user_list_fragment)!!
-                )
-            }
-            hideKeyboardFrom(requireContext(), binding.sendMessageText)
-            if (childFragmentManager.findFragmentById(R.id.emote_menu_fragment)!!.isVisible) {
-                hideChildFragment(
-                    this,
-                    childFragmentManager.findFragmentById(R.id.emote_menu_fragment)!!
-                )
-            } else {
-                showChildFragment(
-                    this,
-                    childFragmentManager.findFragmentById(R.id.emote_menu_fragment)!!
-                )
-            }
-        }
-
-        binding.sendMessageButton.setOnClickListener {
-            val messageText = binding.sendMessageText.text.toString()
-            if (messageText.isEmpty()) {
-                return@setOnClickListener
-            }
-            val first = messageText.first()
-            if (first == '/' && messageText.substringBefore(' ') != "/me") {
-                val command = messageText.substringAfter(first).substringBefore(' ')
-                var privateMessageCommand = ""
-                for (privateMessageItem in commandsArray) {
-                    if (privateMessageItem.contains(
-                            messageText.substringAfter(first).substringBefore(' '), true
-                        )
-                    ) {
-                        privateMessageCommand =
-                            messageText.substringAfter(first).substringBefore(' ')
-                        break
-                    }
-
+            sendMessageText.setOnEditorActionListener { _, actionId, _ ->
+                if (actionId == EditorInfo.IME_ACTION_SEND) {
+                    sendMessageButton.performClick()
                 }
-                if (privateMessageCommand != "") {
-                    if (messageText.length <= privateMessageCommand.length + 2) {
-                        adapter.add(ErrorChatMessage("Invalid nick - /$privateMessageCommand nick message"))
-                    } else {
-                        val nick =
-                            messageText.substringAfter("$privateMessageCommand ").substringBefore(
-                                ' '
+                true
+            }
+
+            sendMessageText.setOnKeyListener { _, keyCode, _ ->
+                if (keyCode == KeyEvent.KEYCODE_ENTER) {
+                    sendMessageButton.performClick()
+                }
+                false
+            }
+
+            val layoutManager = LinearLayoutManager(requireContext())
+            layoutManager.stackFromEnd = true
+            recyclerViewChat.layoutManager = layoutManager
+            recyclerViewChat.adapter = adapter
+            adapter.sendMessageText = sendMessageText
+
+            recyclerViewChat.setOnScrollChangeListener { _, _, _, _, _ ->
+                val layoutTest = recyclerViewChat.layoutManager as LinearLayoutManager
+                val lastItem = layoutTest.findLastVisibleItemPosition()
+                if (lastItem < recyclerViewChat.adapter!!.itemCount - 1) {
+                    goToBottomLayout.visibility = View.VISIBLE
+                    goToBottom.isEnabled = true
+                } else {
+                    goToBottomLayout.visibility = View.GONE
+                    goToBottom.isEnabled = false
+                }
+            }
+
+            recyclerViewChat.itemAnimator = null
+
+            recyclerViewAutofill.adapter = autofillAdapter
+            recyclerViewAutofill.layoutManager =
+                LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+
+            goToBottom.setOnClickListener {
+                recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
+            }
+
+            userListButtonFragment.setOnClickListener {
+                if (childFragmentManager.findFragmentById(R.id.emote_menu_fragment)!!.isVisible) {
+                    hideChildFragment(
+                        this@ChatFragment,
+                        childFragmentManager.findFragmentById(R.id.emote_menu_fragment)!!
+                    )
+                }
+                hideKeyboardFrom(requireContext(), sendMessageText)
+                if (childFragmentManager.findFragmentById(R.id.user_list_fragment)!!.isVisible) {
+                    hideChildFragment(
+                        this@ChatFragment,
+                        childFragmentManager.findFragmentById(R.id.user_list_fragment)!!
+                    )
+                } else {
+                    showChildFragment(
+                        this@ChatFragment,
+                        childFragmentManager.findFragmentById(R.id.user_list_fragment)!!
+                    )
+                }
+            }
+
+            emoteMenuButtonFragment.setOnClickListener {
+                if (childFragmentManager.findFragmentById(R.id.user_list_fragment)!!.isVisible) {
+                    hideChildFragment(
+                        this@ChatFragment,
+                        childFragmentManager.findFragmentById(R.id.user_list_fragment)!!
+                    )
+                }
+                hideKeyboardFrom(requireContext(), sendMessageText)
+                if (childFragmentManager.findFragmentById(R.id.emote_menu_fragment)!!.isVisible) {
+                    hideChildFragment(
+                        this@ChatFragment,
+                        childFragmentManager.findFragmentById(R.id.emote_menu_fragment)!!
+                    )
+                } else {
+                    showChildFragment(
+                        this@ChatFragment,
+                        childFragmentManager.findFragmentById(R.id.emote_menu_fragment)!!
+                    )
+                }
+            }
+
+            sendMessageButton.setOnClickListener {
+                val messageText = sendMessageText.text.toString()
+                if (messageText.isEmpty()) {
+                    return@setOnClickListener
+                }
+                val first = messageText.first()
+                if (first == '/' && messageText.substringBefore(' ') != "/me") {
+                    val command = messageText.substringAfter(first).substringBefore(' ')
+                    var privateMessageCommand = ""
+                    for (privateMessageItem in commandsArray) {
+                        if (privateMessageItem.contains(
+                                messageText.substringAfter(first).substringBefore(' '), true
                             )
-                        val nickRegex = "^[A-Za-z0-9_]{3,20}$"
-                        val p: Pattern = Pattern.compile(nickRegex)
-                        val m: Matcher = p.matcher(nick)
+                        ) {
+                            privateMessageCommand =
+                                messageText.substringAfter(first).substringBefore(' ')
+                            break
+                        }
 
-                        if (!m.find()) {
+                    }
+                    if (privateMessageCommand != "") {
+                        if (messageText.length <= privateMessageCommand.length + 2) {
                             adapter.add(ErrorChatMessage("Invalid nick - /$privateMessageCommand nick message"))
                         } else {
-                            var message = messageText.substringAfter("$privateMessageCommand $nick")
-                            message = message.substringAfter(" ")
-                            if (message.trim() == "") {
-                                adapter.add(ErrorChatMessage("The message was invalid"))
-                                binding.sendMessageText.text.clear()
-                                chatViewModel.currentMessage = null
-                                return@setOnClickListener
+                            val nick =
+                                messageText.substringAfter("$privateMessageCommand ")
+                                    .substringBefore(
+                                        ' '
+                                    )
+                            val nickRegex = "^[A-Za-z0-9_]{3,20}$"
+                            val p: Pattern = Pattern.compile(nickRegex)
+                            val m: Matcher = p.matcher(nick)
+
+                            if (!m.find()) {
+                                adapter.add(ErrorChatMessage("Invalid nick - /$privateMessageCommand nick message"))
                             } else {
-                                val intent = Intent("gg.strims.android.SEND_MESSAGE")
-                                intent.putExtra(
-                                    "gg.strims.android.SEND_MESSAGE_TEXT",
-                                    "PRIVMSG {\"nick\":\"$nick\", \"data\":\"$message\"}"
-                                )
-                                requireContext().sendBroadcast(intent)
+                                var message =
+                                    messageText.substringAfter("$privateMessageCommand $nick")
+                                message = message.substringAfter(" ")
+                                if (message.trim() == "") {
+                                    adapter.add(ErrorChatMessage("The message was invalid"))
+                                    sendMessageText.text.clear()
+                                    chatViewModel.currentMessage = null
+                                    return@setOnClickListener
+                                } else {
+                                    val intent = Intent("gg.strims.android.SEND_MESSAGE")
+                                    intent.putExtra(
+                                        "gg.strims.android.SEND_MESSAGE_TEXT",
+                                        "PRIVMSG {\"nick\":\"$nick\", \"data\":\"$message\"}"
+                                    )
+                                    requireContext().sendBroadcast(intent)
+                                }
                             }
                         }
-                    }
-                } else if (command == "ignore") {
-                    val nickIgnore =
-                        messageText.substringAfter("/ignore ").substringBefore(' ')
-                    CurrentUser.optionsLiveData.value?.ignoreList?.add(nickIgnore)
-                    CurrentUser.addIgnore(nickIgnore)
-                    val message = Message(
-                        false,
-                        "Info",
-                        "Ignoring: $nickIgnore"
-                    )
-                    chatViewModel.addMessage(message)
-                } else if (command == "unignore") {
-                    val message: Message?
-                    val nickUnignore =
-                        messageText.substringAfter("/unignore ").substringBefore(' ')
-                    message =
-                        if (CurrentUser.optionsLiveData.value?.ignoreList!!.contains(nickUnignore)) {
-                            CurrentUser.optionsLiveData.value?.ignoreList?.remove(nickUnignore)
-                            CurrentUser.removeIgnore(nickUnignore)
-                            Message(
-                                false,
-                                "Info",
-                                "Unignored: $nickUnignore"
-                            )
-                        } else {
-                            Message(
-                                false,
-                                "Info",
-                                "User not currently ignored"
-                            )
-                        }
-                    chatViewModel.addMessage(message)
-                } else if (command == "highlight") {
-                    val message: Message?
-                    val nickHighlight =
-                        messageText.substringAfter("/highlight ").substringBefore(' ')
-                    message = if (CurrentUser.optionsLiveData.value?.customHighlights!!.contains(
-                            nickHighlight
-                        )
-                    ) {
-                        Message(
+                    } else if (command == "ignore") {
+                        val nickIgnore =
+                            messageText.substringAfter("/ignore ").substringBefore(' ')
+                        CurrentUser.optionsLiveData.value?.ignoreList?.add(nickIgnore)
+                        CurrentUser.addIgnore(nickIgnore)
+                        val message = Message(
                             false,
                             "Info",
-                            "User already highlighted"
+                            "Ignoring: $nickIgnore"
                         )
+                        chatViewModel.addMessage(message)
+                    } else if (command == "unignore") {
+                        val message: Message?
+                        val nickUnignore =
+                            messageText.substringAfter("/unignore ").substringBefore(' ')
+                        message =
+                            if (CurrentUser.optionsLiveData.value?.ignoreList!!.contains(
+                                    nickUnignore
+                                )
+                            ) {
+                                CurrentUser.optionsLiveData.value?.ignoreList?.remove(nickUnignore)
+                                CurrentUser.removeIgnore(nickUnignore)
+                                Message(
+                                    false,
+                                    "Info",
+                                    "Unignored: $nickUnignore"
+                                )
+                            } else {
+                                Message(
+                                    false,
+                                    "Info",
+                                    "User not currently ignored"
+                                )
+                            }
+                        chatViewModel.addMessage(message)
+                    } else if (command == "highlight") {
+                        val message: Message?
+                        val nickHighlight =
+                            messageText.substringAfter("/highlight ").substringBefore(' ')
+                        message =
+                            if (CurrentUser.optionsLiveData.value?.customHighlights!!.contains(
+                                    nickHighlight
+                                )
+                            ) {
+                                Message(
+                                    false,
+                                    "Info",
+                                    "User already highlighted"
+                                )
+                            } else {
+                                CurrentUser.addHighlight(nickHighlight)
+                                Message(
+                                    false,
+                                    "Info",
+                                    "Highlighting user: $nickHighlight"
+                                )
+                            }
+                        chatViewModel.addMessage(message)
+                    } else if (command == "unhighlight") {
+                        val message: Message?
+                        val nickUnhighlight =
+                            messageText.substringAfter("/unhighlight ").substringBefore(' ')
+                        message =
+                            if (CurrentUser.optionsLiveData.value?.customHighlights!!.contains(
+                                    nickUnhighlight
+                                )
+                            ) {
+                                CurrentUser.removeHighlight(nickUnhighlight)
+                                Message(
+                                    false,
+                                    "Info",
+                                    "No longer highlighting user: $nickUnhighlight"
+                                )
+                            } else {
+                                Message(
+                                    false,
+                                    "Info",
+                                    "User not currently highlighted"
+                                )
+                            }
+                        chatViewModel.addMessage(message)
+                    } else if (command == "help") {
+                        val message = Message(
+                            false,
+                            "Info",
+                            resources.getString(R.string.help)
+                        )
+                        chatViewModel.addMessage(message)
                     } else {
-                        CurrentUser.addHighlight(nickHighlight)
-                        Message(
+                        val message = Message(
                             false,
                             "Info",
-                            "Highlighting user: $nickHighlight"
+                            "Invalid command"
                         )
+                        chatViewModel.addMessage(message)
                     }
-                    chatViewModel.addMessage(message)
-                } else if (command == "unhighlight") {
-                    val message: Message?
-                    val nickUnhighlight =
-                        messageText.substringAfter("/unhighlight ").substringBefore(' ')
-                    message = if (CurrentUser.optionsLiveData.value?.customHighlights!!.contains(
-                            nickUnhighlight
-                        )
-                    ) {
-                        CurrentUser.removeHighlight(nickUnhighlight)
-                        Message(
-                            false,
-                            "Info",
-                            "No longer highlighting user: $nickUnhighlight"
-                        )
-                    } else {
-                        Message(
-                            false,
-                            "Info",
-                            "User not currently highlighted"
-                        )
-                    }
-                    chatViewModel.addMessage(message)
-                } else if (command == "help") {
-                    val message = Message(
-                        false,
-                        "Info",
-                        resources.getString(R.string.help)
-                    )
-                    chatViewModel.addMessage(message)
                 } else {
-                    val message = Message(
-                        false,
-                        "Info",
-                        "Invalid command"
+                    val intent = Intent("gg.strims.android.SEND_MESSAGE")
+                    intent.putExtra(
+                        "gg.strims.android.SEND_MESSAGE_TEXT",
+                        "MSG {\"data\":\"${sendMessageText.text}\"}"
                     )
-                    chatViewModel.addMessage(message)
+                    requireContext().sendBroadcast(intent)
                 }
-            } else {
-                val intent = Intent("gg.strims.android.SEND_MESSAGE")
-                intent.putExtra(
-                    "gg.strims.android.SEND_MESSAGE_TEXT",
-                    "MSG {\"data\":\"${binding.sendMessageText.text}\"}"
-                )
-                requireContext().sendBroadcast(intent)
+                sendMessageText.text.clear()
+                chatViewModel.currentMessage = null
+                recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
             }
-            binding.sendMessageText.text.clear()
-            chatViewModel.currentMessage = null
-            binding.recyclerViewChat.scrollToPosition(adapter.itemCount - 1)
         }
     }
 
@@ -934,35 +976,39 @@ class ChatFragment : Fragment() {
         }
     }
 
-    inner class AutofillItemEmote(private val emote: String, private val bitmap: Bitmap) :
+    inner class AutofillItemEmote<T>(private val name: String, private val emote: T) :
         BindableItem<AutofillItemEmoteBinding>() {
 
         override fun getLayout(): Int = R.layout.autofill_item_emote
 
         override fun bind(viewBinding: AutofillItemEmoteBinding, position: Int) {
             with (viewBinding) {
-                textViewAutofill.text = emote
-                imageViewEmoteAutofill.setImageBitmap(bitmap)
+                textViewAutofill.text = name
+                if (emote is Bitmap) {
+                    imageViewEmoteAutofill.setImageBitmap(emote)
+                } else if (emote is GifDrawable) {
+                    imageViewEmoteAutofill.setImageDrawable(emote as GifDrawable)
+                }
                 root.setOnClickListener {
                     val currentWord =
                         binding.sendMessageText.text.toString().substringAfterLast(' ')
                     val currentMessage =
                         binding.sendMessageText.text.toString().substringBeforeLast(" $currentWord")
-                    if (!emote.toLowerCase(Locale.getDefault())
+                    if (!name.toLowerCase(Locale.getDefault())
                             .contains(currentMessage.toLowerCase(Locale.getDefault()))
                     ) {
                         binding.sendMessageText.setText(
                             resources.getString(
                                 R.string.autofill_user_item1,
                                 currentMessage,
-                                emote
+                                name
                             )
                         )
                     } else {
                         binding.sendMessageText.setText(
                             resources.getString(
                                 R.string.autofill_user_item2,
-                                emote
+                                name
                             )
                         )
                     }

@@ -23,7 +23,6 @@ import gg.strims.android.viewBinding
 import gg.strims.android.viewmodels.ChatViewModel
 import gg.strims.android.viewmodels.PrivateMessagesViewModel
 import io.ktor.util.*
-import kotlinx.android.synthetic.main.whisper_user_item.view.*
 
 @KtorExperimentalAPI
 class WhispersFragment : Fragment() {

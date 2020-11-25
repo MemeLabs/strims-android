@@ -103,8 +103,8 @@ class ProfileFragment: Fragment() {
             CurrentUser.user = null
             deleteCookie()
             with (requireActivity() as MainActivity) {
-                stopService(chatSocketIntent)
-                startService(chatSocketIntent)
+                stopService(chatViewModel.chatSocketIntent)
+                startService(chatViewModel.chatSocketIntent)
                 onBackPressed()
                 invalidateOptionsMenu()
                 navHeaderUsername.text = resources.getString(R.string.anonymous)

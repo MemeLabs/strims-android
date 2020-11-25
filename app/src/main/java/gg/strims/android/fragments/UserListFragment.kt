@@ -19,8 +19,6 @@ import gg.strims.android.keyRequestFocus
 import gg.strims.android.viewBinding
 import gg.strims.android.viewmodels.ChatViewModel
 import io.ktor.util.*
-import kotlinx.android.synthetic.main.chat_user_item.view.*
-import kotlinx.android.synthetic.main.fragment_chat.*
 import java.util.*
 
 @KtorExperimentalAPI
@@ -115,21 +113,22 @@ class UserListFragment : Fragment() {
                 chatUserUsername.text = user
 
                 chatUserUsername.setOnClickListener {
-                    parentFragment!!.sendMessageText.setText(
+                    val parentFragment = requireParentFragment() as ChatFragment
+                    parentFragment.binding.sendMessageText.setText(
                         resources.getString(
                             R.string.chat_whisper_popup,
                             user
                         )
                     )
                     keyRequestFocus(
-                        parentFragment!!.sendMessageText,
+                        parentFragment.binding.sendMessageText,
                         context!!
                     )
                     requireParentFragment().childFragmentManager.beginTransaction()
                         .setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
                         .hide(this@UserListFragment)
                         .commit()
-                    parentFragment!!.sendMessageText.setSelection(parentFragment!!.sendMessageText.text.length)
+                    parentFragment.binding.sendMessageText.setSelection(parentFragment.binding.sendMessageText.text.length)
                 }
             }
         }

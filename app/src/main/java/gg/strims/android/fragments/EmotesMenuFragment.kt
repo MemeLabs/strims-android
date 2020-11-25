@@ -124,24 +124,26 @@ class EmotesMenuFragment : Fragment() {
         override fun getLayout(): Int = R.layout.emote_menu_item
 
         override fun bind(viewBinding: EmoteMenuItemBinding, position: Int) {
-            if (emote is Bitmap) {
-                viewBinding.imageViewEmote.setImageBitmap(emote as Bitmap)
-            } else {
-                viewBinding.imageViewEmote.setImageDrawable(emote as GifDrawable)
-            }
+            with (viewBinding) {
+                if (emote is Bitmap) {
+                    imageViewEmote.setImageBitmap(emote)
+                } else {
+                    imageViewEmote.setImageDrawable(emote as GifDrawable)
+                }
 
-            viewBinding.imageViewEmote.setOnClickListener {
-                val parentFragment = requireParentFragment() as ChatFragment
-                parentFragment.binding.sendMessageText.append("$name ")
-                keyRequestFocus(
-                    parentFragment.binding.sendMessageText,
-                    context!!
-                )
-                requireParentFragment().childFragmentManager.beginTransaction()
-                    .setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
-                    .hide(this@EmotesMenuFragment)
-                    .commit()
-                parentFragment.binding.sendMessageText.setSelection(parentFragment.binding.sendMessageText.text.length)
+                imageViewEmote.setOnClickListener {
+                    val parentFragment = requireParentFragment() as ChatFragment
+                    parentFragment.binding.sendMessageText.append("$name ")
+                    keyRequestFocus(
+                        parentFragment.binding.sendMessageText,
+                        context!!
+                    )
+                    requireParentFragment().childFragmentManager.beginTransaction()
+                        .setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
+                        .hide(this@EmotesMenuFragment)
+                        .commit()
+                    parentFragment.binding.sendMessageText.setSelection(parentFragment.binding.sendMessageText.text.length)
+                }
             }
         }
 

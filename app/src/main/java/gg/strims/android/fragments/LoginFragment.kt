@@ -38,8 +38,8 @@ class LoginFragment: Fragment() {
                     if (url == "https://strims.gg/" || url == "https://chat.strims.gg/") {
                         with (requireActivity() as MainActivity) {
                             onBackPressed()
-                            stopService(chatSocketIntent)
-                            startService(chatSocketIntent)
+                            stopService(chatViewModel.chatSocketIntent)
+                            startService(chatViewModel.chatSocketIntent)
                         }
                     }
                 }

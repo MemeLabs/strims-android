@@ -350,46 +350,48 @@ fun createMessageTextView(
     /** Codes **/
     if (messageData.entities.codes!!.isNotEmpty() && codes) {
         messageData.entities.codes!!.forEach {
-            ssb.setSpan(
-                BackgroundColorSpan(Color.parseColor("#2B2B2B")),
-                it.bounds[0],
-                it.bounds[1],
-                Spannable.SPAN_INCLUSIVE_INCLUSIVE
-            )
-            ssb.setSpan(
-                ForegroundColorSpan(Color.parseColor("#AAAAAA")),
-                it.bounds[0],
-                it.bounds[1],
-                Spannable.SPAN_INCLUSIVE_INCLUSIVE
-            )
-            ssb.setSpan(
-                TypefaceSpan("monospace"),
-                it.bounds[0],
-                it.bounds[1],
-                Spannable.SPAN_INCLUSIVE_INCLUSIVE
-            )
-            ssb.setSpan(
-                RelativeSizeSpan(0f),
-                it.bounds[0],
-                it.bounds[0] + 1,
-                Spannable.SPAN_INCLUSIVE_INCLUSIVE
-            )
-            ssb.setSpan(
-                RelativeSizeSpan(0f),
-                it.bounds[1] - 1,
-                it.bounds[1],
-                Spannable.SPAN_INCLUSIVE_INCLUSIVE
-            )
-            if (messageData.entities.links!!.isNotEmpty()) {
-                messageData.entities.links!!.forEach { it2 ->
-                    if (it2.bounds[0] >= it.bounds[0] && it2.bounds[1] <= it.bounds[1]) {
-                        val span3 = ssb.getSpans(
-                            it2.bounds[0],
-                            it2.bounds[1],
-                            ColouredUnderlineSpan::class.java
-                        )
-                        if (span3.isNotEmpty()) {
-                            span3[span3.size - 1].color = Color.parseColor("#00000000")
+            with (ssb) {
+                setSpan(
+                    BackgroundColorSpan(Color.parseColor("#2B2B2B")),
+                    it.bounds[0],
+                    it.bounds[1],
+                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                )
+                setSpan(
+                    ForegroundColorSpan(Color.parseColor("#AAAAAA")),
+                    it.bounds[0],
+                    it.bounds[1],
+                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                )
+                setSpan(
+                    TypefaceSpan("monospace"),
+                    it.bounds[0],
+                    it.bounds[1],
+                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                )
+                setSpan(
+                    RelativeSizeSpan(0f),
+                    it.bounds[0],
+                    it.bounds[0] + 1,
+                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                )
+                setSpan(
+                    RelativeSizeSpan(0f),
+                    it.bounds[1] - 1,
+                    it.bounds[1],
+                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                )
+                if (messageData.entities.links!!.isNotEmpty()) {
+                    messageData.entities.links!!.forEach { it2 ->
+                        if (it2.bounds[0] >= it.bounds[0] && it2.bounds[1] <= it.bounds[1]) {
+                            val span3 = getSpans(
+                                it2.bounds[0],
+                                it2.bounds[1],
+                                ColouredUnderlineSpan::class.java
+                            )
+                            if (span3.isNotEmpty()) {
+                                span3[span3.size - 1].color = Color.parseColor("#00000000")
+                            }
                         }
                     }
                 }
@@ -558,37 +560,38 @@ fun createMessageTextView(
                     }
                 }
             }
-
-            ssb.setSpan(
-                span1,
-                it.bounds[0],
-                it.bounds[1],
-                Spannable.SPAN_INCLUSIVE_INCLUSIVE
-            )
-            ssb.setSpan(
-                RelativeSizeSpan(0f),
-                it.bounds[0],
-                it.bounds[0] + 2,
-                Spannable.SPAN_INCLUSIVE_INCLUSIVE
-            )
-            ssb.setSpan(
-                RelativeSizeSpan(0f),
-                it.bounds[1] - 2,
-                it.bounds[1],
-                Spannable.SPAN_INCLUSIVE_INCLUSIVE
-            )
-            ssb.setSpan(
-                BackgroundColorSpan(Color.parseColor("#353535")),
-                it.bounds[0],
-                it.bounds[1],
-                Spannable.SPAN_INCLUSIVE_INCLUSIVE
-            )
-            ssb.setSpan(
-                ForegroundColorSpan(Color.parseColor("#00000000")),
-                it.bounds[0],
-                it.bounds[1],
-                Spannable.SPAN_INCLUSIVE_INCLUSIVE
-            )
+            with (ssb) {
+                setSpan(
+                    span1,
+                    it.bounds[0],
+                    it.bounds[1],
+                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                )
+                setSpan(
+                    RelativeSizeSpan(0f),
+                    it.bounds[0],
+                    it.bounds[0] + 2,
+                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                )
+                setSpan(
+                    RelativeSizeSpan(0f),
+                    it.bounds[1] - 2,
+                    it.bounds[1],
+                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                )
+                setSpan(
+                    BackgroundColorSpan(Color.parseColor("#353535")),
+                    it.bounds[0],
+                    it.bounds[1],
+                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                )
+                setSpan(
+                    ForegroundColorSpan(Color.parseColor("#00000000")),
+                    it.bounds[0],
+                    it.bounds[1],
+                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                )
+            }
         }
     }
     /** /me **/
