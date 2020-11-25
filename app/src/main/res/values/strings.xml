@@ -5,7 +5,7 @@
     <string name="log_in_to_send_messages">Log in to send messages</string>
     <string name="more_messages_below">More messages below</string>
     <string name="title">Title</string>
-    <string name="exit">Exit</string>
+    <string name="close">Close</string>
     <string name="show_timestamps_on_messages">Show timestamps on messages</string>
     <string name="greentext">Greentext</string>
     <string name="harsh_ignore">Harsh Ignore</string>
