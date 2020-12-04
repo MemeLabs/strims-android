@@ -15,6 +15,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.PRIORITY_MIN
 import gg.strims.android.R
+import gg.strims.android.singletons.CurrentUser
 import io.ktor.client.*
 import io.ktor.client.features.websocket.*
 import io.ktor.http.cio.websocket.*
@@ -38,6 +39,7 @@ class StreamsService: Service() {
         try {
             job = GlobalScope.launch {
                 try {
+                    Log.d("TAG", "STARTING STREAMS SERVICE ${(System.currentTimeMillis() - CurrentUser.time)}")
                     StreamsClient().onConnect()
                 } catch (e: ClosedReceiveChannelException) {
                     job?.cancel()
@@ -64,9 +66,10 @@ class StreamsService: Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     private fun startForeground() {
-        val channelId = createNotificationChannel("strims_chat_service", "Strims Chat Service")
+        val channelId = createNotificationChannel()
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
         val notification = notificationBuilder.setOngoing(true)
+            .setStyle(NotificationCompat.DecoratedCustomViewStyle())
             .setSmallIcon(R.mipmap.ic_launcher_foreground)
             .setPriority(PRIORITY_MIN)
             .setCategory(Notification.CATEGORY_SERVICE)
@@ -75,16 +78,16 @@ class StreamsService: Service() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun createNotificationChannel(channelId: String, channelName: String): String {
-        val chan = NotificationChannel(
-            channelId,
-            channelName, NotificationManager.IMPORTANCE_NONE
+    private fun createNotificationChannel(): String {
+        val channel = NotificationChannel(
+            "strims_chat_service",
+            "Strims Chat Service", NotificationManager.IMPORTANCE_NONE
         )
-        chan.lightColor = Color.BLUE
-        chan.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+        channel.lightColor = Color.BLUE
+        channel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
         val service = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        service.createNotificationChannel(chan)
-        return channelId
+        service.createNotificationChannel(channel)
+        return channel.id
     }
 
     inner class StreamsClient {
@@ -104,7 +107,6 @@ class StreamsService: Service() {
                         val intent = Intent("gg.strims.android.STREAMS")
                         intent.putExtra("gg.strims.android.STREAMS_TEXT", frame.readText())
                         sendBroadcast(intent)
-                        Log.d("TAG", "Sending broadcast with ${frame.readText()}")
                     }
                     is Frame.Binary -> println(frame.readBytes())
                 }

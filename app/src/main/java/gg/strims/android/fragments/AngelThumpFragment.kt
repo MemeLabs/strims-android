@@ -3,94 +3,117 @@ package gg.strims.android.fragments
 import android.app.PictureInPictureParams
 import android.content.res.Configuration
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.SimpleExoPlayer
-import gg.strims.android.CurrentUser
-import gg.strims.android.R
-import gg.strims.android.hideFragment
+import gg.strims.android.databinding.FragmentAngelthumpBinding
+import gg.strims.android.hideChildFragment
+import gg.strims.android.viewBinding
+import gg.strims.android.viewmodels.ExoPlayerViewModel
 import io.ktor.util.*
-import kotlinx.android.synthetic.main.activity_chat.*
-import kotlinx.android.synthetic.main.fragment_angelthump.*
 
 @KtorExperimentalAPI
 class AngelThumpFragment: Fragment() {
 
-    private var player: SimpleExoPlayer? = null
+    val binding by viewBinding(FragmentAngelthumpBinding::bind)
+
+    var player: SimpleExoPlayer? = null
+
+    private lateinit var exoPlayerViewModel: ExoPlayerViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_angelthump, container, false)
+    ): View = FragmentAngelthumpBinding.inflate(layoutInflater).root
+
+    override fun onStop() {
+        binding.angelThumpVideoView.player = null
+        super.onStop()
     }
 
     override fun onResume() {
         super.onResume()
-        if (CurrentUser.tempStream != null && !player!!.isPlaying) {
-            player?.play()
+        with (binding) {
+            if (!requireActivity().isInPictureInPictureMode) {
+                angelThumpStreamTitle.visibility = View.VISIBLE
+                if (exoPlayerViewModel.liveDataStream.value?.service != "m3u8") {
+                    angelThumpStreamTitle.text =
+                        exoPlayerViewModel.liveDataStream.value?.title
+                }
+                angelThumpSeparator.visibility = View.VISIBLE
+                angelThumpClose.visibility = View.VISIBLE
+            }
         }
-
-        angelThumpStreamTitle.visibility = View.VISIBLE
-        angelThumpSeparator.visibility = View.VISIBLE
-        angelThumpClose.visibility = View.VISIBLE
-    }
-
-    override fun onPause() {
-        if (CurrentUser.tempStream != null && !requireActivity().isChangingConfigurations) {
-            enterPIPMode()
-        }
-        super.onPause()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        hideFragment(requireActivity(), this)
+        hideChildFragment(requireParentFragment(), this)
 
-        player = SimpleExoPlayer.Builder(view.context).build()
-        angelThumpVideoView.player = player
+        exoPlayerViewModel = ViewModelProvider(requireActivity()).get(ExoPlayerViewModel::class.java)
 
-        angelThumpClose.setOnClickListener {
-            player?.stop()
-            player?.removeMediaItems(0, player?.mediaItemCount!!)
-            CurrentUser.tempStream = null
+        binding.angelThumpClose.setOnClickListener {
+            with (exoPlayerViewModel) {
+                player?.release()
+                player = null
+                liveDataStream.value = null
+            }
+
             parentFragmentManager.beginTransaction()
                 .hide(this)
                 .commit()
 
             if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                requireActivity().constraintLayoutStream.visibility = View.GONE
+                val parentFragment = requireParentFragment() as ChatFragment
+                parentFragment.binding.constraintLayoutStreamFragment?.visibility = View.GONE
             }
         }
     }
 
-    private fun enterPIPMode() {
-        angelThumpVideoView.useController = false
-        val params = PictureInPictureParams.Builder()
-        requireActivity().enterPictureInPictureMode(params.build())
-        angelThumpStreamTitle.visibility = View.GONE
-        angelThumpSeparator.visibility = View.GONE
-        angelThumpClose.visibility = View.GONE
+    fun enterPIPMode() {
+        with (binding) {
+            angelThumpVideoView.useController = false
+            val params = PictureInPictureParams.Builder()
+            requireActivity().enterPictureInPictureMode(params.build())
+            angelThumpStreamTitle.visibility = View.GONE
+            angelThumpSeparator.visibility = View.GONE
+            angelThumpClose.visibility = View.GONE
+        }
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
-        if (CurrentUser.tempStream != null && !hidden) {
-            if (CurrentUser.tempStream!!.service == "m3u8") {
-                player?.addMediaItem(MediaItem.fromUri(CurrentUser.tempStream!!.channel.toUri()))
+        if (exoPlayerViewModel.liveDataStream.value != null && !hidden) {
+
+            if (exoPlayerViewModel.player != null && exoPlayerViewModel.liveDataStream.value?.channel == exoPlayerViewModel.currentlyPlaying) {
+                binding.angelThumpVideoView.player = exoPlayerViewModel.player
             } else {
-                player?.addMediaItem(MediaItem.fromUri("https://video-cdn.angelthump.com/hls/${CurrentUser.tempStream!!.channel}/index.m3u8".toUri()))
-                angelThumpStreamTitle.text = CurrentUser.tempStream!!.title
+                player = SimpleExoPlayer.Builder(binding.root.context).build()
+                binding.angelThumpVideoView.player = player
+
+                exoPlayerViewModel.liveDataStream.observe(viewLifecycleOwner, {
+                    if (it != null) {
+                        exoPlayerViewModel.player?.release()
+
+                        if (it.service == "m3u8") {
+                            player?.addMediaItem(MediaItem.fromUri(it.channel.toUri()))
+                        } else {
+                            player?.addMediaItem(MediaItem.fromUri("https://video-cdn.angelthump.com/hls/${it.channel}/index.m3u8".toUri()))
+                            binding.angelThumpStreamTitle.text = it.title
+                        }
+
+                        player?.prepare()
+                        player?.play()
+                        exoPlayerViewModel.player = player
+                        exoPlayerViewModel.currentlyPlaying = it.channel
+                    }
+                })
             }
-            player?.prepare()
-            player?.play()
-            angelThumpVideoView.hideController()
-        } else {
-            player?.stop()
-            player?.removeMediaItems(0, player?.mediaItemCount!!)
         }
     }
 }

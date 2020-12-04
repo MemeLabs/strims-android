@@ -2,13 +2,51 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/nav_Streams">
+    app:startDestination="@id/nav_Chat">
 
     <fragment
+        android:id="@+id/nav_Chat"
+        android:name="gg.strims.android.fragments.ChatFragment"
+        android:label="@string/chat"
+        tools:layout="@layout/fragment_chat" >
+    </fragment>
+    <fragment
         android:id="@+id/nav_Streams"
-        android:name="gg.strims.android.ui.home.HomeFragment"
-        android:label="@string/menu_home"
-        tools:layout="@layout/fragment_home" />
+        android:name="gg.strims.android.fragments.StreamsFragment"
+        android:label="@string/streams"
+        tools:layout="@layout/fragment_streams"/>
+    <fragment
+        android:id="@+id/nav_Settings"
+        android:name="gg.strims.android.fragments.OptionsFragment"
+        android:label="@string/settings"
+        tools:layout="@layout/fragment_chat_options"/>
+    <fragment
+        android:id="@+id/nav_Profile"
+        android:name="gg.strims.android.fragments.ProfileFragment"
+        android:label="@string/profile"
+        tools:layout="@layout/fragment_profile"/>
+    <fragment
+        android:id="@+id/nav_Whispers"
+        android:name="gg.strims.android.fragments.WhispersFragment"
+        android:label="@string/private_messages"
+        tools:layout="@layout/fragment_whispers">
+        <action
+            android:id="@+id/action_nav_Whispers_to_whispersUserFragment"
+            app:destination="@id/whispersUserFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/whispersUserFragment"
+        android:name="gg.strims.android.fragments.WhispersUserFragment"
+        android:label="{username}"
+        tools:layout="@layout/fragment_user_whispers">
+        <argument
+            android:name="username"
+            app:argType="string" />
+    </fragment>
+    <fragment
+        android:id="@+id/nav_LogIn"
+        android:name="gg.strims.android.fragments.LoginFragment"
+        android:label="@string/login"
+        tools:layout="@layout/fragment_login"/>
 
 </navigation>

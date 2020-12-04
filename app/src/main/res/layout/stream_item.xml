@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/constraintLayoutStreamItem"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="8dp"
@@ -16,6 +15,7 @@
         android:layout_marginStart="1dp"
         android:layout_marginTop="1dp"
         android:layout_marginEnd="1dp"
+        android:contentDescription="@string/stream_thumbnail"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -64,6 +64,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="2dp"
+            android:contentDescription="@string/stream_viewer_count_image"
             app:layout_constraintBottom_toBottomOf="@id/streamViewerCount"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@+id/streamViewerCount"
@@ -72,11 +73,11 @@
 
     <ImageView
         android:id="@+id/streamViewerState"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="4dp"
-        app:layout_constraintBottom_toBottomOf="@+id/streamTitle"
+        android:layout_width="4dp"
+        android:layout_height="0dp"
+        android:contentDescription="@string/stream_viewer_state_colour"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/streamTitle"
-        app:srcCompat="@drawable/ic_android_bot_24dp" />
+        app:layout_constraintTop_toBottomOf="@+id/streamThumbnail"
+        app:srcCompat="@drawable/orange_cursor" />
 </androidx.constraintlayout.widget.ConstraintLayout>

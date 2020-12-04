@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/constraintLayoutTwitch"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#222222">
@@ -21,7 +20,7 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="2dp"
-        android:text="@string/exit"
+        android:text="@string/close"
         android:textColor="#FF5722"
         android:textSize="18sp"
         app:layout_constraintBottom_toTopOf="@+id/twitchSeparator"
@@ -31,6 +30,7 @@
         android:id="@+id/twitchSeparator"
         android:layout_width="0dp"
         android:layout_height="1dp"
+        android:contentDescription="@string/separator_between_twitch_fragment_and_chat_fragment"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

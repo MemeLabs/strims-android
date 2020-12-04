@@ -2,49 +2,40 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/constraintLayoutWhisperMessageItemLeft"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:background="@drawable/rounded_whisper_message_left"
+    android:paddingStart="4dp"
     android:paddingEnd="4dp">
+
+    <TextView
+        android:id="@+id/timestampWhisperMessageItemLeft"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textColor="#737373"
+        android:textSize="12sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Time" />
 
     <TextView
 
         android:id="@+id/messageWhisperMessageItemLeft"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="4dp"
+        android:layout_marginTop="2dp"
         android:layout_marginBottom="4dp"
         android:gravity="center_vertical"
         android:lineSpacingExtra="6dp"
         android:lineSpacingMultiplier="1.2"
         android:padding="4dp"
         android:textColor="#AAAAAA"
+        android:paddingStart="0dp"
+        android:paddingEnd="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/usernameWhisperMessageItemLeft"
+        app:layout_constraintTop_toBottomOf="@+id/timestampWhisperMessageItemLeft"
         tools:text="Message" />
 
-    <TextView
-        android:id="@+id/usernameWhisperMessageItemLeft"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="4dp"
-        android:layout_marginTop="4dp"
-        android:textColor="#FFFFFF"
-        app:layout_constraintStart_toEndOf="@+id/timestampWhisperMessageItemLeft"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:text="Username" />
-
-    <TextView
-        android:id="@+id/timestampWhisperMessageItemLeft"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="4dp"
-        android:textColor="#737373"
-        android:textSize="12sp"
-        app:layout_constraintBottom_toBottomOf="@+id/usernameWhisperMessageItemLeft"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/usernameWhisperMessageItemLeft"
-        tools:text="Time" />
 </androidx.constraintlayout.widget.ConstraintLayout>

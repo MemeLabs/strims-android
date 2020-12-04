@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/constraintLayoutProfile"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#000000">
@@ -57,9 +56,11 @@
         android:textColorHighlight="#40FF5722"
         android:textCursorDrawable="@drawable/orange_cursor"
         android:textSize="14sp"
+        android:hint="@string/stream_path"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/streamPathTextViewProfile" />
+        app:layout_constraintTop_toBottomOf="@+id/streamPathTextViewProfile"
+        android:importantForAutofill="no" />
 
     <TextView
         android:id="@+id/streamingServiceTextViewProfile"
@@ -111,9 +112,11 @@
         android:textColorHighlight="#40FF5722"
         android:textCursorDrawable="@drawable/orange_cursor"
         android:textSize="14sp"
+        android:hint="@string/channel_video_id"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/channelTextViewProfile" />
+        app:layout_constraintTop_toBottomOf="@+id/channelTextViewProfile"
+        android:importantForAutofill="no" />
 
     <CheckBox
         android:id="@+id/checkBoxUserViewerState"
@@ -134,17 +137,17 @@
         android:backgroundTint="#FF5722"
         android:text="@string/save"
         android:textColor="#000000"
-        app:layout_constraintEnd_toEndOf="@+id/channelEditTextProfile"
+        app:layout_constraintStart_toStartOf="@+id/checkBoxUserViewerState"
         app:layout_constraintTop_toBottomOf="@+id/checkBoxUserViewerState" />
 
     <Button
         android:id="@+id/logOutProfile"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
+        android:layout_marginEnd="24dp"
         android:backgroundTint="#FF5722"
         android:text="@string/log_out"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="@+id/saveProfile" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/saveProfile" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -13,3 +13,33 @@ class Entities(
 
     constructor(): this(listOf(), listOf(), listOf(), Bounds(), Bounds(), listOf(), listOf(), listOf())
 }
+
+class ChatEmote(
+    var name: String,
+    var bounds: List<Int>,
+    var modifiers: List<String>,
+    var combo: Int
+) {
+
+    constructor() : this("", listOf(), listOf(), 0)
+}
+
+class Bounds(var bounds: List<Int>) {
+
+    constructor(): this(listOf())
+}
+
+class Link(var url: String?, var bounds: List<Int>) {
+
+    constructor(): this("", listOf())
+}
+
+class Nick(var nick: String, var bounds: List<Int>) {
+
+    constructor(): this("", listOf())
+}
+
+class Tag(var name: String?, var bounds: List<Int>) {
+
+    constructor(): this("", listOf())
+}

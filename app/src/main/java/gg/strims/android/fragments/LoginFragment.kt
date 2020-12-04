@@ -9,42 +9,37 @@ import android.view.ViewGroup
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.fragment.app.Fragment
-import gg.strims.android.*
-import io.ktor.util.KtorExperimentalAPI
-import kotlinx.android.synthetic.main.activity_chat.*
-import kotlinx.android.synthetic.main.app_bar_main.*
-import kotlinx.android.synthetic.main.fragment_login.*
+import gg.strims.android.MainActivity
+import gg.strims.android.databinding.FragmentLoginBinding
+import gg.strims.android.viewBinding
+import io.ktor.util.*
 
 @SuppressLint("SetJavaScriptEnabled")
 @KtorExperimentalAPI
 class LoginFragment: Fragment() {
 
+    private val binding by viewBinding(FragmentLoginBinding::bind)
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_login, container, false)
-    }
+    ): View = FragmentLoginBinding.inflate(layoutInflater).root
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        requireActivity().toolbar.title = "Login"
-
-        loginWebView.settings.javaScriptEnabled = true
-        loginWebView.settings.domStorageEnabled = true
-        loginWebView.loadUrl("https://strims.gg/login")
-        loginWebView.webViewClient = object: WebViewClient() {
-            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-                if (url == "https://strims.gg/" || url == "https://chat.strims.gg/") {
-                    val activity = requireActivity() as ChatActivity
-                    activity.stopService(activity.chatSocketIntent)
-                    activity.startService(activity.chatSocketIntent)
-                    parentFragmentManager.beginTransaction()
-                        .remove(this@LoginFragment)
-                        .commit()
-                    parentFragmentManager.popBackStack()
-                    activity.toolbar.title = "Chat"
-                    activity.progressBar.visibility = View.VISIBLE
+        with (binding) {
+            loginWebView.settings.javaScriptEnabled = true
+            loginWebView.settings.domStorageEnabled = true
+            loginWebView.loadUrl("https://strims.gg/login")
+            loginWebView.webViewClient = object : WebViewClient() {
+                override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                    if (url == "https://strims.gg/" || url == "https://chat.strims.gg/") {
+                        with (requireActivity() as MainActivity) {
+                            onBackPressed()
+                            stopService(chatViewModel.chatSocketIntent)
+                            startService(chatViewModel.chatSocketIntent)
+                        }
+                    }
                 }
             }
         }

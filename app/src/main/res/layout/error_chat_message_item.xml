@@ -2,10 +2,10 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/constraintLayoutChatMessageItem"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="#000000">
+    android:background="#000000"
+    android:minHeight="30dp">
 
     <TextView
         android:id="@+id/messageErrorChatMessage"
@@ -40,6 +40,7 @@
         android:layout_height="12dp"
         android:layout_marginStart="4dp"
         android:visibility="visible"
+        android:contentDescription="@string/chat_error_message"
         app:layout_constraintBottom_toBottomOf="@+id/timestampErrorChatMessage"
         app:layout_constraintStart_toEndOf="@id/timestampErrorChatMessage"
         app:layout_constraintTop_toTopOf="@id/timestampErrorChatMessage"

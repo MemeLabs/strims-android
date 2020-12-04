@@ -9,7 +9,9 @@ class Options(
     var greentext: Boolean = true,
     var emotes: Boolean = true,
     var customHighlights: MutableList<String>,
-    var showViewerState: Boolean = true
+    var showViewerState: Boolean = true,
+    var pictureInPicture: Boolean = false
 ) {
+
     constructor(): this(false, mutableListOf(), false, false , false, true, true, mutableListOf(), true)
 }

@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <TextView
+        android:id="@+id/usernameTextViewProfile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/username"
+        android:textColor="#BBBBBB"
+        app:layout_constraintStart_toStartOf="@+id/usernameEditTextProfile"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/usernameEditTextProfile"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="24dp"
+        android:background="@drawable/rounded_text_profile"
+        android:ems="10"
+        android:textColor="#FFFFFF"
+        android:textColorHighlight="#40FF5722"
+        android:textCursorDrawable="@drawable/orange_cursor"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/usernameTextViewProfile" />
+
+    <TextView
+        android:id="@+id/streamPathTextViewProfile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/stream_path"
+        android:textColor="#BBBBBB"
+        app:layout_constraintStart_toStartOf="@+id/streamPathEditTextProfile"
+        app:layout_constraintTop_toBottomOf="@+id/usernameEditTextProfile" />
+
+    <EditText
+        android:id="@+id/streamPathEditTextProfile"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="24dp"
+        android:background="@drawable/rounded_text_profile"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:textColor="#FFFFFF"
+        android:textColorHighlight="#40FF5722"
+        android:textCursorDrawable="@drawable/orange_cursor"
+        android:textSize="14sp"
+        android:hint="@string/stream_path"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/streamPathTextViewProfile"
+        android:importantForAutofill="no" />
+
+    <TextView
+        android:id="@+id/streamingServiceTextViewProfile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/streaming_service"
+        android:textColor="#BBBBBB"
+        app:layout_constraintStart_toStartOf="@+id/streamingServiceSpinnerProfile"
+        app:layout_constraintTop_toBottomOf="@+id/streamPathEditTextProfile" />
+
+    <Spinner
+        android:id="@+id/streamingServiceSpinnerProfile"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="24dp"
+        android:background="@drawable/streaming_service_spinner"
+        android:drawSelectorOnTop="true"
+        android:ems="10"
+        android:spinnerMode="dialog"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/streamingServiceTextViewProfile" />
+
+    <TextView
+        android:id="@+id/channelTextViewProfile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/channel_video_id"
+        android:textColor="#BBBBBB"
+        app:layout_constraintStart_toStartOf="@+id/channelEditTextProfile"
+        app:layout_constraintTop_toBottomOf="@+id/streamingServiceSpinnerProfile" />
+
+    <EditText
+        android:id="@+id/channelEditTextProfile"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="24dp"
+        android:background="@drawable/rounded_text_profile"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:textColor="#FFFFFF"
+        android:textColorHighlight="#40FF5722"
+        android:textCursorDrawable="@drawable/orange_cursor"
+        android:textSize="14sp"
+        android:hint="@string/channel_video_id"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/channelTextViewProfile"
+        android:importantForAutofill="no" />
+
+    <CheckBox
+        android:id="@+id/checkBoxUserViewerState"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:buttonTint="#FF5722"
+        android:text="@string/show_what_i_m_watching_in_chat"
+        android:textColor="#BBBBBB"
+        app:layout_constraintStart_toStartOf="@+id/channelEditTextProfile"
+        app:layout_constraintTop_toBottomOf="@+id/channelEditTextProfile" />
+
+    <Button
+        android:id="@+id/saveProfile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:backgroundTint="#FF5722"
+        android:text="@string/save"
+        android:textColor="#000000"
+        app:layout_constraintStart_toStartOf="@+id/checkBoxUserViewerState"
+        app:layout_constraintTop_toBottomOf="@+id/checkBoxUserViewerState" />
+
+    <Button
+        android:id="@+id/logOutProfile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="24dp"
+        android:backgroundTint="#FF5722"
+        android:text="@string/log_out"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/saveProfile" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

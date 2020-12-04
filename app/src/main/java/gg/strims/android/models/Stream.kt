@@ -1,8 +1,11 @@
 package gg.strims.android.models
 
 import android.graphics.Color
+import android.os.Parcelable
+import kotlinx.android.parcel.Parcelize
 import kotlin.random.Random
 
+@Parcelize
 class Stream(
     val afk: Boolean,
     var afk_rustlers: Int,
@@ -18,7 +21,7 @@ class Stream(
     val thumbnail: String,
     val title: String,
     val viewers: Int
-) {
+) : Parcelable {
     constructor() : this(
         false,
         0,
@@ -36,6 +39,5 @@ class Stream(
         789
     )
 
-    private val random = Random
-    val colour = Color.argb(255, random.nextInt(256), random.nextInt(256), random.nextInt(256))
+    val colour = Color.argb(255, Random.nextInt(256), Random.nextInt(256), Random.nextInt(256))
 }
