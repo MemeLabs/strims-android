@@ -13,7 +13,7 @@ import gg.strims.android.MainActivity
 import gg.strims.android.singletons.CurrentUser
 import gg.strims.android.R
 import gg.strims.android.databinding.FragmentProfileBinding
-import gg.strims.android.viewBinding
+import gg.strims.android.utils.viewBinding
 import gg.strims.android.viewmodels.ProfileViewModel
 import io.ktor.client.*
 import io.ktor.client.features.websocket.*

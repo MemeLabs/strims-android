@@ -26,6 +26,10 @@ import gg.strims.android.fragments.AngelThumpFragment
 import gg.strims.android.models.EmotesParsed
 import gg.strims.android.models.Options
 import gg.strims.android.singletons.CurrentUser
+import gg.strims.android.utils.getBitmapFromURL
+import gg.strims.android.utils.getGifFromURL
+import gg.strims.android.utils.hideChildFragment
+import gg.strims.android.utils.viewBinder
 import gg.strims.android.viewmodels.ChatViewModel
 import gg.strims.android.viewmodels.ExoPlayerViewModel
 import io.ktor.util.*
@@ -90,8 +94,8 @@ class MainActivity : AppCompatActivity() {
             binding.navView.menu.findItem(R.id.nav_Whispers).isVisible = true
             val header = navView.getHeaderView(0)
             header.navHeaderUsername.text = CurrentUser.user!!.username
-        } else {
-            with (chatViewModel) {
+        } else if (savedInstanceState == null) {
+            with(chatViewModel) {
                 chatSocketIntent = Intent(this@MainActivity, ChatService::class.java)
                 streamsSocketIntent = Intent(this@MainActivity, StreamsService::class.java)
                 startService(chatSocketIntent)

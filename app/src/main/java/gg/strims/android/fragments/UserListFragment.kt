@@ -15,8 +15,8 @@ import com.xwray.groupie.viewbinding.BindableItem
 import gg.strims.android.R
 import gg.strims.android.databinding.ChatUserItemBinding
 import gg.strims.android.databinding.FragmentUserListBinding
-import gg.strims.android.keyRequestFocus
-import gg.strims.android.viewBinding
+import gg.strims.android.utils.keyRequestFocus
+import gg.strims.android.utils.viewBinding
 import gg.strims.android.viewmodels.ChatViewModel
 import io.ktor.util.*
 import java.util.*

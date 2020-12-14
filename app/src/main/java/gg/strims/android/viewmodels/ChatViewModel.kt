@@ -5,7 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import gg.strims.android.models.Message
 import gg.strims.android.models.ViewerState
-import gg.strims.android.notifyObserver
+import gg.strims.android.utils.notifyObserver
 
 class ChatViewModel: ViewModel() {
     var streamsSocketIntent: Intent? = null

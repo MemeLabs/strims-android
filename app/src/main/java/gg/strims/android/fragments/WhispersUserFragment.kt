@@ -17,13 +17,13 @@ import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.viewbinding.BindableItem
 import gg.strims.android.singletons.CurrentUser
 import gg.strims.android.R
-import gg.strims.android.createMessageTextView
+import gg.strims.android.utils.createMessageTextView
 import gg.strims.android.customspans.MarginItemDecoration
 import gg.strims.android.databinding.FragmentUserWhispersBinding
 import gg.strims.android.databinding.WhisperMessageItemLeftBinding
 import gg.strims.android.databinding.WhisperMessageItemRightBinding
 import gg.strims.android.room.PrivateMessage
-import gg.strims.android.viewBinding
+import gg.strims.android.utils.viewBinding
 import gg.strims.android.viewmodels.PrivateMessagesViewModel
 import io.ktor.util.*
 import java.text.SimpleDateFormat

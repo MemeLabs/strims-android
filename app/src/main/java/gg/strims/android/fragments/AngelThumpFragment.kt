@@ -3,7 +3,6 @@ package gg.strims.android.fragments
 import android.app.PictureInPictureParams
 import android.content.res.Configuration
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,8 +12,8 @@ import androidx.lifecycle.ViewModelProvider
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.SimpleExoPlayer
 import gg.strims.android.databinding.FragmentAngelthumpBinding
-import gg.strims.android.hideChildFragment
-import gg.strims.android.viewBinding
+import gg.strims.android.utils.hideChildFragment
+import gg.strims.android.utils.viewBinding
 import gg.strims.android.viewmodels.ExoPlayerViewModel
 import io.ktor.util.*
 

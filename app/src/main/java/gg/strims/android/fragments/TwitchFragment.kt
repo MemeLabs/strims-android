@@ -9,8 +9,8 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import gg.strims.android.databinding.FragmentTwitchBinding
-import gg.strims.android.hideChildFragment
-import gg.strims.android.viewBinding
+import gg.strims.android.utils.hideChildFragment
+import gg.strims.android.utils.viewBinding
 import gg.strims.android.viewmodels.TwitchViewModel
 import io.ktor.util.*
 

@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import gg.strims.android.models.Stream
-import gg.strims.android.notifyObserver
+import gg.strims.android.utils.notifyObserver
 
 class StreamsViewModel: ViewModel() {
     var streams = MutableLiveData<MutableList<Stream>>()

@@ -5,7 +5,7 @@ import android.graphics.Bitmap
 import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
 import gg.strims.android.models.*
-import gg.strims.android.notifyObserver
+import gg.strims.android.utils.notifyObserver
 import io.ktor.util.*
 import pl.droidsonroids.gif.GifDrawable
 import java.util.HashMap

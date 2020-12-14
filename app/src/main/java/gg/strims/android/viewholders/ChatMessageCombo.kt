@@ -16,7 +16,7 @@ import com.xwray.groupie.viewbinding.BindableItem
 import gg.strims.android.singletons.CurrentUser
 import gg.strims.android.R
 import gg.strims.android.adapters.CustomAdapter
-import gg.strims.android.createMessageTextView
+import gg.strims.android.utils.createMessageTextView
 import gg.strims.android.databinding.ChatMessageItemEmoteComboBinding
 import gg.strims.android.models.Message
 import io.ktor.util.*
