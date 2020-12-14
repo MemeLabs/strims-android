@@ -6,7 +6,7 @@ import android.view.View
 import com.xwray.groupie.viewbinding.BindableItem
 import gg.strims.android.R
 import gg.strims.android.adapters.CustomAdapter
-import gg.strims.android.createMessageTextView
+import gg.strims.android.utils.createMessageTextView
 import gg.strims.android.databinding.ChatMessageItemConsecutiveNickBinding
 import gg.strims.android.models.Message
 import gg.strims.android.singletons.CurrentUser

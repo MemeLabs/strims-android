@@ -20,6 +20,8 @@ import gg.strims.android.databinding.FragmentStreamsBinding
 import gg.strims.android.databinding.StreamItemBinding
 import gg.strims.android.models.Stream
 import gg.strims.android.singletons.CurrentUser
+import gg.strims.android.utils.getBitmapFromURL
+import gg.strims.android.utils.viewBinding
 import gg.strims.android.viewmodels.ExoPlayerViewModel
 import gg.strims.android.viewmodels.StreamsViewModel
 import gg.strims.android.viewmodels.TwitchViewModel

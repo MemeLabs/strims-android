@@ -17,6 +17,8 @@ import gg.strims.android.*
 import gg.strims.android.databinding.EmoteMenuItemBinding
 import gg.strims.android.databinding.FragmentEmoteMenuBinding
 import gg.strims.android.singletons.CurrentUser
+import gg.strims.android.utils.keyRequestFocus
+import gg.strims.android.utils.viewBinding
 import io.ktor.util.*
 import pl.droidsonroids.gif.GifDrawable
 import java.util.*

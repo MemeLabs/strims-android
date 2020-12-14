@@ -1,6 +1,5 @@
-package gg.strims.android
+package gg.strims.android.utils
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.graphics.*
@@ -8,111 +7,17 @@ import android.net.Uri
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.*
-import android.view.LayoutInflater
 import android.view.View
-import android.view.inputmethod.InputMethodManager
-import android.widget.EditText
 import android.widget.TextView
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
-import androidx.viewbinding.ViewBinding
 import gg.strims.android.customspans.CenteredImageSpan
 import gg.strims.android.customspans.ColouredUnderlineSpan
 import gg.strims.android.callbacks.DrawableCallback
 import gg.strims.android.customspans.NoUnderlineClickableSpan
-import gg.strims.android.fragments.FragmentViewBindingDelegate
 import gg.strims.android.models.Message
 import gg.strims.android.singletons.CurrentUser
 import io.ktor.util.*
 import pl.droidsonroids.gif.GifDrawable
-import java.io.BufferedInputStream
-import java.io.IOException
-import java.io.InputStream
-import java.net.HttpURLConnection
-import java.net.URL
-
-inline fun <T : ViewBinding> Activity.viewBinder(
-    crossinline bindingInflater: (LayoutInflater) -> T) =
-    lazy(LazyThreadSafetyMode.NONE) {
-        bindingInflater.invoke(layoutInflater)
-    }
-
-fun <T : ViewBinding> Fragment.viewBinding(viewBindingFactory: (View) -> T) =
-    FragmentViewBindingDelegate(this, viewBindingFactory)
-
-fun keyRequestFocus(editText: EditText, context: Context) {
-    editText.requestFocus()
-    val imm: InputMethodManager =
-        context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-    imm.toggleSoftInput(
-        InputMethodManager.SHOW_FORCED,
-        InputMethodManager.HIDE_IMPLICIT_ONLY
-    )
-}
-
-fun hideKeyboardFrom(context: Context, view: View) {
-    val imm =
-        context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
-    imm.hideSoftInputFromWindow(view.windowToken, 0)
-}
-
-fun hideChildFragment(fragment: Fragment, fragmentToHide: Fragment) {
-    fragment.childFragmentManager.beginTransaction()
-        .setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
-        .hide(fragmentToHide)
-        .commit()
-}
-
-fun showChildFragment(fragment: Fragment, fragmentToShow: Fragment) {
-    fragment.childFragmentManager.beginTransaction()
-        .setCustomAnimations(R.anim.fragment_open_enter, R.anim.fragment_open_exit)
-        .show(fragmentToShow)
-        .commit()
-}
-
-fun Bitmap.flip(degrees: Float): Bitmap {
-    val matrix = Matrix()
-    matrix.preScale(-1f, 1f)
-    matrix.apply { postRotate(degrees) }
-    return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
-}
-
-fun Bitmap.mirror(): Bitmap {
-    val matrix = Matrix()
-    matrix.preScale(-1f, 1f)
-    return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
-}
-
-fun getBitmapFromURL(src: String?): Bitmap? {
-    return try {
-        val url = URL(src)
-        val connection: HttpURLConnection = url.openConnection() as HttpURLConnection
-        connection.doInput = true
-        connection.connect()
-        val input: InputStream = connection.inputStream
-        BitmapFactory.decodeStream(input)
-    } catch (e: IOException) {
-        null
-    }
-}
-
-fun getGifFromURL(src: String?): GifDrawable? {
-    return try {
-        val url = URL(src)
-        val connection: HttpURLConnection = url.openConnection() as HttpURLConnection
-        connection.doInput = true
-        connection.connect()
-        val input: InputStream = connection.inputStream
-        val bis = BufferedInputStream(input)
-        GifDrawable(bis)
-    } catch (e: IOException) {
-        null
-    }
-}
-
-fun <T> MutableLiveData<T>.notifyObserver() {
-    this.value = this.value
-}
 
 @KtorExperimentalAPI
 fun createMessageTextView(

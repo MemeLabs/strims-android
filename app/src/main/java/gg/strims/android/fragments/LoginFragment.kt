@@ -11,7 +11,7 @@ import android.webkit.WebViewClient
 import androidx.fragment.app.Fragment
 import gg.strims.android.MainActivity
 import gg.strims.android.databinding.FragmentLoginBinding
-import gg.strims.android.viewBinding
+import gg.strims.android.utils.viewBinding
 import io.ktor.util.*
 
 @SuppressLint("SetJavaScriptEnabled")

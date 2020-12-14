@@ -8,9 +8,9 @@ import androidx.appcompat.view.ContextThemeWrapper
 import com.xwray.groupie.viewbinding.BindableItem
 import gg.strims.android.R
 import gg.strims.android.adapters.CustomAdapter
-import gg.strims.android.createMessageTextView
+import gg.strims.android.utils.createMessageTextView
 import gg.strims.android.databinding.PrivateChatMessageItemBinding
-import gg.strims.android.keyRequestFocus
+import gg.strims.android.utils.keyRequestFocus
 import gg.strims.android.models.Message
 import gg.strims.android.singletons.CurrentUser
 import io.ktor.util.*

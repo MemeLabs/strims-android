@@ -44,6 +44,10 @@ import gg.strims.android.models.NamesMessage
 import gg.strims.android.models.ViewerState
 import gg.strims.android.room.PrivateMessage
 import gg.strims.android.singletons.CurrentUser
+import gg.strims.android.utils.hideChildFragment
+import gg.strims.android.utils.hideKeyboardFrom
+import gg.strims.android.utils.showChildFragment
+import gg.strims.android.utils.viewBinding
 import gg.strims.android.viewholders.*
 import gg.strims.android.viewmodels.*
 import io.ktor.util.*
@@ -386,7 +390,10 @@ class ChatFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         with (binding) {
             Log.d("TAG", "ONVIEWCREATED CHAT FRAGMENT")
-            chatViewModel.oldMessageCount = 0
+            if (savedInstanceState != null || adapter.itemCount != 0) {
+                progressBarFragment.visibility = View.GONE
+                chatViewModel.oldMessageCount = 0
+            }
 
             chatViewModel.viewerStates.observe(viewLifecycleOwner, {
                 if (it.isNotEmpty()) {
@@ -452,10 +459,6 @@ class ChatFragment : Fragment() {
 
             if (CurrentUser.user != null) {
                 sendMessageText.hint = "Write something ${CurrentUser.user!!.username} ..."
-            }
-
-            if (savedInstanceState != null) {
-                progressBarFragment.visibility = View.GONE
             }
 
             if (missedMessages.isNotEmpty()) {
