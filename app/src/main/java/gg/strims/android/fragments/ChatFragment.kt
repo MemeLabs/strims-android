@@ -178,7 +178,6 @@ class ChatFragment : Fragment() {
                             chatViewModel.addMessage(message)
                         }
                     }
-                    binding.progressBarFragment.visibility = View.GONE
                     Log.d(
                         "TAG",
                         "ENDING PARSING ${(System.currentTimeMillis() - CurrentUser.time)}"
@@ -189,7 +188,6 @@ class ChatFragment : Fragment() {
 
                     /** Remove duplicate messages **/
                     if (adapter.itemCount > 1 && message != null) {
-                        // TODO: LOOK AT THIS BELOW: "Wanted item at position -1 but an Item is a Group of size 1"
                         val item = adapter.getItem(adapter.itemCount - 2)
                         if (item.layout == R.layout.chat_message_item) {
                             val lastMessage =
@@ -1096,7 +1094,9 @@ class ChatFragment : Fragment() {
             "NAMES" -> {
                 val names: NamesMessage = Klaxon().parse(msg[1])!!
                 names.users.forEach {
-                    chatViewModel.users.add(it.nick)
+                    if (!chatViewModel.users.contains(it.nick)) {
+                        chatViewModel.users.add(it.nick)
+                    }
                 }
                 if (adapter.itemCount > 0 && adapter.getItem(adapter.itemCount - 1).layout == R.layout.chat_message_item_emote_combo) {
                     val lastMessage =
