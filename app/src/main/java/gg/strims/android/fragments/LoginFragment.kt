@@ -27,17 +27,19 @@ class LoginFragment: Fragment() {
     ): View = FragmentLoginBinding.inflate(layoutInflater).root
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        with (binding) {
-            loginWebView.settings.javaScriptEnabled = true
-            loginWebView.settings.domStorageEnabled = true
-            loginWebView.loadUrl("https://strims.gg/login")
-            loginWebView.webViewClient = object : WebViewClient() {
+        with (binding.loginWebView) {
+            settings.javaScriptEnabled = true
+            settings.domStorageEnabled = true
+            loadUrl("https://strims.gg/login")
+            webViewClient = object : WebViewClient() {
                 override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                     if (url == "https://strims.gg/" || url == "https://chat.strims.gg/") {
-                        with (requireActivity() as MainActivity) {
+                        with(requireActivity() as MainActivity) {
                             onBackPressed()
-                            stopService(chatViewModel.chatSocketIntent)
-                            startService(chatViewModel.chatSocketIntent)
+                            restartChatService()
+                            restartStreamsService()
+//                            stopService(chatViewModel.chatSocketIntent)
+//                            startService(chatViewModel.chatSocketIntent)
                         }
                     }
                 }
