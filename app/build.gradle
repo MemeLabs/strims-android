@@ -1,4 +1,5 @@
 import com.github.triplet.gradle.androidpublisher.ResolutionStrategy
+import com.github.triplet.gradle.androidpublisher.ReleaseStatus
 
 plugins {
     id 'com.android.application'
@@ -46,8 +47,9 @@ android {
             signingConfig signingConfigs.release
 
             play {
-                track = 'internal' //'alpha','beta' or 'production'
-                serviceAccountCredentials = file(serviceAccountKeyFile)
+                track.set("internal")
+                serviceAccountCredentials.set(file(serviceAccountKeyFile))
+                updatePriority.set(2)
                 resolutionStrategy.set(ResolutionStrategy.AUTO)
             }
         }
