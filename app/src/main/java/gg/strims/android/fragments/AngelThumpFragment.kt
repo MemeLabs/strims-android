@@ -33,7 +33,8 @@ class AngelThumpFragment: Fragment() {
     ): View = FragmentAngelthumpBinding.inflate(layoutInflater).root
 
     override fun onStop() {
-        binding.angelThumpVideoView.player = null
+        /** Investigate for memory leak **/
+//        binding.angelThumpVideoView.player = null
         super.onStop()
     }
 
@@ -48,6 +49,7 @@ class AngelThumpFragment: Fragment() {
                 }
                 angelThumpSeparator.visibility = View.VISIBLE
                 angelThumpClose.visibility = View.VISIBLE
+                binding.angelThumpVideoView.player = exoPlayerViewModel.player
             }
         }
     }

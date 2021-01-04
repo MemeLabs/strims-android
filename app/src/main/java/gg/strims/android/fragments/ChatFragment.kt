@@ -388,9 +388,10 @@ class ChatFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         with (binding) {
             Log.d("TAG", "ONVIEWCREATED CHAT FRAGMENT")
-            if (savedInstanceState != null || adapter.itemCount != 0) {
-                progressBarFragment.visibility = View.GONE
+            if (savedInstanceState != null || adapter.itemCount == 0) {
                 chatViewModel.oldMessageCount = 0
+            } else if (adapter.itemCount != 0) {
+                progressBarFragment.visibility = View.GONE
             }
 
             chatViewModel.viewerStates.observe(viewLifecycleOwner, {

@@ -56,6 +56,16 @@ class MainActivity : AppCompatActivity() {
     lateinit var chatViewModel: ChatViewModel
     private lateinit var exoPlayerViewModel: ExoPlayerViewModel
 
+    override fun onDestroy() {
+        stopService(chatViewModel.streamsSocketIntent)
+        stopService(chatViewModel.chatSocketIntent)
+        if (exoPlayerViewModel.player != null) {
+            exoPlayerViewModel.player?.release()
+            exoPlayerViewModel.player = null
+        }
+        super.onDestroy()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
