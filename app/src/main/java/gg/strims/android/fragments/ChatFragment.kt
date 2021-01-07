@@ -226,7 +226,8 @@ class ChatFragment : Fragment() {
                     binding.sendMessageText.hint = "Write something ${CurrentUser.user!!.username} ..."
                     val activity = (requireActivity() as MainActivity)
                     with (activity.binding.navView) {
-                        navHeaderUsername.text = CurrentUser.user!!.username
+                        val header = getHeaderView(0)
+                        header.navHeaderUsername.text = CurrentUser.user!!.username
                         menu.findItem(R.id.nav_Profile).isVisible = true
                         menu.findItem(R.id.nav_Whispers).isVisible = true
                         setCheckedItem(R.id.nav_Chat)

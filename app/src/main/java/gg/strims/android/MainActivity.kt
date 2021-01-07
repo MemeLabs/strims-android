@@ -38,6 +38,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.net.URL
+import kotlin.system.exitProcess
 
 @KtorExperimentalAPI
 class MainActivity : AppCompatActivity() {
@@ -57,13 +58,17 @@ class MainActivity : AppCompatActivity() {
     private lateinit var exoPlayerViewModel: ExoPlayerViewModel
 
     override fun onDestroy() {
-        stopService(chatViewModel.streamsSocketIntent)
-        stopService(chatViewModel.chatSocketIntent)
-        if (exoPlayerViewModel.player != null) {
-            exoPlayerViewModel.player?.release()
-            exoPlayerViewModel.player = null
-        }
         super.onDestroy()
+        if (!isChangingConfigurations) {
+            if (exoPlayerViewModel.player != null) {
+                exoPlayerViewModel.player?.release()
+                exoPlayerViewModel.player = null
+            }
+            stopService(chatViewModel.streamsSocketIntent)
+            stopService(chatViewModel.chatSocketIntent)
+            finish()
+            exitProcess(0)
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

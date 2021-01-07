@@ -108,11 +108,11 @@ dependencies {
     implementation 'com.github.bumptech.glide:glide:4.11.0'
     implementation 'com.google.android.material:material:1.2.1'
     implementation 'pl.droidsonroids.gif:android-gif-drawable:1.2.21'
-    implementation 'com.google.android.exoplayer:exoplayer-core:2.12.1'
-    implementation 'com.google.android.exoplayer:exoplayer-dash:2.12.1'
-    implementation 'com.google.android.exoplayer:exoplayer-ui:2.12.1'
-    implementation 'com.google.android.exoplayer:exoplayer-hls:2.12.1'
-    implementation 'com.google.android.exoplayer:exoplayer-smoothstreaming:2.12.1'
+    implementation 'com.google.android.exoplayer:exoplayer-core:2.12.2'
+    implementation 'com.google.android.exoplayer:exoplayer-dash:2.12.2'
+    implementation 'com.google.android.exoplayer:exoplayer-ui:2.12.2'
+    implementation 'com.google.android.exoplayer:exoplayer-hls:2.12.2'
+    implementation 'com.google.android.exoplayer:exoplayer-smoothstreaming:2.12.2'
     implementation 'com.google.android.exoplayer:extension-mediasession:2.12.1'
     implementation 'jp.wasabeef:blurry:4.0.0'
 
@@ -120,11 +120,11 @@ dependencies {
     implementation "androidx.datastore:datastore-preferences:1.0.0-alpha05"
 
     // Room components
-    implementation "androidx.room:room-runtime:2.2.5"
+    implementation "androidx.room:room-runtime:2.2.6"
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    kapt "androidx.room:room-compiler:2.2.5"
-    implementation "androidx.room:room-ktx:2.2.5"
-    androidTestImplementation "androidx.room:room-testing:2.2.5"
+    kapt "androidx.room:room-compiler:2.2.6"
+    implementation "androidx.room:room-ktx:2.2.6"
+    androidTestImplementation "androidx.room:room-testing:2.2.6"
 
     // Lifecycle components
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.2.0"
@@ -134,8 +134,6 @@ dependencies {
 
     // Kotlin components
     api "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.1"
-
-    debugImplementation 'com.melegy.redscreenofdeath:red-screen-of-death:0.1.2'
 //    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.5'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.11.0'
     testImplementation 'junit:junit:4.13.1'
