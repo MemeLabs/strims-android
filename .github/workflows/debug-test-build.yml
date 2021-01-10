@@ -1,9 +1,5 @@
 name: Develop Branch Test & Build
 on:
-  pull_request:
-    branches: 
-      - 'master'
-      - 'dev*'
   push:
   pull_request:
     types: [opened]
