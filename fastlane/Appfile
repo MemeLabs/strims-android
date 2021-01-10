@@ -1,2 +1,2 @@
-json_key_file("./keys.json")
+json_key_file("./serviceAccountKey.json")
 package_name("gg.strims.android")

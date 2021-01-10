@@ -16,3 +16,6 @@
 *.log
 keys.json
 *.lock
+
+.env
+keystore/
