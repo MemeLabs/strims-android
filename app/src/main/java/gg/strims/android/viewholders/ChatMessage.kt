@@ -186,6 +186,8 @@ class ChatMessage(
                     adapter.tempHighlightNick = null
                     adapter.notifyDataSetChanged()
                 }
+            } else {
+                messageChatMessage.setOnClickListener(null)
             }
 
             root.setOnClickListener {

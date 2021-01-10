@@ -83,8 +83,11 @@ class OptionsFragment : Fragment() {
             }
 
             checkBoxPictureInPicture.setOnCheckedChangeListener { _, isChecked ->
-                CurrentUser.optionsLiveData.value?.pictureInPicture = isChecked
+                CurrentUser.optionsLiveData.value?.pictureInPicture = false
             }
+
+            checkBoxPictureInPicture.isEnabled = false
+            checkBoxPictureInPicture.visibility = View.GONE
         }
     }
 }
