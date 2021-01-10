@@ -1,11 +1,8 @@
 name: Develop Branch Test & Build
 on:
   push:
-    branches:
-      - 'develop'
-      - '*fix/*'
-      - '*release/*'
-      - '*feature/*'
+  pull_request:
+    types: [opened]
 jobs:
   main:
     name: Test & Build Debug
